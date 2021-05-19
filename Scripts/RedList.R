@@ -1,12 +1,37 @@
+############################# Uploading and downloading scripts to dropbox #####################
+drop_upload(file = file.path("Scripts", "RedList.R"), 
+            path = file.path("PhD", "Thesis", "Data", "Chapter_3", "Scripts"))
+
+drop_download(path = file.path("PhD", "Thesis", "Data", "Chapter_3", "Scripts", "RedList.R"),
+              local_path = file.path("Scripts", "RedList.R"))
+
 ############################### Load Red List spatial and assessment data #########################
+
+# For downloading on virtual machine
+RL_files <- c("data_0.cpg", "data_0.dbf", "data_0.prj", "data_0.shp", "data_0.shx", "data_1.cpg", "data_1.dbf",
+ "data_1.prj", "data_1.shp", "data_1.shx", "data_2.cpg", "data_2.dbf", "data_2.prj", "data_2.shp",
+ "data_2.shx")
+
+# Download each file
+llply(.data = RL_files[1:length(RL_files)], .fun = function(i) .progress = "tk" {
+  
+  drop_download(path = file.path("PhD", "Thesis", "Data", "Chapter_3", "SpatialData", "Vector", "redlist_species_data_18052021", i),
+                local_path = file.path("SpatialData", "Vector", "redlist_species_data_18052021", i))
+  
+})
 
 #Load spatial data
 RL_Aus_shp <- st_read("SpatialData/Vector/redlist_species_data_Aus/data_0.shp")
+RL_shp_0 <- st_read("SpatialData/Vector/redlist_species_data_18052021/data_0.shp")
+RL_shp_1 <- st_read("SpatialData/Vector/redlist_species_data_18052021/data_1.shp")
 
 #Also need to load Red List assessment and threats data. Join to RL spatial layer #~#
-RL_Aus_assess <- read_excel(file.path("Data", "redlist_species_data", "assessments.xlsx"), sheet = "assessments")
-RL_Aus_threats <- read_excel(file.path("Data", "redlist_species_data", "threats.xlsx"), sheet = "threats")
+RL_Aus_assess <- read_excel(file.path("SpeciesData", "redlist_species_data", "assessments.xlsx"), sheet = "assessments")
+RL_Aus_threats <- read_excel(file.path("SpeciesData", "redlist_species_data", "threats.xlsx"), sheet = "threats")
 
+#More recent download - broader scope
+RL_Aus_assess <- read.csv(file.path("SpeciesData", "redlist_species_data_18052021", "assessments.csv"))
+RL_Aus_threats <- read.csv(file.path("SpeciesData", "redlist_species_data_18052021", "threats.csv"))
 
 #################################### Preparing assessment data #############################
 #Getting higher level taxonomic information

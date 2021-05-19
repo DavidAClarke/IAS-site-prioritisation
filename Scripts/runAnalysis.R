@@ -2,7 +2,7 @@
 drop_upload(file = file.path("Scripts", "runAnalysis.R"), 
             path = file.path("PhD", "Thesis", "Data", "Chapter_3", "Scripts"))
 
-drop_download(path = file.path("PhD", "Thesis", "Data", "Chapter_3", "Scripts", "runAnalysis.R"),
+drop_download(path = file.path("PhD", "Thesis", "Data", "Chapter_3", "Scripts","runAnalysis.R"),
               local_path = file.path("Scripts", "runAnalysis.R"))
 
 
@@ -67,32 +67,26 @@ source("Scripts/RedListEco.R")
 #dir.create(file.path("SpatialData", "Input_zonation", "SNES_ALL"))
 
 #Key Biodiversity Areas (DONE)
-#feature_rst(Aus_KBA, "RL_IAS", "Name")
-feature_rst(Aus_KBA, "RL_ALL", "Name")
-feature_rst(Aus_KBA, "SNES_IAS", "Name")
-feature_rst(Aus_KBA, "SNES_ALL", "Name")
+feature_rst(Aus_KBA, "KBAs", "Name")
 
 #Red List species
-#feature_rst(Aus_RL_IAS, "RL_IAS", "scientificName")
-feature_rst(Aus_RL, "RL_ALL", "scientificName")
+feature_rst(Aus_RL_IAS, "RedList_species_IAS", "scientificName")
+feature_rst(Aus_RL, "RedList_species_all", "scientificName")
 
 #Ramsar and Upstream catchments
-#feature_rst(Aus_Rams, "RL_IAS", "RAMSAR_NAM")
-#feature_rst(Aus_Ups, "RL_IAS", "RAM_NAME")
-feature_rst(Aus_Rams, "RL_ALL", "RAMSAR_NAM")
-feature_rst(Aus_Ups, "RL_ALL", "RAM_NAME")
-feature_rst(Aus_Rams, "SNES_IAS", "RAMSAR_NAM")
-feature_rst(Aus_Ups, "SNES_IAS", "RAM_NAME")
-feature_rst(Aus_Rams, "SNES_ALL", "RAMSAR_NAM")
-feature_rst(Aus_Ups, "SNES_ALL", "RAM_NAME")
+feature_rst(Aus_Rams, "Ramsar", "RAMSAR_NAM")
+feature_rst(Aus_Ups, "Upstream", "RAM_NAME")
 
 #Red List Ecosystems
-feature_rst(Aus_Ecosystems, "RL_IAS", "Ecosystem")
+feature_rst(Aus_Ecosystems, "RedList_Ecosystems", "Ecosystem")
 
 #Protected areas
 feature_rst(Aus_CAPAD, "PAs", "NAME")
 
 #SNES
-feature_rst(SNES_shp, "SNES", "scientificName")
+feature_rst(Aus_SNES, "SNES_all", "scientificName")
+feature_rst(Aus_SNES_IAS, "SNES_IAS", "scientificName")
+
+                                  # Copy files into folders for zonation #
 
                                            # Running Zonation #
