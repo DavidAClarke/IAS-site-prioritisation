@@ -2,8 +2,8 @@
 drop_upload(file = file.path("Scripts", "Functions.R"), 
             path = file.path("PhD", "Thesis", "Data", "Chapter_3", "Scripts"))
 
-drop_download(path = file.path("PhD", "Thesis", "Data", "Chapter_3", "Scripts"),
-              local_path = file.path("Scripts", "Functions.R"))
+drop_download(path = file.path("PhD", "Thesis", "Data", "Chapter_3", "Scripts", "Functions.R"),
+              local_path = file.path("Scripts", "Functions.R"), overwrite = T)
 
 #~#~# Function loads / installing packages required libraries----
 loadLibrary <- function(packageList){
@@ -36,18 +36,6 @@ Get_gbif_Occ <- function(sppList) {
   return(res.out)
 }
 
-#~#~# Function converting NA to factor level----
-NA2fctlvl <- function(df) {
-  
-  for(j in 1:ncol(df)) {
-    
-    levels(df[[j]]) <- c(levels(df[[j]]),"NA")
-    df[[j]][is.na(df[[j]])] <- "NA"
-    
-  }
-  return(df)
-}
-
 #Getting higher level taxonomic information
 GetTax <- function(sppList) {
   
@@ -69,9 +57,10 @@ GetTax <- function(sppList) {
 #Creating rasters for features (in progress)
 feature_rst <- function(shp, target_path, feature_name) { 
   
+  shp[[feature_name]] <- gsub(" | /", "_", shp[[feature_name]])
   featureList <- shp[[feature_name]]
   featureList <- unique(featureList)
-  featureList <- gsub(" | /", "_", featureList)
+  
   
   #dir.create(file.path("SpatialData", "Input_zonation", target_path))
   
@@ -196,4 +185,24 @@ Threat_info <- function(urls, species, target_folder) {
 }
 
 
+# Creating convex hulls (MCP or alphahull) for multiple species across multiple countries
+# Description of what I want/need: 
+#1. for each species, 
+#2. associate all points with a contiguous land mass
+#3. create polygons for each contiguous land mass
+#4. join all polygons for a given species to create a multipolygon shapefile
+#5. join all species multipolygon shapefiles into one big shapefile
+
+#~#~# Function matches co-ordinates to polygons----
+#Notes: initial = original data frame, pre = name of new layer, Layer = shapefile to be matched
+#TRY TO UPDATE THIS e.g using sf instead of sp
+xy_match <- function(initial, pre, Layer) {
+  pre <- initial
+  
+  coordinates(pre) <- ~ Long + Lat
+  proj4string(pre) <- proj4string(Layer)
+  
+  final <- cbind(initial, over(pre, Layer))
+  return(final)
+}
   

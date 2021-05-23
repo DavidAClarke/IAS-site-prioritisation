@@ -3,123 +3,112 @@ drop_upload(file = file.path("Scripts", "RedList.R"),
             path = file.path("PhD", "Thesis", "Data", "Chapter_3", "Scripts"))
 
 drop_download(path = file.path("PhD", "Thesis", "Data", "Chapter_3", "Scripts", "RedList.R"),
-              local_path = file.path("Scripts", "RedList.R"))
+              local_path = file.path("Scripts", "RedList.R"), overwrite = T)
 
 ############################### Load Red List spatial and assessment data #########################
 
 # For downloading on virtual machine
-RL_files <- c("data_0.cpg", "data_0.dbf", "data_0.prj", "data_0.shp", "data_0.shx", "data_1.cpg", "data_1.dbf",
- "data_1.prj", "data_1.shp", "data_1.shx", "data_2.cpg", "data_2.dbf", "data_2.prj", "data_2.shp",
- "data_2.shx")
-
-# Download each file
-llply(.data = RL_files[1:length(RL_files)], .fun = function(i) .progress = "tk" {
-  
-  drop_download(path = file.path("PhD", "Thesis", "Data", "Chapter_3", "SpatialData", "Vector", "redlist_species_data_18052021", i),
-                local_path = file.path("SpatialData", "Vector", "redlist_species_data_18052021", i))
-  
-})
+# RL_files <- c("data_0.cpg", "data_0.dbf", "data_0.prj", "data_0.shp", "data_0.shx", "data_1.cpg", "data_1.dbf",
+#  "data_1.prj", "data_1.shp", "data_1.shx", "data_2.cpg", "data_2.dbf", "data_2.prj", "data_2.shp",
+#  "data_2.shx")
+# 
+# # Download each file
+# lapply(RL_files[1:length(RL_files)], function(i) {
+#   
+#   drop_download(path = file.path("PhD", "Thesis", "Data", "Chapter_3", "SpatialData", "Vector", "redlist_species_data_18052021", i),
+#                 local_path = file.path("SpatialData", "Vector", "redlist_species_data_18052021", i))
+#   
+# })
 
 #Load spatial data
-RL_Aus_shp <- st_read("SpatialData/Vector/redlist_species_data_Aus/data_0.shp")
+#RL_Aus_shp <- st_read("SpatialData/Vector/redlist_species_data_Aus/data_0.shp")
+
+#Updated downloaded shapefiles. Do I combine them all? How do they differ?
 RL_shp_0 <- st_read("SpatialData/Vector/redlist_species_data_18052021/data_0.shp")
 RL_shp_1 <- st_read("SpatialData/Vector/redlist_species_data_18052021/data_1.shp")
+RL_shp_2 <- st_read("SpatialData/Vector/redlist_species_data_18052021/data_2.shp")
+RL_shp <- rbind(RL_shp_0,RL_shp_1,RL_shp_2)
+rm(RL_shp_0,RL_shp_1,RL_shp_2)
+
+#Save new combined shapefile
+st_write(RL_shp, 
+         dsn = file.path("SpatialData", "Vector", "redlist_species_data_18052021"),
+         layer = "RL_shp.shp",
+         driver = "ESRI Shapefile")
+
+#Load plant point data
+RL_plants <- read.csv(file.path("SpatialData", "Vector", "redlist_species_data_plantpoints", "points_data.csv"))
+RL_plants <- RL_plants %>%
+  dplyr::select("binomial", "presence", "origin", "seasonal", "legend", "longitude", "latitude")
+RL_plants_points <- RL_plants %>%
+  dplyr::select("longitude", "latitude")
+RL_plants_points.sp <- SpatialPointsDataFrame(RL_plants_points,
+                                              data = RL_plants,
+                                              proj4string = CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"))
+RL_plants_points_sf <- st_as_sf(RL_plants_points.sp)
+rm(RL_plants_points.sp,RL_plants_points,RL_plants)
+
+
 
 #Also need to load Red List assessment and threats data. Join to RL spatial layer #~#
-RL_Aus_assess <- read_excel(file.path("SpeciesData", "redlist_species_data", "assessments.xlsx"), sheet = "assessments")
-RL_Aus_threats <- read_excel(file.path("SpeciesData", "redlist_species_data", "threats.xlsx"), sheet = "threats")
+#RL_Aus_assess <- read_excel(file.path("SpeciesData", "redlist_species_data", "assessments.xlsx"), sheet = "assessments")
+#RL_Aus_threats <- read_excel(file.path("SpeciesData", "redlist_species_data", "threats.xlsx"), sheet = "threats")
 
 #More recent download - broader scope
 RL_Aus_assess <- read.csv(file.path("SpeciesData", "redlist_species_data_18052021", "assessments.csv"))
 RL_Aus_threats <- read.csv(file.path("SpeciesData", "redlist_species_data_18052021", "threats.csv"))
+RL_Aus_taxon <- read.csv(file.path("SpeciesData", "redlist_species_data_18052021", "taxonomy.csv"))
 
-#################################### Preparing assessment data #############################
-#Getting higher level taxonomic information
-#Information for some species was not retrieved during function.
-scinames <- unique(RL_Aus_assess$scientificName)
-RL_class <- GetTax(scinames) #Custom function
-RL_class <- RL_class %>%
-  mutate(canonicalName = as.character(canonicalName)) %>%
-  dplyr::rename(scientificName = "canonicalName") %>%
-  mutate(class = stringr::str_replace(class, "Ancylastrum cumingianus", "Gastropoda")) %>%
-  mutate(order = stringr::str_replace(order, "Gastropoda", "Lymnaeida")) %>%
-  mutate(class = stringr::str_replace(class, "Notomys robustus", "Mammalia")) %>%
-  mutate(class = stringr::str_replace(class, "Threskiornis moluccus", "Aves")) %>%
-  mutate(order = stringr::str_replace(order, "Aves", "Pelecaniformes")) %>%
-  mutate(class = stringr::str_replace(class, "Ctenophorus graafi", "Reptilia")) %>%
-  mutate(order = stringr::str_replace(order, "Ctenophorus graafi", "Squamata")) %>%
-  mutate(class = stringr::str_replace(class, "Ctenophorus infans", "Reptilia")) %>%
-  mutate(order = stringr::str_replace(order, "Ctenophorus infans", "Squamata")) %>%
-  mutate(class = stringr::str_replace(class, "Ctenophorus slateri", "Reptilia")) %>%
-  mutate(order = stringr::str_replace(order, "Ctenophorus slateri", "Squamata")) %>%
-  mutate(class = stringr::str_replace(class, "Nyctimystes infrafrenatus", "Amphibia")) %>%
-  mutate(order = stringr::str_replace(order, "Nyctimystes infrafrenatus", "Anura")) %>%
-  mutate(order = stringr::str_replace(order, "Gelochelidon macrotarsa", "Charadriiformes")) %>%
-  mutate(class = stringr::str_replace(class, "Gelochelidon macrotarsa", "Aves")) %>%
-  mutate(class = stringr::str_replace(class, "Herennia oz", "Arachnida")) %>%
-  mutate(class = stringr::str_replace(class, "Nephila edulis", "Arachnida")) %>%
-  mutate(class = stringr::str_replace(class, "Elasmobranchii", "Chondrichthyes"))
-
+####################################### Data Preparation ####################################
 #Joining taxonomic information to red list assessment data
-RL_Aus_assess <- left_join(RL_Aus_assess, RL_class, by = "scientificName")
-
-#Preparation of assessment data
-RL_Aus_assess_min <- RL_Aus_assess %>%
-  dplyr::select(scientificName, order, class, redlistCategory, redlistCriteria, yearPublished) %>%
-  mutate(class = as.factor(class)) %>%
-  mutate(order = as.factor(order))%>%
-  filter(redlistCategory != "Extinct", redlistCategory != "Lower Risk/conservation dependent") %>%
+RL_info <- RL_Aus_assess %>% 
+  left_join(RL_Aus_threats, by = "scientificName") %>%
+  left_join(RL_Aus_taxon, by = "scientificName") %>%
+  dplyr::select(scientificName, orderName, className, phylumName, kingdomName, 
+                redlistCategory, redlistCriteria, yearPublished,code, name, 
+                stressCode, stressName, ias, scope) %>%
+  mutate(className = as.factor(className)) %>%
+  mutate(orderName = as.factor(orderName)) %>%
+  mutate(phylumName = as.factor(phylumName)) %>%
+  mutate(kingdomName = as.factor(kingdomName)) %>%
+  filter(redlistCategory != "Lower Risk/near threatened", 
+         redlistCategory != "Lower Risk/conservation dependent",
+         redlistCategory != "Lower Risk/least concern") %>%
   mutate(redlistCategory = factor(redlistCategory, 
                                   levels = c("Data Deficient", "Least Concern", "Near Threatened",
-                                             "Vulnerable", "Endangered", "Critically Endangered"),
-                                  labels = c("DD", "LC", "NT", "VU", "EN", "CR")))
+                                             "Vulnerable", "Endangered", "Critically Endangered", "Extinct"),
+                                  labels = c("DD", "LC", "NT", "VU", "EN", "CR", "EX")))
+rm(RL_Aus_assess, RL_Aus_taxon, RL_Aus_threats)
 
 #Summary information for Red List categories
-RL_Aus_assess_sum <- RL_Aus_assess_min %>%
-  group_by(class, redlistCategory) %>%
+RL_assess_sum <- RL_info %>%
+  distinct(scientificName = scientificName, .keep_all = T) %>%
+  group_by(className, redlistCategory) %>%
   count(redlistCategory)
 
-#Joining threat data with taxonomic information
-#Note: threat data is smaller than assessment data
-RL_Aus_threats <- left_join(RL_Aus_threats, RL_class, by = "scientificName")
-
-#Subsetting species with IAS as known threat
-RL_Aus_IASthreats <- RL_Aus_threats %>%
-  dplyr::select(scientificName, order, class, code, name, stressCode, stressName, ias, scope) %>%
-  mutate_if(is.character, as.factor) %>%
-  mutate(scientificName = as.character(scientificName)) %>%
-  mutate(ias = as.character(ias)) %>%
-  filter(code == "8.1.1" | code == "8.1.2" | code == "8.2.2")
-
-RL_Aus_IASthreats_distinct <- RL_Aus_IASthreats %>%
-  distinct(scientificName = scientificName, .keep_all = T)
-
-scinames_IAS <- unique(RL_Aus_IASthreats$scientificName)
-
-#Summary IAS threat information
-RL_Aus_IASthreats_sum <- RL_Aus_IASthreats %>%
-  group_by(class, name) %>%
-  count(name)
-
-#Joining assessment and IAS threat data (loses 13 extinct species)
-RL_Aus_join_IAS <- RL_Aus_assess_min %>% 
-               left_join(RL_Aus_IASthreats_distinct, by = c("scientificName", "order", "class")) %>%
-               filter(scientificName %in% scinames_IAS)
-
-##Summary information for Red List categories threatened by IAS
-RL_Aus_join_IAS_sum <- RL_Aus_join_IAS %>%
-  group_by(class, redlistCategory) %>%
+#Summary information for Red List categories of IAS threatened species
+RL_IAS_assess_sum <- RL_info %>%
+  filter(code == "8.1.1" | code == "8.1.2" | code == "8.2.2") %>%
+  distinct(scientificName = scientificName, .keep_all = T) %>%
+  group_by(className, redlistCategory) %>%
   count(redlistCategory)
 
 ###################################### Spatial operations ##################################
+#Creating convex polygons for plants
+plant_mcp <- mcp(RL_plants_points.sp[1:60,1], percent = 95)
 
+#Might be good to overlay this with something like GADM to get country information
+#That would be necessary to calculate proportion of Australia to overall range
 #Combining spatial and ancillary information 
-RL_Aus_shp <- RL_Aus_shp %>%
+RL_Aus_shp <- RL_shp_0 %>%
   dplyr::select(BINOMIAL, PRESENCE, ORIGIN, SEASONAL, LEGEND) %>%
   rename(scientificName = "BINOMIAL")
-RL_Aus_shp <- st_crop(RL_Aus_shp, Aus_Coast) #bringing extent down before projection
-RL_Aus_shp_IAS <- merge(RL_Aus_join_IAS, RL_Aus_shp, by = "scientificName")
-RL_Aus_shp_IAS <- st_as_sf(RL_Aus_shp_IAS) #now ready for further spatial analysis
+new_bb <- c(113, -44, 154, -9)
+names(new_bb) <- c("xmin", "ymin", "xmax", "ymax")
+RL_Aus_shp <- st_crop(RL_Aus_shp, new_bb) #bringing extent down before projection
+RL_Aus_shp <- merge(RL_info, RL_Aus_shp, by = "scientificName")
+RL_Aus_shp <- st_as_sf(RL_Aus_shp) #now ready for further spatial analysis
+RL_Aus_shp_IAS <- RL_Aus_shp %>% filter(code == "8.1.1" | code == "8.1.2" | code == "8.2.2")
 
 #Re-project spatial layers
 RL_Aus_shp_proj <- st_transform(RL_Aus_shp, 3577)
