@@ -22,6 +22,8 @@ drop_download(path = file.path("PhD", "Thesis", "Data", "Chapter_3", "Scripts", 
 
 #Load spatial data
 #RL_Aus_shp <- st_read("SpatialData/Vector/redlist_species_data_Aus/data_0.shp")
+load(file.path("SpatialData","Vector", "lvl_1.RData"))
+lvl_1_sf <- st_as_sf(lvl_1)
 
 #Updated downloaded shapefiles. Do I combine them all? How do they differ?
 RL_shp_0 <- st_read("SpatialData/Vector/redlist_species_data_18052021/data_0.shp")
@@ -36,17 +38,28 @@ st_write(RL_shp,
          layer = "RL_shp.shp",
          driver = "ESRI Shapefile")
 
+#Load new combined shapefile
+RL_shp <- st_read("SpatialData/Vector/redlist_species_data_18052021/RL_shp.shp")
+
 #Load plant point data
 RL_plants <- read.csv(file.path("SpatialData", "Vector", "redlist_species_data_plantpoints", "points_data.csv"))
 RL_plants <- RL_plants %>%
-  dplyr::select("binomial", "presence", "origin", "seasonal", "legend", "longitude", "latitude")
+  dplyr::select("binomial", "presence", "origin", "seasonal", "legend", "longitude", "latitude") %>%
+  mutate(Country = map.where(x = RL_plants$longitude, y = RL_plants$latitude)) %>%
+  rename(Long = "longitude") %>%
+  rename(Lat = "latitude") %>%
+  rename(scientificName = "binomial")
+#maybe on this line do xy_match. Then remove any NA points e.g. the very first one.
+RL_plants <- subset(RL_plants, with(RL_plants, unsplit(table(scientificName), scientificName)) >= 5)
+RL_plants_Aus <- RL_plants %>% filter(Country == "Australia" | Country == "Australia:Tasmania")
+RL_plants_Aus <- subset(RL_plants_Aus, with(RL_plants_Aus, unsplit(table(scientificName), scientificName)) >= 5)
 RL_plants_points <- RL_plants %>%
-  dplyr::select("longitude", "latitude")
+  dplyr::select("Long", "Lat")
 RL_plants_points.sp <- SpatialPointsDataFrame(RL_plants_points,
                                               data = RL_plants,
                                               proj4string = CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"))
 RL_plants_points_sf <- st_as_sf(RL_plants_points.sp)
-rm(RL_plants_points.sp,RL_plants_points,RL_plants)
+#rm(RL_plants_points.sp,RL_plants_points,RL_plants)
 
 
 
@@ -95,28 +108,44 @@ RL_IAS_assess_sum <- RL_info %>%
 
 ###################################### Spatial operations ##################################
 #Creating convex polygons for plants
-plant_mcp <- mcp(RL_plants_points.sp[1:60,1], percent = 95)
+coordinates(RL_plants_Aus) <- ~ Long + Lat
+Aus_plant_mcp <- mcp(RL_plants_Aus[,1], percent = 95)
+Aus_plant_mcp_sf <- st_as_sf(Aus_plant_mcp)
+Aus_plant_mcp_sf <- Aus_plant_mcp_sf %>% rename(scientificName = "id")
+Aus_plant_mcp_sf <- merge(RL_info, Aus_plant_mcp_sf, by = "scientificName")
+Aus_plant_mcp_sf <- st_as_sf(Aus_plant_mcp_sf)
+st_crs(Aus_plant_mcp_sf) <- st_crs(Aus_Coast)
+Aus_plant_mcp_sf_IAS <- Aus_plant_mcp_sf %>% filter(code == "8.1.1" | code == "8.1.2" | code == "8.2.2")
 
 #Might be good to overlay this with something like GADM to get country information
 #That would be necessary to calculate proportion of Australia to overall range
 #Combining spatial and ancillary information 
-RL_Aus_shp <- RL_shp_0 %>%
+RL_shp <- RL_shp %>%
   dplyr::select(BINOMIAL, PRESENCE, ORIGIN, SEASONAL, LEGEND) %>%
   rename(scientificName = "BINOMIAL")
 new_bb <- c(113, -44, 154, -9)
 names(new_bb) <- c("xmin", "ymin", "xmax", "ymax")
-RL_Aus_shp <- st_crop(RL_Aus_shp, new_bb) #bringing extent down before projection
+RL_Aus_shp <- st_crop(RL_shp, new_bb) #bringing extent down before projection
 RL_Aus_shp <- merge(RL_info, RL_Aus_shp, by = "scientificName")
 RL_Aus_shp <- st_as_sf(RL_Aus_shp) #now ready for further spatial analysis
 RL_Aus_shp_IAS <- RL_Aus_shp %>% filter(code == "8.1.1" | code == "8.1.2" | code == "8.2.2")
 
 #Re-project spatial layers
 RL_Aus_shp_proj <- st_transform(RL_Aus_shp, 3577)
+Aus_plant_mcp_sf_proj <- st_transform(Aus_plant_mcp_sf, 3577)
 RL_Aus_shp_IAS_proj <- st_transform(RL_Aus_shp_IAS, 3577)
+Aus_plant_mcp_sf_IAS_proj <- st_transform(Aus_plant_mcp_sf_IAS, 3577)
+
+#Breaking it up
+RL_Aus_shp_proj_1 <- RL_Aus_shp_proj[1:3823,]
+RL_Aus_shp_proj_2 <- RL_Aus_shp_proj[3824:7642,]
+RL_Aus_shp_proj_3 <- RL_Aus_shp_proj[7643:11470,]
+RL_Aus_shp_proj_4 <- RL_Aus_shp_proj[11471:15284,]
 
 #Intersection with coastal layer
-Aus_RL <- st_intersection(st_buffer(Aus_Coast_proj, dist = 0), st_buffer(RL_Aus_shp_proj, dist = 0))
+Aus_RL_1 <- st_intersection(st_buffer(Aus_Coast_proj, dist = 0), st_buffer(RL_Aus_shp_proj_1, dist = 0))
 Aus_RL_IAS <- st_intersection(st_buffer(Aus_Coast_proj, dist = 0), st_buffer(RL_Aus_shp_IAS_proj, dist = 0))
+Aus_RL_plants <- st_intersection(st_buffer(Aus_Coast_proj, dist = 0), st_buffer(Aus_plant_mcp_sf_proj, dist = 0))
 
 #Remove unnecessary files
 rm(RL_Aus_shp)

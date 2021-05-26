@@ -91,12 +91,10 @@ feature_rst <- function(shp, target_path, feature_name) {
     
     #The following is only required when working from virtual machine
     Sys.sleep(10)
-    if(is_empty(drop_acc()) == F){
+    
     drop_upload(file = file.path("SpatialData", "Input_zonation", target_path, paste0(i, ".tif")), 
                 path = file.path("PhD", "Thesis", "Data", "Chapter_3", "SpatialData", "Input_zonation", target_path))
-    } else if(is_empty(drop_acc()) == T) {
-      print("No dropbox account information identified")
-    }
+    
   })
 }
 
@@ -188,10 +186,34 @@ Threat_info <- function(urls, species, target_folder) {
 # Creating convex hulls (MCP or alphahull) for multiple species across multiple countries
 # Description of what I want/need: 
 #1. for each species, 
-#2. associate all points with a contiguous land mass
+#2. associate all points with a contiguous land mass (will need GADM file or my coastal layer)
 #3. create polygons for each contiguous land mass
 #4. join all polygons for a given species to create a multipolygon shapefile
 #5. join all species multipolygon shapefiles into one big shapefile
+# Look at the alphahull.R script I have which has code from somewhere to make alpha hulls
+
+#progress (incorporate alphahull.R script functions)
+
+#run other alphahull functions first, then call them in next function
+
+alpha_hulls <- function(df, species_column, Long_name, Lat_name) {
+  
+  scinames <- df[[species_names]]
+  scinames <- unique(scinames)
+  
+  res.out <- lapply(scinames[1:length(scinames)], function(i) {
+    
+    temp <- df[,species_column] == i
+    temp <- temp[!duplicated(paste(temp$Long, temp$Lat)), ]
+    temp <- temp[,c(Long_name, Lat_name)]
+    
+    ashape(x = temp,  alpha = 0.5) #I think here is where I add code from alphull script
+    
+  })
+  res.out <- do.call(rbind, res.out)
+  return(res.out)
+}
+
 
 #~#~# Function matches co-ordinates to polygons----
 #Notes: initial = original data frame, pre = name of new layer, Layer = shapefile to be matched
@@ -205,4 +227,8 @@ xy_match <- function(initial, pre, Layer) {
   final <- cbind(initial, over(pre, Layer))
   return(final)
 }
+
+# I will also want to calculate overlap of layers 
+# e.g. proportion of total range that is Australian
+# use st_intersection, followed by st_area (if there is an intersection)
   

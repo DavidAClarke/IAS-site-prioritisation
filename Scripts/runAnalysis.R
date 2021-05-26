@@ -3,7 +3,7 @@ drop_upload(file = file.path("Scripts", "runAnalysis.R"),
             path = file.path("PhD", "Thesis", "Data", "Chapter_3", "Scripts"))
 
 drop_download(path = file.path("PhD", "Thesis", "Data", "Chapter_3", "Scripts","runAnalysis.R"),
-              local_path = file.path("Scripts", "runAnalysis.R"))
+              local_path = file.path("Scripts", "runAnalysis.R"), overwrite = T)
 
 
 ################################ Main script for running the analyses #########################
@@ -12,12 +12,15 @@ drop_download(path = file.path("PhD", "Thesis", "Data", "Chapter_3", "Scripts","
 rm(list = ls())
 
 # Load required libraries
+library(rdrop2)
 library(tidyverse)
 library(readxl)
 library(rvest)
 library(purrr)
 library(sf)
+library(sp)
 library(tmap)
+library(maps)
 library(raster)
 library(gdalUtils)
 library(rgbif)
@@ -27,7 +30,7 @@ library(red)
 library(letsR)
 library(biomod2)
 library(zonator)
-library(rdrop2)
+library(adehabitatHR)
 
 # Load bespoke functions
 source("Scripts/Functions.R")
