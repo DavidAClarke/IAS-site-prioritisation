@@ -25,6 +25,7 @@ drop_download(path = file.path("PhD", "Thesis", "Data", "Chapter_3", "Scripts", 
 load(file.path("SpatialData","Vector", "lvl_1.RData"))
 lvl_1_sf <- st_as_sf(lvl_1)
 
+
 #Updated downloaded shapefiles. Do I combine them all? How do they differ?
 RL_shp_0 <- st_read("SpatialData/Vector/redlist_species_data_18052021/data_0.shp")
 RL_shp_1 <- st_read("SpatialData/Vector/redlist_species_data_18052021/data_1.shp")
@@ -39,7 +40,7 @@ st_write(RL_shp,
          driver = "ESRI Shapefile")
 
 #Load new combined shapefile
-RL_shp <- st_read("SpatialData/Vector/redlist_species_data_18052021/RL_shp.shp")
+RL_shp <- st_read(file.path("SpatialData","Vector","redlist_species_data_18052021","RL_shp.shp"))
 
 #Load plant point data
 RL_plants <- read.csv(file.path("SpatialData", "Vector", "redlist_species_data_plantpoints", "points_data.csv"))
@@ -49,9 +50,19 @@ RL_plants <- RL_plants %>%
   rename(Long = "longitude") %>%
   rename(Lat = "latitude") %>%
   rename(scientificName = "binomial")
-#maybe on this line do xy_match. Then remove any NA points e.g. the very first one.
+#maybe on this line do xy_match. Then remove any NA points e.g. the very first 
+points_countries <- xy_match(RL_plants, RL_plants_new, lvl_1)
 RL_plants <- subset(RL_plants, with(RL_plants, unsplit(table(scientificName), scientificName)) >= 5)
 RL_plants_Aus <- RL_plants %>% filter(Country == "Australia" | Country == "Australia:Tasmania")
+
+###########################################################################################
+# #For potential Red List paper
+# RL_plants_Aus <- filter(RL_plants, grepl("^Australia", Country))
+# Aus_species <- unique(RL_plants_Aus$scientificName)
+# #Removing species that have no Australian distribution
+# Aus_RL_species <- RL_plants %>% filter(scientificName %in% Aus_species)
+##############################################################################################
+
 RL_plants_Aus <- subset(RL_plants_Aus, with(RL_plants_Aus, unsplit(table(scientificName), scientificName)) >= 5)
 RL_plants_points <- RL_plants %>%
   dplyr::select("Long", "Lat")
@@ -93,6 +104,15 @@ RL_info <- RL_Aus_assess %>%
                                   labels = c("DD", "LC", "NT", "VU", "EN", "CR", "EX")))
 rm(RL_Aus_assess, RL_Aus_taxon, RL_Aus_threats)
 
+#Taxonomic harmonization
+species_names <- unique(RL_info$scientificName)
+species_names_head <- head(species_names)
+TaxInfo <- get_gbif_taxonomy(species_names_head)
+#the add an "acceptedName" column to RL_info, 
+#remove existing "scientificName", 
+#rename "acceptedName" as "scientificName"
+
+
 #Summary information for Red List categories
 RL_assess_sum <- RL_info %>%
   distinct(scientificName = scientificName, .keep_all = T) %>%
@@ -119,6 +139,10 @@ Aus_plant_mcp_sf_IAS <- Aus_plant_mcp_sf %>% filter(code == "8.1.1" | code == "8
 
 #Might be good to overlay this with something like GADM to get country information
 #That would be necessary to calculate proportion of Australia to overall range
+
+RL_shp_1_area <- calc_area(RL_shp_1, "BINOMIAL", lvl_1_sf)
+write.csv(RL_shp_1_area, file.path("SpeciesData", "RangeProportions.csv"))
+
 #Combining spatial and ancillary information 
 RL_shp <- RL_shp %>%
   dplyr::select(BINOMIAL, PRESENCE, ORIGIN, SEASONAL, LEGEND) %>%

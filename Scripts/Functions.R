@@ -1,10 +1,3 @@
-############################# Uploading and downloading scripts to dropbox #####################
-drop_upload(file = file.path("Scripts", "Functions.R"), 
-            path = file.path("PhD", "Thesis", "Data", "Chapter_3", "Scripts"))
-
-drop_download(path = file.path("PhD", "Thesis", "Data", "Chapter_3", "Scripts", "Functions.R"),
-              local_path = file.path("Scripts", "Functions.R"), overwrite = T)
-
 #~#~# Function loads / installing packages required libraries----
 loadLibrary <- function(packageList){
   
@@ -27,13 +20,56 @@ Get_gbif_Occ <- function(sppList) {
   res.out <- lapply(sppList[1:length(sppList)], function(i) {
     
     print(i)
-    OccS <- occ_data(scientificName = i, hasCoordinate = T, hasGeospatialIssue = F, limit = 200000)
-    OccS <- as_tibble(OccS$data)
-    OccS <- OccS %>% dplyr::select(scientificName, decimalLatitude, decimalLongitude,coordinateUncertaintyInMeters,geodeticDatum,basisOfRecord, country)
+    
+    # Getting GBIF entries with this name: 
+    all_occ <- name_backbone(i)
+    
+    # Getting the species key, unique for the species and its synonimous:
+    key_no <- all_occ$speciesKey
+    
+    # Get the number of occurrences in gbif:
+    num_occ <- occ_count(taxonKey=key_no, georeferenced=TRUE)
+    
+    if (num_occ<=200000) {
+      # Search for GBIF occurrences according to 'key_no'
+      OccS <- occ_data(taxonKey = key_no,
+                       country = "AU",
+                       hasCoordinate = T, 
+                       hasGeospatialIssue = F, 
+                       limit = num_occ)
+      if(is_empty(OccS[["data"]]) == FALSE) {
+      OccS <- as_tibble(OccS$data)
+      OccS <- OccS %>% 
+        dplyr::filter(basisOfRecord == "HUMAN_OBSERVATION" | 
+                      basisOfRecord == "MACHINE_OBSERVATION" |
+                      basisOfRecord == "OBSERVATION" ) %>%
+        dplyr::select(scientificName,
+                      species,
+                      decimalLatitude, 
+                      decimalLongitude,
+                      coordinateUncertaintyInMeters,
+                      geodeticDatum,
+                      basisOfRecord, 
+                      country)
+      } else {NULL}
+    } #else {next}
+    
   })
   res.out <- do.call(rbind,res.out)
   
   return(res.out)
+}
+
+#~#~# Function converting NA to factor level----
+NA2fctlvl <- function(df) {
+  
+  for(j in 1:ncol(df)) {
+    
+    levels(df[[j]]) <- c(levels(df[[j]]),"NA")
+    df[[j]][is.na(df[[j]])] <- "NA"
+    
+  }
+  return(df)
 }
 
 #Getting higher level taxonomic information
@@ -57,10 +93,8 @@ GetTax <- function(sppList) {
 #Creating rasters for features (in progress)
 feature_rst <- function(shp, target_path, feature_name) { 
   
-  shp[[feature_name]] <- gsub(" | /", "_", shp[[feature_name]])
   featureList <- shp[[feature_name]]
-  featureList <- unique(featureList)
-  
+  featureList <- unique(featureList) 
   
   #dir.create(file.path("SpatialData", "Input_zonation", target_path))
   
@@ -69,8 +103,8 @@ feature_rst <- function(shp, target_path, feature_name) {
     print(i)
     
     #sci_name <- shp %>% filter(scientificName) == i
-    temp <- shp[,feature_name] == i
-    temp_num <- as.numeric(paste0(which(temp[, feature_name] == T)))
+    temp <- shp[,col_name] == i
+    temp_num <- as.numeric(paste0(which(temp[, col_name] == T)))
     sci_name <- shp[temp_num,]
     
     new_bb <- c(-1863742, -4840841, 2088051, -1168811) #double check these numbers. Really should be the same as ext when creating raster
@@ -87,14 +121,10 @@ feature_rst <- function(shp, target_path, feature_name) {
     
     rst_sci_name <- rasterize(st_zm(sci_name), rst_template, field = 1)
     
-    writeRaster(rst_sci_name, filename = file.path("SpatialData", "Input_zonation", target_path, paste0(i,".tif")), format = "GTiff", overwrite = T)
+    writeRaster(rst_sci_name, filename = file.path("SpatialData", "Input_zonation", target_path, paste0(i,".tif")), format = "GTiff")
     
-    #The following is only required when working from virtual machine
-    Sys.sleep(10)
-    
-    drop_upload(file = file.path("SpatialData", "Input_zonation", target_path, paste0(i, ".tif")), 
-                path = file.path("PhD", "Thesis", "Data", "Chapter_3", "SpatialData", "Input_zonation", target_path))
-    
+    #drop_upload(file = file.path("SpatialData", "Input_zonation", target_path, paste0(i, ".tif")), 
+    #            path = file.path("PhD", "Thesis", "Data", "Chapter 3", "SpatialData", "Input_zonation", target_path))
   })
 }
 
@@ -114,13 +144,10 @@ Threat_present <- function(urls,species,target_path) {
     print(i)
     
     #Avoiding a HTTP error 429 (too many requests)
-    Sys.sleep(15)
+    Sys.sleep(10)
     
-    options(timeout = 200)
-    download.file(i, 
-                  destfile = file.path("Data", target_path, paste0(which(urls == i, arr.ind = T), "_scrapedpage.html")),
-                  quiet = T 
-                  )
+    
+    download.file(i, destfile = file.path("Data", target_path, paste0(which(urls == i, arr.ind = T), "_scrapedpage.html")), quiet = T)
     spec_sprat <- read_html(file.path("Data", target_path, paste0(which(urls == i, arr.ind = T), "_scrapedpage.html")))
     
     
@@ -149,27 +176,17 @@ Threat_present <- function(urls,species,target_path) {
 #Then keyword search on this result i.e. on the whole web page
 #Do I save each result to a text file, that I then read in and keyword search later?
 
-Threat_info <- function(urls, species, target_folder) {
+Threat_info <- function(urls,species) {
   
-  scientificName <- as.vector(species)
+  scientificNames <- as.vector(species)
   ThreatInfo <- vector(mode = "character", length = length(urls))
-  
-  dir.create(file.path("Data", target_folder))
   
   res.out <- lapply(urls[1:length(urls)], function(i = urls) {  
     
-    print(i)
-    
     Sys.sleep(10)
     
-    #It helps to have chrome as the default browser
-    options(timeout = 300)
-    download.file(i, 
-                  destfile = file.path("Data", target_folder, paste0(which(urls == i, arr.ind = T), "_scrapedpage.html")), 
-                  quiet = T,
-                  extra = options(download.file.method = "libcurl")
-                  )
-    spec_sprat <- read_html(file.path("Data", target_folder, paste0(which(urls == i, arr.ind = T), "_scrapedpage.html")))
+    download.file(i, destfile = file.path("Data", "rnd2_websites", paste0(which(urls == i, arr.ind = T), "_scrapedpage.html")), quiet = T)
+    spec_sprat <- read_html(file.path("Data", "rnd2_websites", paste0(which(urls == i, arr.ind = T), "_scrapedpage.html")))
     
     ThreatInfo <- spec_sprat %>%
            html_element("#bodyContent") %>%
@@ -177,47 +194,43 @@ Threat_info <- function(urls, species, target_folder) {
     })
   
   res.out <- do.call(rbind,res.out)
-  res.out <- data.frame(scientificName = scientificName, 
+  res.out <- data.frame(scientificNames = scientificNames, 
                         ThreatInfo = res.out)
   return(as_tibble(res.out))
 }
 
+#Calculating proportion of total range that is in Australia
+#Would use this after filtering out species that have no Australian range 
 
-# Creating convex hulls (MCP or alphahull) for multiple species across multiple countries
-# Description of what I want/need: 
-#1. for each species, 
-#2. associate all points with a contiguous land mass (will need GADM file or my coastal layer)
-#3. create polygons for each contiguous land mass
-#4. join all polygons for a given species to create a multipolygon shapefile
-#5. join all species multipolygon shapefiles into one big shapefile
-# Look at the alphahull.R script I have which has code from somewhere to make alpha hulls
-
-#progress (incorporate alphahull.R script functions)
-
-#run other alphahull functions first, then call them in next function
-
-alpha_hulls <- function(df, species_column, Long_name, Lat_name) {
+calc_area <- function(feature_shp, feature_name, country_shp) {
   
-  scinames <- df[[species_names]]
-  scinames <- unique(scinames)
+  feature_list <- feature_shp[[feature_name]]
+  feature_list <- unique(feature_list)
   
-  res.out <- lapply(scinames[1:length(scinames)], function(i) {
-    
-    temp <- df[,species_column] == i
-    temp <- temp[!duplicated(paste(temp$Long, temp$Lat)), ]
-    temp <- temp[,c(Long_name, Lat_name)]
-    
-    ashape(x = temp,  alpha = 0.5) #I think here is where I add code from alphull script
-    
+  res.out <- lapply(feature_list[1:length(feature_list)], function(i) {
+  
+    print(i)
+  
+    spec <- feature_shp %>% filter(BINOMIAL == i)
+    spec_dist <- st_intersection(st_buffer(country_shp, dist = 0), st_buffer(spec, dist = 0))
+    spec_area <- spec_dist %>% 
+      mutate(Area = st_area(spec_dist)) %>%
+      st_drop_geometry()
+    spec_area <- spec_area %>%
+      group_by(BINOMIAL, NAME_0) %>%
+      summarise(Country_area = sum(Area)) %>%
+      mutate(Perc_Total = Country_area/sum(Country_area)*100) %>%
+      rename(scientificName = "BINOMIAL") 
   })
-  res.out <- do.call(rbind, res.out)
-  return(res.out)
+
+  res.out <- do.call(rbind,res.out)
+  return(as_tibble(res.out))
 }
 
-
 #~#~# Function matches co-ordinates to polygons----
-#Notes: initial = original data frame, pre = name of new layer, Layer = shapefile to be matched
-#TRY TO UPDATE THIS e.g using sf instead of sp
+#Notes: initial = original data frame, pre = altered version of initial with new name, Layer = shapefile to be matched
+
+
 xy_match <- function(initial, pre, Layer) {
   pre <- initial
   
@@ -227,8 +240,3 @@ xy_match <- function(initial, pre, Layer) {
   final <- cbind(initial, over(pre, Layer))
   return(final)
 }
-
-# I will also want to calculate overlap of layers 
-# e.g. proportion of total range that is Australian
-# use st_intersection, followed by st_area (if there is an intersection)
-  
