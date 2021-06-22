@@ -14,10 +14,10 @@ drop_download(path = file.path("PhD", "Thesis", "Data", "Chapter_3", "Scripts", 
 # 
 # # Download each file
 # lapply(RL_files[1:length(RL_files)], function(i) {
-#   
+# 
 #   drop_download(path = file.path("PhD", "Thesis", "Data", "Chapter_3", "SpatialData", "Vector", "redlist_species_data_18052021", i),
-#                 local_path = file.path("SpatialData", "Vector", "redlist_species_data_18052021", i))
-#   
+#                 local_path = file.path("SpatialData", "Vector", "redlist_species_data_18052021", i), overwrite = T)
+# 
 # })
 
 #Load spatial data
@@ -33,14 +33,18 @@ RL_shp_2 <- st_read("SpatialData/Vector/redlist_species_data_18052021/data_2.shp
 RL_shp <- rbind(RL_shp_0,RL_shp_1,RL_shp_2)
 rm(RL_shp_0,RL_shp_1,RL_shp_2)
 
-#Save new combined shapefile
-st_write(RL_shp, 
-         dsn = file.path("SpatialData", "Vector", "redlist_species_data_18052021"),
-         layer = "RL_shp.shp",
-         driver = "ESRI Shapefile")
+#Calculate area and proportion of total area for each species x country combination
+#lvl_1_sf_moll <- st_transform(lvl_1_sf, crs = "+proj=moll") #Mollweide projection
+#RL_shp_moll <- st_transform(RL_shp, crs = "+proj=moll") #Mollweide projection
+#RL_shp_area <- calc_area(RL_shp_moll, "BINOMIAL", lvl_1_sf_moll) #need to edit function to remove RL_shp_moll from function
+#write.csv(RL_shp_area, file.path("SpeciesData", "RangeProportions.csv"))
 
-#Load new combined shapefile
-RL_shp <- st_read(file.path("SpatialData","Vector","redlist_species_data_18052021","RL_shp.shp"))
+#Which species have Australian ranges?
+Ranges <- read.csv(file.path("SpeciesData", "RangeProportions.csv"))
+Ranges_Aus <- Ranges %>% filter(NAME_0 == "Australia")
+speciesNamesRange <- unique(Ranges_Aus$scientificName)
+RL_shp_Aus <- RL_shp %>% filter(BINOMIAL %in% speciesNamesRange)
+length(unique(RL_shp_Aus$BINOMIAL))
 
 #Load plant point data
 RL_plants <- read.csv(file.path("SpatialData", "Vector", "redlist_species_data_plantpoints", "points_data.csv"))
@@ -50,10 +54,11 @@ RL_plants <- RL_plants %>%
   rename(Long = "longitude") %>%
   rename(Lat = "latitude") %>%
   rename(scientificName = "binomial")
-#maybe on this line do xy_match. Then remove any NA points e.g. the very first 
-points_countries <- xy_match(RL_plants, RL_plants_new, lvl_1)
-RL_plants <- subset(RL_plants, with(RL_plants, unsplit(table(scientificName), scientificName)) >= 5)
-RL_plants_Aus <- RL_plants %>% filter(Country == "Australia" | Country == "Australia:Tasmania")
+RL_plants <- xy_match(RL_plants, RL_plants_new, lvl_1)
+RL_plants <- RL_plants %>% drop_na(NAME_0) %>% filter(NAME_0 == "Australia")
+length(unique(RL_plants$scientificName))
+#RL_plants <- subset(RL_plants, with(RL_plants, unsplit(table(scientificName), scientificName)) >= 5)
+#RL_plants_Aus <- RL_plants %>% filter(Country == "Australia" | Country == "Australia:Tasmania")
 
 ###########################################################################################
 # #For potential Red List paper
@@ -104,14 +109,131 @@ RL_info <- RL_Aus_assess %>%
                                   labels = c("DD", "LC", "NT", "VU", "EN", "CR", "EX")))
 rm(RL_Aus_assess, RL_Aus_taxon, RL_Aus_threats)
 
-#Taxonomic harmonization
-species_names <- unique(RL_info$scientificName)
-species_names_head <- head(species_names)
-TaxInfo <- get_gbif_taxonomy(species_names_head)
-#the add an "acceptedName" column to RL_info, 
-#remove existing "scientificName", 
-#rename "acceptedName" as "scientificName"
+############################################ Taxonomic harmonization #####################################
+##Shapefile
+# species_names <- unique(RL_shp_Aus$BINOMIAL)
+# TaxInfo <- traitdataform::get_gbif_taxonomy(species_names) #function from traitdataform package
+# write.csv(TaxInfo, file = file.path("SpeciesData", "TaxInfo_shp.csv"))
+TaxInfo <- read.csv(file.path("SpeciesData", "TaxInfo.csv"))
+TaxInfo <- as_tibble(TaxInfo)
+TaxInfo_names <- TaxInfo %>% 
+  distinct(verbatimScientificName = verbatimScientificName, .keep_all = T) %>%
+  rename(acceptedName = "scientificName") %>%
+  rename(BINOMIAL = "verbatimScientificName") %>%
+  dplyr::select(BINOMIAL, acceptedName)
+RL_shp_Aus <- RL_shp_Aus %>%
+  left_join(TaxInfo_names, by = "BINOMIAL")
 
+#Which species have unresolved taxonomies?
+which(is.na(RL_shp_Aus$acceptedName == TRUE))
+RL_shp_Aus[57,16] <- "Onthophagus froggattellus" #Onthophagus bicornis
+RL_shp_Aus[879,16] <- "Paspalum sumatrense" #Paspalum longifolium
+RL_shp_Aus[3686,16] <- "Austrelaps ramsayi" #Austrelaps superbus
+RL_shp_Aus[3744,16] <- "Gehyra montium" #Gehyra punctata
+RL_shp_Aus[4047,16] <- "Eremiascincus phantasmus" #Eremiascincus fasciolatus
+RL_shp_Aus[c(6932,6933),16] <- "Chelon planiceps" #Planiliza planiceps
+RL_shp_Aus[c(6970,6971),16] <- "Ozimops planiceps"
+RL_shp_Aus <- RL_shp_Aus %>% drop_na(acceptedName) #removing unresolved names
+length(unique(RL_shp_Aus$acceptedName))
+RL_Aus_Range <- st_drop_geometry(RL_shp_Aus)
+write.csv(RL_Aus_Range, file = file.path("SpeciesData", "RL_Aus_Range.csv"))
+
+##Assessment information
+#species_names_assess <- unique(RL_info$scientificName)
+# TaxInfo_assess <- traitdataform::get_gbif_taxonomy(species_names_assess)
+# TaxInfo_assess <- as_tibble(TaxInfo_assess)
+# TaxInfo_assess_names <- TaxInfo_assess %>% 
+#   rename(acceptedName = "scientificName") %>%
+#   rename(scientificName = "verbatimScientificName") %>%
+#   dplyr::select(scientificName, acceptedName)
+#write.csv(TaxInfo_assess_names, file = file.path("SpeciesData", "TaxInfo_assess_names.csv"))
+# TaxInfo_assess_names <- read.csv(file.path("SpeciesData", "TaxInfo_assess_names.csv"))
+# RL_info <- RL_info %>%
+#   left_join(TaxInfo_assess_names, by = "scientificName")
+
+##Red List plants
+species_names_plants <- unique(RL_plants$scientificName)
+TaxInfo_plants <- traitdataform::get_gbif_taxonomy(species_names_plants)
+TaxInfo_plants <- as_tibble(TaxInfo_plants)
+TaxInfo_plants_names <- TaxInfo_plants %>% 
+ rename(acceptedName = "scientificName") %>%
+ rename(scientificName = "verbatimScientificName") %>%
+ dplyr::select(scientificName, acceptedName)
+write.csv(TaxInfo_plants_names, file = file.path("SpeciesData", "TaxInfo_plants_names.csv"))
+TaxInfo_plants_names <- read.csv(file.path("SpeciesData", "TaxInfo_plants_names.csv"))
+RL_plants <- RL_plants %>% 
+  left_join(TaxInfo_plants_names, by = "scientificName")
+write.csv(RL_plants, file = file.path("SpeciesData", "RL_plants_points.csv"))
+
+#Which species have unresolved taxonomies?
+which(is.na(RL_plants$acceptedName == TRUE))
+
+
+#also, jusdt noticed that Sus scrofa (feral pig?) is in the shapefile
+#maybe run the species list against a list of known introduced species in Australia
+#GRIIS? Is there a "comprehensive" list of introduced species in Australia?
+
+
+############################### Downloading GBIF data (rgibf and Taxize) #####################################
+#Also look at ALA#
+#GBIF credentials (remove credentials when publishing scripts)
+user <- "davidclarke" 
+pwd <- "!8208GBIF153"
+email <- "david.clarke1@monash.edu"
+
+#Use names from both RL_shp_Aus and RL_plants (all species that have Australian ranges)
+speciesNames <- unique(c(RL_shp_Aus$acceptedName, RL_plants$acceptedName)) #6275 species
+
+#Match the names
+gbif_taxon_keys <- speciesNames %>% 
+  taxize::get_gbifid_(method = "backbone") %>%
+  imap(~ .x %>% mutate(original_sciname = .y)) %>%
+  bind_rows() %T>%
+  write.csv(file = file.path("SpeciesData", "all_matches.csv")) %>% #can then examine the data
+  filter(matchtype == "EXACT" & status == "ACCEPTED") %>%
+  pull(usagekey)
+matches <- read.csv(file.path("SpeciesData", "all_matches.csv"))
+setdiff(speciesNames, matches$canonicalname) #matches (threfore GBIF) doesn't contain "Ozimops planiceps". 
+
+
+#Getting number of GBIF occurrences
+gbif_counts <- function(keys) {
+  res.out <- lapply(keys[1:length(keys)], function(i) {
+       occs <- occ_count(taxonKey = i, georeferenced = T, country = "AU")
+       usagekey <- i
+       info <- cbind(usagekey, occs)
+   })
+  res.out <- do.call(rbind, res.out)
+
+return(data.frame(res.out))
+}
+
+counts <- gbif_counts(gbif_taxon_keys)
+matches <- left_join(matches, counts, by = "usagekey")
+matches <- matches %>% distinct(original_sciname = original_sciname, .keep_all = T)
+matches[5073,27] <- 0 # row for "Ozimops planiceps"
+write.csv(matches, file = file.path("SpeciesData", "all_matches.csv"))
+
+#Request download
+res <- occ_download(
+  pred_in("taxonKey", gbif_taxon_keys),
+  pred_in("basisOfRecord", c('HUMAN_OBSERVATION','OBSERVATION','MACHINE_OBSERVATION')),
+  pred("country", "AU"),
+  pred("hasCoordinate", TRUE),
+  pred("hasGeospatialIssue", FALSE),
+  format = "SIMPLE_CSV",
+  user=user,pwd=pwd,email=email)
+occ_download_meta(res) #check the download status
+
+#0299151-200613084148143 - this is the link for my download
+#The following first downloads to machine and then imports into R
+#occ_download_get("0299151-200613084148143") %>% occ_download_import()
+#maybe assign to object e.g.
+#dat <- occ_download_get("0299151-200613084148143", path = file.path("SpatialData", "Vector")) %>% 
+#occ_download_import(fill = FALSE, quote = "", na.strings = c("", NA))
+#The fill = FALSE and quote = "" are in anticipation of errors
+#Then only select the most relevant columns
+#I may issues as it is a BIG file (use VM)
 
 #Summary information for Red List categories
 RL_assess_sum <- RL_info %>%
@@ -137,11 +259,7 @@ Aus_plant_mcp_sf <- st_as_sf(Aus_plant_mcp_sf)
 st_crs(Aus_plant_mcp_sf) <- st_crs(Aus_Coast)
 Aus_plant_mcp_sf_IAS <- Aus_plant_mcp_sf %>% filter(code == "8.1.1" | code == "8.1.2" | code == "8.2.2")
 
-#Might be good to overlay this with something like GADM to get country information
-#That would be necessary to calculate proportion of Australia to overall range
 
-RL_shp_1_area <- calc_area(RL_shp_1, "BINOMIAL", lvl_1_sf)
-write.csv(RL_shp_1_area, file.path("SpeciesData", "RangeProportions.csv"))
 
 #Combining spatial and ancillary information 
 RL_shp <- RL_shp %>%

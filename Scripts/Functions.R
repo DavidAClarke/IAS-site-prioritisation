@@ -1,3 +1,11 @@
+############################# Uploading and downloading scripts to dropbox #####################
+drop_upload(file = file.path("Scripts", "Functions.R"), 
+            path = file.path("PhD", "Thesis", "Data", "Chapter_3", "Scripts"))
+
+drop_download(path = file.path("PhD", "Thesis", "Data", "Chapter_3", "Scripts", "Functions.R"),
+              local_path = file.path("Scripts", "Functions.R"), overwrite = T)
+
+###################################################################################################
 #~#~# Function loads / installing packages required libraries----
 loadLibrary <- function(packageList){
   
