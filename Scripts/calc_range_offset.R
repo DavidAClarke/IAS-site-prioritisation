@@ -8,7 +8,7 @@ drop_download(path = file.path("PhD", "Thesis", "Data", "Chapter_3", "Scripts", 
                               # Creating bias file (with bossMaps) #
                                               # TEST #
 #selecting species
-Ap <- RL_Aus_shp %>% filter(BINOMIAL == "Acanthiza pusilla")
+Ap <- RL_shp_Aus %>% filter(BINOMIAL == "Acanthiza pusilla")
 
 #convert to sp
 Ap_sp <- as(Ap, Class = "Spatial")
@@ -41,23 +41,47 @@ Aus_elev_Ap <- crop(Aus_elev, extent(Ap_sp))
 # writeRaster(Aus_bio, filename = file.path("SpatialData", "Raster", "Worldclim", "Aus_bio.grd"), bandorder = "BIL", overwrite = T)
 Aus_bio <- stack(file.path("SpatialData", "Raster", "Worldclim", "Aus_bio.gri"))
 
+#crop wordclim to range map
+Aus_bio_Ap <- crop(Aus_bio, extent(Ap_sp))
+
 #Calculate distance-to-range
 #range and domain need to be the same extent (thus same projection)
+start_time <- Sys.time()
 rdist <- rangeDist(
               range = Ap_sp,
-              domain = Aus_elev_Ap,
+              domain = Aus_bio_Ap,
               domainkm = 1000,
               mask = F,
-              fact = 2
+              fact = 4
               )
+end_time <- Sys.time()
+end_time - start_time
+
+#load rdist
+load(file.path("SpatialData", "Raster", "rangeDist", "Ap_rdist.RData"))
 
 #Crop "environmental data" to this new domain
-elev_domain = crop(Aus_elev_Ap, rdist)
+Aus_bio_domain <- crop(Aus_bio, rdist)
 
 # Mask pixels with no environmenta data (over ocean, etc.)
-rdist <- mask(rdist, elev_domain)
+rdist <- mask(rdist, Aus_bio_domain[[1]])
 names(rdist) <- "rangeDist"
 
 #Evaluate curves
 rates <- checkRates(rdist, skew = 0.2)
-rates_posdif <- rates %>% filter(pdif >0 & prob >= 0.5) #row 15 here looks good?
+
+#Calculate frequency table of distances
+dists <- freq(rdist, useNA = "no", digits = 2)
+
+#Create offset
+expert <- rangeOffset(
+  rdist,
+  parms = c(rate = 0.215, skew = 0.2, shift = 0, prob = 0.8), #need to decide on parameter values
+  dists = dists,
+  doNormalize = T,
+  verbose = T,
+  doWriteRaster = T,
+  filename = file.path("SpatialData", "Raster", "Ap_offset.tif"), #in a loop will use e.g. paste0(i, "_offset.tif")
+  overwrite = T,
+  datatype = "FLT4S"
+)
