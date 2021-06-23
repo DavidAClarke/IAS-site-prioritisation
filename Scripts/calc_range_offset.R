@@ -3,10 +3,13 @@ drop_upload(file = file.path("Scripts", "calc_range_offset.R"),
             path = file.path("PhD", "Thesis", "Data", "Chapter_3", "Scripts"))
 
 drop_download(path = file.path("PhD", "Thesis", "Data", "Chapter_3", "Scripts", "calc_range_offset.R"),
-              local_path = file.path("Scripts", "calc_range_offset"), overwrite = T)
+              local_path = file.path("Scripts", "calc_range_offset.R"), overwrite = T)
 ##################################################################################################
                               # Creating bias file (with bossMaps) #
                                               # TEST #
+#Could potentially alter Pin for each species based off information from cleaned occurrence records
+#Could join the prop_within to shapefile
+
 #selecting species
 Ap <- RL_shp_Aus %>% filter(BINOMIAL == "Acanthiza pusilla")
 
