@@ -212,7 +212,8 @@ counts <- gbif_counts(gbif_taxon_keys)
 matches <- left_join(matches, counts, by = "usagekey")
 matches <- matches %>% distinct(original_sciname = original_sciname, .keep_all = T)
 matches[5073,27] <- 0 # row for "Ozimops planiceps"
-write.csv(matches, file = file.path("SpeciesData", "all_matches.csv"))
+#write.csv(matches, file = file.path("SpeciesData", "all_matches.csv"))
+matches <- read.csv(file.path("SpeciesData", "all_matches.csv"))
 
 #Request download
 res <- occ_download(
@@ -234,6 +235,18 @@ occ_download_meta(res) #check the download status
 #The fill = FALSE and quote = "" are in anticipation of errors
 #Then only select the most relevant columns
 #I may issues as it is a BIG file (use VM)
+
+#Importing GBIF data
+#first get column names
+my_cols <- fread(file.path("SpatialData", "Vector", "SpeciesOccurrences", "GBIF", "0299151-200613084148143.csv"), nrows = 0)
+my_cols_min <- c("taxonKey","family","species", "taxonRank","scientificName","decimalLongitude","decimalLatitude","countryCode","stateProvince",
+             "coordinateUncertaintyInMeters", "coordinatePrecision","basisOfRecord","year", "individualCount", "institutionCode")
+dataDir <- path.expand("~/Chapter_3/Chapter_3/SpatialData/Vector/SpeciesOccurrences/GBIF")
+dataFiles <- dir(dataDir, pattern = "csv$", full.names = T)
+gbif_occs <- fread(cmd = paste("grep", "Acanthiza.pusilla",dataFiles), col.names = names(my_cols)) #works!
+gbif_occs_min <- gbif_occs %>% dplyr::select(my_cols_min)
+#write.csv(gbif_occs_min, file = file.path("SpatialData", "Vector","SpeciesOccurrences", "GBIF", "gbif_occs_min.csv"))
+Ap_gbif_occs <- read.csv(file.path("SpatialData", "Vector","SpeciesOccurrences", "GBIF", "gbif_occs_min.csv"))
 
 #Summary information for Red List categories
 RL_assess_sum <- RL_info %>%
