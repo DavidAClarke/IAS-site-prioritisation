@@ -18,7 +18,78 @@ drop_download(path = file.path("PhD", "Thesis", "Data", "Chapter_3", "Scripts", 
 #2. sp
 #3. countrycode
 #4. tidyverse
+#5. data.table
 
+#Species list
+speciesNames <- read.csv(file.path("SpeciesData", "all_accepted_names.csv"))
+speciesNames <- speciesNames$x
+
+#Path
+path <- paste0(getwd(), "/", file.path("SpatialData", "Vector", "SpeciesOccurrences", "GBIF", "0310609-200613084148143.csv"))
+
+#Import data (turn into function)
+data_import_n_clean <- function(sppList, path) {
+  
+  sppList <- gsub(" ", ".", sppList)
+  
+  my_cols <- fread(cmd = paste("head -n 1", path))
+  
+  my_cols_min <- c("family","species", "taxonRank","scientificName","decimalLongitude","decimalLatitude","countryCode","stateProvince", "coordinateUncertaintyInMeters", "coordinatePrecision","basisOfRecord","year", "individualCount", "institutionCode")
+  
+  res.out <- lapply(sppList[1:length(sppList)], function(i){
+    
+    print(i)
+    
+    tryCatch({
+      gbif_occs <- fread(cmd = paste("grep", i ,path), col.names = names(my_cols), quote = "", na.strings = c("",NA))
+      if(is_empty(gbif_occs)) stop("No occurrence records")
+      gbif_occs <- gbif_occs %>% dplyr::select(my_cols_min)
+      
+      #think its here where I include cleaning stuff
+      
+      # remove records without coordinates
+      gbif_occs <- gbif_occs %>%
+        filter(!is.na(decimalLongitude)) %>%
+        filter(!is.na(decimalLatitude))
+      
+      #convert country code from ISO2c to ISO3c
+      gbif_occs$countryCode <-  countrycode(gbif_occs$countryCode, origin =  'iso2c', destination = 'iso3c')
+      
+      #flag problems
+      flags <- clean_coordinates(x = gbif_occs,
+                                 lon = "decimalLongitude",
+                                 lat = "decimalLatitude",
+                                 countries = "countryCode",
+                                 species = "species",
+                                 tests = c("centroids", "equal","gbif", "institutions",
+                                           "zeros", "duplicates"))
+      
+      #Exclude problematic records
+      gbif_occs_cl <- gbif_occs[flags$.summary,]
+      
+      #The flagged records
+      gbif_occs_fl <- gbif_occs[!flags$.summary,]
+      
+      #Excluding records with more than 500m uncertainty
+      gbif_occs_cl <- gbif_occs_cl %>%
+        filter(coordinateUncertaintyInMeters <= 500 | is.na(coordinateUncertaintyInMeters))
+      
+      #write csv of cleaned records
+      write.csv(gbif_occs_cl, file = file.path("SpatialData", "Vector", "SpeciesOccurrences", "GBIF", "Cleaned", paste0(i,"_cl.csv")))
+      
+      #write csv of flagged records
+      write.csv(gbif_occs_fl, file = file.path("SpatialData", "Vector", "SpeciesOccurrences", "GBIF", "Flagged", paste0(i,"_fl.csv")))
+      
+    }, error = function(e) {cat("ERROR :", conditionMessage(e), "\n")})
+    
+  })
+  
+  #res.out <- do.call(rbind, res.out)
+  #return(res.out)
+}
+
+
+############################################################################################################
 # remove records without coordinates
 Ap_gbif_occs <- Ap_gbif_occs %>%
   filter(!is.na(decimalLongitude)) %>%
@@ -72,6 +143,6 @@ prop_within <- nrow(within_range)/nrow(Ap_gbif_occs_cl)
 
 #[For function?] create data frame with information
 #example
-Ap_info <- data.frame(c(scientificName = "Acanthiza pusilla", 
-                        occs_in_range = nrow(within_range),
-                        prop_in_range = prop_within)) 
+Ap_info <- data.frame(scientificName = "Acanthiza pusilla", 
+                      occs_in_range = nrow(within_range),
+                      prop_in_range = prop_within)
