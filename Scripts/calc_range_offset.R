@@ -18,7 +18,7 @@ Ap_sp <- as(Ap, Class = "Spatial")
 
 #elevation raster
 #getData("alt", country = "AUS", mask = T, path = file.path("SpatialData", "Raster", "Elevation"))
-Aus_elev <- raster(file.path("SpatialData", "Raster", "Elevation", "Aus_msk_alt.gri")) 
+Aus_elev <- raster(file.path("SpatialData", "Raster", "Elevation", "Aus_msk_alt.gri"))
 #resolution is in degrees. 0.008333333 degrees = 0.5 arc min ~ 1km
 Aus_elev <- mask(Aus_elev, Aus_Coast)
 Aus_elev <- crop(Aus_elev, Aus_Coast)
@@ -79,7 +79,7 @@ dists <- freq(rdist, useNA = "no", digits = 2)
 #Create offset
 expert <- rangeOffset(
   rdist,
-  parms = c(rate = 0.215, skew = 0.2, shift = 0, prob = 0.8), #need to decide on parameter values
+  parms = c(rate = 0.215, skew = 0.2, shift = 0, prob = 0.9), #need to decide on parameter values. If 0.9, rate should be higher
   dists = dists,
   doNormalize = T,
   verbose = T,
@@ -88,3 +88,7 @@ expert <- rangeOffset(
   overwrite = T,
   datatype = "FLT4S"
 )
+
+#Can extend offset raster using extend(). Prob needed for zonation.
+#example
+expert <- extend(expert, Aus_Coast)
