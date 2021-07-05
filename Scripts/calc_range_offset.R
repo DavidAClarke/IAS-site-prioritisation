@@ -17,7 +17,7 @@ lapply(speciesNames[1:length(speciesNames)], function(i) {
 
   #Domain
   #environmental data
-  Env <- Aus_elev
+  Env <- Aus_elev #will be combination of climate and elevation
   Env_Range <- crop(Env, Range)
 
   #Calculate distance-to-range
@@ -26,6 +26,10 @@ lapply(speciesNames[1:length(speciesNames)], function(i) {
   rdist <- rangeDist(
               range = Range, 
               domain = Env_Range, #I wonder if this should be based on occurrence records?
+              #model.extent <- extent(min(occs$decimalLongitude)-10,
+                                    #max(occs$decimalLongitude)+10,
+                                    #min(occs$decimalLatitude)-10,
+                                    #max(occs$decimalLatitude)+10)
               domainkm = 1000,
               mask = F,
               fact = 6
