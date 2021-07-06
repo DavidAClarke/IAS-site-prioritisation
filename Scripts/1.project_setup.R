@@ -15,13 +15,14 @@ library(CoordinateCleaner)
 library(galah)
 library(zonator)
 library(biomod2)
+library(rgeos)
 
 ##required to be installed
 #"taxize"
 #"traitdataform"
 
 ##Load initially required data (other data can maybe come in later)
-source("Scripts/Coast.R")
+source("Scripts/aus_coast.R")
 source("Scripts/env_predictors.R")
 #source("Scripts/RedList.R") #needs to be tidied up
 speciesNames <- read.csv(file.path("SpeciesData", "all_accepted_names.csv"))
@@ -30,7 +31,7 @@ speciesNames <- speciesNames$x
 
 ##Creating folder structure for running Maxent
 #Specify maxent path
-dir.create("Maxent") #direct the installation of maxent to here.
+#dir.create("Maxent") #direct the installation of maxent to here.
 maxent_path <- file.path("Maxent")
 
 #Create necessary folders
@@ -45,12 +46,18 @@ lapply(speciesNames[1:length(speciesNames)], function(i){
   
   i <- gsub(" ", "_", i)
   
-  dir.create(file.path(maxent_path, "env_layers", i))
-  dir.create(file.path(maxent_path, "bias_layers", i))
-  dir.create(file.path(maxent_path, "occurrences", i))
-  dir.create(file.path(maxent_path, "outputs", i))
+  dir.create(file.path(maxent_path, "Env_layers", i))
+  dir.create(file.path(maxent_path, "Bias_layers", i))
+  dir.create(file.path(maxent_path, "Occurrences", i))
+  dir.create(file.path(maxent_path, "Outputs", i))
   
 })
+
+#Create paths
+env_path <- file.path(maxent_path, "Env_layers")
+bias_path <- file.path(maxent_path, "Bias_layers")
+occ_path <- file.path(maxent_path, "Occurrences")
+
 
 ##Creating folder structure for running Zonation
 #Create path to a new project
