@@ -303,6 +303,7 @@ lapply(spp_list[1:length(spp_list)], function(i){
 })
 
 #Ensemble model
+start_time <- Sys.time()
 lapply(spp_list[1:length(spp_list)], function(i) {
   
   #i <- gsub(".", "_", i)
@@ -348,10 +349,12 @@ lapply(spp_list[1:length(spp_list)], function(i) {
   
   # Project ensemble model
   models_ensemble_proj_current <- BIOMOD_EnsembleForecasting(EM.output = all_ensemble_model,
-                                                             projection.output = model_pi,
+                                                             projection.output = get(model_pi),
                                                              binary.meth = "TSS",
                                                              do.stack = FALSE )
 })
+end_time <- Sys.time()
+end_time - start_time
   
   
 
