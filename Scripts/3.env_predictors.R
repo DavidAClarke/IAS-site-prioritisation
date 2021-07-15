@@ -97,9 +97,11 @@ HP_sf <- st_transform(HP_sf, 4326)
 HP_sf <- HP_sf %>%
   dplyr::select(FEATURETYPE, TYPE, SHAPE_Length, SHAPE_Area, geometry)
 HP_sf <- st_make_valid(HP_sf)
-HP_sf <- st_union(HP_sf, Aus_Coast)
-HP_sf <- st_intersection(HP_sf, Aus_Coast)
-
+HP_sf <- st_crop(HP_sf, Aus_Coast)
+HP_sf <- st_cast(HP_sf, "MULTIPOLYGON")
+HP_rst <- fasterize(HP_sf, Aus_elev, field = "TYPE")
+HP_rst <- mask(HP_rst, Aus_Coast)
+writeRaster(HP_rst, filename = "E:/SpatialData/Raster/Aus_Hyd.grd", overwrite = T)
 
 #Combine
 env_predictors <- stack(Aus_bio_min, Aus_elev)
