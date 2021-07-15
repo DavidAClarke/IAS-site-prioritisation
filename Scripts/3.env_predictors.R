@@ -5,6 +5,8 @@ Aus_elev <- raster(file.path("SpatialData", "Raster", "Elevation", "Aus_msk_alt.
 Aus_elev <- raster("E:/SpatialData/Raster/Elevation/Aus_msk_alt.gri") #external drive
 Aus_elev <- crop(Aus_elev, Aus_Coast)
 Aus_elev <- mask(Aus_elev, Aus_Coast)
+#for resampling veg
+Aus_elev_proj <- projectRaster(from = Aus_elev, res = 1000, crs = "+proj=aea +lat_0=0 +lon_0=132 +lat_1=-18 +lat_2=-36 +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs")
 
 
 #Bioclim rasters
@@ -81,10 +83,22 @@ writeRaster(dist_raster, filename = file.path("SpatialData", "dist_to_water.grd"
 
 #Vegetation
 veg <- raster(file.path("SpatialData", "GRID_NVIS6_0_AUST_EXT_MVG", "aus6_0e_mvg", "w001000.adf"))
-wgs84 <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
-veg_84 <- projectRaster(veg, crs = wgs84, method = "ngb")
-veg_84 <- crop(veg_84, Aus_Coast)
-veg_84 <- mask(veg_84, Aus_Coast)
+veg <- resample(veg, Aus_elev_proj, method = "ngb")
+veg <- projectRaster(from = veg, to = Aus_elev, method = "ngb")
+veg <- mask(veg, Aus_Coast)
+writeRaster(veg, filename = "E:/SpatialData/Raster/Aus_veg.grd", overwrite = T)
+
+#Surface Hydrology
+gdb_path <- file.path("SpatialData", "SurfaceHydrologyPolygonsNational.gdb")
+ogrListLayers(gdb_path)
+HP <- readOGR(gdb_path, "HydroPolys")
+HP_sf <- st_as_sf(HP)
+HP_sf <- st_transform(HP_sf, 4326)
+HP_sf <- HP_sf %>%
+  dplyr::select(FEATURETYPE, TYPE, SHAPE_Length, SHAPE_Area, geometry)
+HP_sf <- st_make_valid(HP_sf)
+HP_sf <- st_union(HP_sf, Aus_Coast)
+HP_sf <- st_intersection(HP_sf, Aus_Coast)
 
 
 #Combine
