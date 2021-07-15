@@ -277,7 +277,8 @@ lapply(spp_list[1:length(spp_list)], function(i){
                                       GAM=list(k=3))
   
   #Path for models
-  model_path <- file.path("SpatialData", "IAS_distributions", name_model_folder)
+  #must be full path (back to e.g. C:, and have no spaces)
+  model_path <- paste0("C:/Users/dcla0008/Dropbox/PhD/Thesis/Data/Chapter_3/SpatialData/IAS_distributions/", name_model_folder)
   setwd(model_path)
   
   #Run the models
@@ -347,7 +348,7 @@ lapply(spp_list[1:length(spp_list)], function(i) {
   
   # Project ensemble model
   models_ensemble_proj_current <- BIOMOD_EnsembleForecasting(EM.output = all_ensemble_model,
-                                                             projection.output = get(models_proj_current),
+                                                             projection.output = model_pi,
                                                              binary.meth = "TSS",
                                                              do.stack = FALSE )
 })
