@@ -2,7 +2,7 @@
 #Australia elevation
 #getData("alt", country = "AUS", mask = T, path = file.path("SpatialData", "Raster", "Elevation"))
 Aus_elev <- raster(file.path("SpatialData", "Raster", "Elevation", "Aus_msk_alt.gri"))
-Aus_elev <- raster("E:/SpatialData/Raster/Elevation/Aus_msk_alt.gri") #external drive
+Aus_elev <- raster("F:/SpatialData/Raster/Elevation/Aus_msk_alt.gri") #external drive
 Aus_elev <- crop(Aus_elev, Aus_Coast)
 Aus_elev <- mask(Aus_elev, Aus_Coast)
 #for resampling veg
@@ -86,7 +86,54 @@ veg <- raster(file.path("SpatialData", "GRID_NVIS6_0_AUST_EXT_MVG", "aus6_0e_mvg
 veg <- resample(veg, Aus_elev_proj, method = "ngb")
 veg <- projectRaster(from = veg, to = Aus_elev, method = "ngb")
 veg <- mask(veg, Aus_Coast)
-writeRaster(veg, filename = "E:/SpatialData/Raster/Aus_veg.grd", overwrite = T)
+veg <- as.factor(veg)
+rat <- levels(veg)[[1]]
+rat$Name <- c("Rainforests and Vine Thickets", "Eucalypt Tall Open Forests",
+              "Eucalypt Open Forests", "Eucalypt Low Open Forests", "Eucalypt Woodlands",
+              "Acacia Forests and Woodlands", "Callitris Forests and Woodlands",
+              "Casuarina Forests and Woodlands", "Melaleuca Forests and Woodlands",
+              "Other Forests and Woodlands", "Eucalypt Open Woodlands", "Tropical Eucalypt Woodlands/Grasslands",
+              "Acacia Open Woodlands", "Mallee Woodlands and Shrublands", "Low Closed Forests and Tall Closed Shrublands",
+             " Acacia Shrublands", "Other Shrublands", "Heathlands", "Tussock Grasslands", 
+              "Hummock Grasslands", "Other Grasslands, Herblands, Sedgelands and Rushlands", 
+              "Chenopod Shrublands, Samphire Shrublands and Forblands", "Mangroves",
+              "Inland Aquatic - freshwater, salt lakes, lagoons", "Cleared, non-native vegetation, buildings",
+              "Unclassified native vegetation", "Naturally bare - sand, rock, claypan, mudflat",
+              "Sea and estuaries", "Regrowth, modified native vegetation", "Unclassified forest",
+              "Other Open Woodlands", "Mallee Open Woodlands and Sparse Mallee Shrublands",
+              "Unknown/no data")
+levels(veg) <- rat
+#veg <- deratify(veg, "Name")
+rm(Aus_elev_proj)
+#maybe need to separate each class into individual rasters, then stack them
+#Here is an example of how to do it:
+# New_LULC_2015 <- raster()
+# 
+# values(New_LULC_2015) <- sample(x = 1:15,size = ncell(New_LULC_2015),replace = T)
+# 
+# rat <- data.frame(
+#   ID= 1:15,
+#   LandCover = c("Evergreen","Deciduous","Mixed Forest",
+#                 "grass","Degraded Forest","Scrubland",
+#                 "Dry Grassland","Wet Grassland","Plantation",
+#                 "Settlement","High Elevation Plantation","Coastal",
+#                 "Barren Land","Cropland","Wetlands")
+# )
+# 
+# levels(New_LULC_2015)<- rat
+# 
+# ls() # to see which objects are created in the workspace
+# ## [1] "New_LULC_2015" "rat" 
+# 
+# # create class names without space
+# rat$class_names <- gsub(pattern = ' ' ,replacement = '_',x = rat$LandCover)
+# 
+# for(i in 1:15){
+#   assign(rat$class_names[i],mask(New_LULC_2015,New_LULC_2015 != i, maskvalue=1))
+# }
+
+
+writeRaster(veg, filename = "F:/SpatialData/Raster/Aus_veg.grd", overwrite = T)
 
 #Surface Hydrology
 gdb_path <- file.path("SpatialData", "SurfaceHydrologyPolygonsNational.gdb")
@@ -96,12 +143,21 @@ HP_sf <- st_as_sf(HP)
 HP_sf <- st_transform(HP_sf, 4326)
 HP_sf <- HP_sf %>%
   dplyr::select(FEATURETYPE, TYPE, SHAPE_Length, SHAPE_Area, geometry)
+#
+FeatureType <- HP_sf %>%
+  st_drop_geometry() %>%
+  distinct(FEATURETYPE = FEATURETYPE, .keep_all = T) %>%
+  arrange(TYPE) %>%
+  dplyr::select(FEATURETYPE)
+FeatureType <- as.vector(FeatureType$FEATURETYPE)
+#
 HP_sf <- st_make_valid(HP_sf)
 HP_sf <- st_crop(HP_sf, Aus_Coast)
 HP_sf <- st_cast(HP_sf, "MULTIPOLYGON")
 HP_rst <- fasterize(HP_sf, Aus_elev, field = "TYPE")
 HP_rst <- mask(HP_rst, Aus_Coast)
+#maybe need to separate each class into individual rasters, then stack them
 writeRaster(HP_rst, filename = "E:/SpatialData/Raster/Aus_Hyd.grd", overwrite = T)
 
 #Combine
-env_predictors <- stack(Aus_bio_min, Aus_elev)
+env_predictors <- stack(Aus_bio_min, Aus_elev, veg, HP_rst)
