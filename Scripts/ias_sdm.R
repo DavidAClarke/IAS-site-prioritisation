@@ -13,7 +13,8 @@ library(usdm)
 
 #Required initial data
 #bio <- getData("worldclim", var = "bio", res = 2.5, path = "E:/SpatialData/Raster/Worldclim")
-bio_names <- list.files(path = "E:/SpatialData/Raster/Worldclim/wc2-5", pattern = ".bil$", full.names = T)
+#Personal PC = F:, original work PC = E:
+bio_names <- list.files(path = "F:/SpatialData/Raster/Worldclim/wc2-5", pattern = ".bil$", full.names = T)
 bio <- stack(bio_names)
 source("Scripts/2.aus_coast.R") #if not already loaded
 
@@ -27,10 +28,24 @@ ref_raster <- raster(ext = ext, crs = crs, resolution = res, vals = vals)
 #Need an Australian raster that is a subset of reference raster (Regional)
 Aus_raster <- crop(ref_raster, extent(Aus_Coast))
 
-#IAS insect species list
+#IAS insect species list (maybe only use species with Aus occurrences)
 spp_list <- c("Vespa velutina", "Bombus impatiens", "Lymantria dispar", "Harmonia axyridis", 
               "Solenopsis invicta", "Wasmannia auropunctata", "Glischrochilus quadrisignatus",
               "Digitonthophagus gazella", "Icerya purchasi", "Pheidole megacephala")
+#Which species do and do not have occurrences in Australia?
+#Do
+spp_list_AUS <- c("Solenopsis invicta", "Wasmannia auropunctata", "Digitonthophagus gazella",
+                  "Icerya purchasi", "Pheidole megacephala")
+#Do not (these will only be predictions I guess? i.e. they have no realized niche in AUS)
+spp_list_NoAUS <- c("Vespa velutina", "Bombus impatiens", "Lymantria dispar", "Harmonia axyridis",
+                    "Glischrochilus quadrisignatus")
+
+#Maybe also use:
+#Anoplolepis gracilipes, Vespula germanica, Tetramorium bicarinatum, Aethina tumida, Paratrechina longicornis
+#New list
+spp_list <- c("Solenopsis invicta", "Wasmannia auropunctata", "Digitonthophagus gazella",
+              "Icerya purchasi", "Pheidole megacephala", "Anoplolepis gracilipes",
+              "Vespula germanica", "Tetramorium bicarinatum", "Aethina tumida","Paratrechina longicornis")
 
 #Download occurrence data
 #GBIF credentials (remove credentials when publishing scripts)
@@ -355,6 +370,345 @@ lapply(spp_list[1:length(spp_list)], function(i) {
 })
 end_time <- Sys.time()
 end_time - start_time
+
+#Accuracy
+lapply(spp_list[1:length(spp_list)], function(i) {
   
+  model_path <- paste0("C:/Users/dcla0008/Dropbox/PhD/Thesis/Data/Chapter_3/SpatialData/IAS_distributions/", name_model_folder)
+  setwd(model_path)
   
+  #Load separated models
+  model_name <- file.path(model_path, i, paste0(i,".",model_class,".models.out"))
+  model_i <- load(model_name)
+  
+  #Load unique ensemble model
+  model_ensem <- file.path(model_path, i, paste0(i,".",model_class,"ensemble.models.out"))
+  model_ei <- load(model_ensem)
+  
+  # Get evaluations of ensemble models to decide which one to choose:
+  all_ensemble_models_scores <- get_evaluations(get(model_ei))
+  write.table(all_ensemble_models_scores, file = paste0(model_path, i, paste0(i,"_eval_ensemble.csv")))
+  
+  # Get variables importance for all models
+  all_models_var_import <- get_variables_importance(get(model_i))
+  
+  # Calculate the mean of variable importance by algorithm
+  table_importance <- apply(all_models_var_import, c(1,2), mean, na.rm=TRUE)
+  write.table(table_importance, file = paste0(model_path, i, paste0(i,"_importance_var.csv")))
+  
+})
+  
+###Australian predictions
+#Predictors
+#worldclim - use already loaded "bio"
+Aus_bio_2.5 <- crop(bio, Aus_raster)
+#Reducing collinearity
+nocorrvar <- vifstep(Aus_bio_2.5, th = 4)
+predictors <- as.character(nocorrvar@results$Variables)
+clim_sub_Aus <- raster::subset(Aus_bio_2.5,c(predictors))
+
+#Elevation
+Aus_elev_2.5 <- resample(Aus_elev, Aus_bio_2.5, method = "bilinear") 
+
+#Vegatation
+Aus_veg_2.5 <- resample(veg, Aus_raster, methood = "ngb")
+Aus_veg_2.5 <- ratify(Aus_veg_2.5, count = TRUE)
+rat <- levels(Aus_veg_2.5)[[1]]
+rat$Name <- c("Rainforests and Vine Thickets", "Eucalypt Tall Open Forests",
+              "Eucalypt Open Forests", "Eucalypt Low Open Forests", "Eucalypt Woodlands",
+              "Acacia Forests and Woodlands", "Callitris Forests and Woodlands",
+              "Casuarina Forests and Woodlands", "Melaleuca Forests and Woodlands",
+              "Other Forests and Woodlands", "Eucalypt Open Woodlands", "Tropical Eucalypt Woodlands/Grasslands",
+              "Acacia Open Woodlands", "Mallee Woodlands and Shrublands", "Low Closed Forests and Tall Closed Shrublands",
+              " Acacia Shrublands", "Other Shrublands", "Heathlands", "Tussock Grasslands", 
+              "Hummock Grasslands", "Other Grasslands, Herblands, Sedgelands and Rushlands", 
+              "Chenopod Shrublands, Samphire Shrublands and Forblands", "Mangroves",
+              "Inland Aquatic - freshwater, salt lakes, lagoons", "Cleared, non-native vegetation, buildings",
+              "Unclassified native vegetation", "Naturally bare - sand, rock, claypan, mudflat",
+              "Sea and estuaries", "Regrowth, modified native vegetation", "Unclassified forest",
+              "Other Open Woodlands", "Mallee Open Woodlands and Sparse Mallee Shrublands",
+              "Unknown/no data")
+levels(Aus_veg_2.5) <- rat
+#Aus_veg_2.5 <- deratify(Aus_veg_2.5, "Name")
+Aus_veg_2.5 <- mask(Aus_veg_2.5, Aus_raster)
+
+#Surface hydrology
+Aus_hyd <- raster("F:/SpatialData/Raster/Aus_Hyd.gri")
+Aus_hyd <- resample(Aus_hyd, Aus_raster, method = "ngb")
+Aus_hyd <- ratify(Aus_hyd, count = TRUE)
+rat <- levels(Aus_hyd)[[1]]
+rat$FeatureType <- FeatureType
+levels(Aus_hyd) <- rat
+Aus_hyd <- mask(Aus_hyd, Aus_raster)
+
+#Stacking all
+all_predictors <- stack(clim_sub_Aus, Aus_elev_2.5, Aus_veg_2.5, Aus_hyd)
+
+###Set parameters for regional model
+name_model_folder <- "IAS_regional" 
+model_class <- "regional" 
+
+#Individual models
+my_models <- c("GLM","GAM","MAXENT.Phillips","FDA","GBM") # Algorithms to fit the models   
+my_pa_strategy <- c("random") # Strategy to select PAs   
+my_pa_dist_min <- 0 # Distance where to start throwing PAs  
+my_runs <- 3 # Number of PAs runs
+my_n_pa <- 5000 # Number of pseudoabsences, when not dependent of no. presences
+my_proj_name <- "regional"
+
+#To begin with, just use spp_list_AUS
+lapply(spp_list[1:length(spp_list)], function(i) {
+  
+  #Remove decimal in species name
+  #i <- gsub("//.", "_", i)
+  
+  #Load presences
+  sp_pres <- readOGR(file.path(occ_path,paste0(i,"_pres.shp")))
+  
+  #Subset of Australia
+  sp_pres_au <- rasterize(sp_pres, Aus_raster, 1)
+  n_mod <- summary(as.factor(sp_pres_au@data@values))[1]
+  
+  #Pseudoabsences
+  # Select number of pseudoabsences
+  n_pa <- my_n_pa
+  
+  # Weights based on the global model:
+  all_pa <- raster(file.path(model_path, i, "proj_global", "individual_projections", paste0(i, "_EMcaByTSS_mergedAlgo_mergedRun_mergedData.grd")))
+  pa_au <- raster::crop(all_pa,Aus_raster)
+  pa_au <- raster::mask(pa_au,Aus_raster)
+  pa_au_1 <- pa_au/1000 # conversion from 0 to 1
+  weights_pa <- 1/(1+((pa_au_1/(pa_au_1-1))^2)) # inverse logistic transformation
+  
+  # Format data for 'BIOMOD'
+  # Subset of only presences
+  subset_1 <- as.data.frame(rasterToPoints(sp_pres_au,fun=function(x){x==1}))
+  
+  # Presences
+  mypres <- rep(1,dim(subset_1)[1])
+  
+  # Presences coordinates
+  mycoord <- subset_1[,c("x","y")]
+  
+  # Clean data
+  clean_data <- BIOMOD_FormatingData(resp.var=mypres, 
+                                     expl.var=all_predictors, 
+                                     resp.xy=mycoord,
+                                     resp.name=i, 
+                                     PA.nb.rep=my_runs,
+                                     PA.nb.absences=n_pa,
+                                     PA.strategy = my_pa_strategy, 
+                                     PA.dist.min=my_pa_dist_min)
+  
+  # Adding "weights" to the data
+  # Get the presences + PA dataset
+  my_pres_PA_df <- data.frame(clean_data@coord, 
+                              obs = clean_data@data.species, 
+                              clean_data@PA)
+  
+  # Add the weigth vector to the presences
+  pres <- subset(my_pres_PA_df, obs==1)
+  pres$yweights <- 1
+  
+  # Weight of absences based on global model
+  abs <- subset(my_pres_PA_df, is.na(obs)==TRUE)
+  weight_values_ab <- raster::extract(weights_pa,cbind(abs$x,abs$y))
+  abs$yweights <- weight_values_ab
+  
+  new_my_pres_PA_df <- rbind(pres,abs)
+  
+  # Settings for the model algorithms
+  model_opt <- BIOMOD_ModelingOptions(GLM=list(type='quadratic', interaction.level=0),
+                                      GBM=list(n.trees=1000),
+                                      MAXENT.Phillips = list(path_to_maxent.jar = maxent_jar_path,product=FALSE), #change path
+                                      GAM=list(k=3))
+  
+  #Set path for model folder
+  model_path <- paste0("C:/Users/dcla0008/Dropbox/PhD/Thesis/Data/Chapter_3/SpatialData/IAS_distributions/", name_model_folder)
+  setwd(model_path)
+  
+  # Run the models
+  # Separate
+  all_models <- BIOMOD_Modeling(data=clean_data, 
+                                models=my_models, 
+                                models.options=model_opt, 
+                                NbRunEval = 4, 
+                                DataSplit = 70, 
+                                VarImport = 3, 
+                                do.full.models = F, 
+                                modeling.id = "regional", 
+                                Yweights=new_my_pres_PA_df$yweights)
+  
+  # Project the models
+  # Separate
+  models_proj_current <- BIOMOD_Projection(modeling.output = all_models,
+                                           new.env = pred_au_sub,
+                                           proj.name = my_proj_name ,
+                                           binary.meth = "TSS",
+                                           do.stack = FALSE )
+})
+
+#Ensemble model
+lapply(spp_list[1:length(spp_list)], function(i) {
+  
+  #Load separate models
+  model_name <- file.path(model_path, i, paste0(i,".",model_class,".models.out"))
+  model_i <- load(model_name)
+  
+  #Load separate projection models
+  model_proj <- file.path(model_path, i, paste0("proj_", model_class), paste0(i,".",model_class,".projection.out"))
+  model_pi <- load(model_proj)
+  
+  # Fit ensemble model
+  all_test <- get_evaluations(get(model_i))
+  all_tss <- all_test[2, 1, 1:5, 1:4, 1:3]
+  
+  if (all_tss>=0.7) {
+    all_ensemble_model <- BIOMOD_EnsembleModeling(modeling.output = get(model_i), 
+                                                  em.by='all',
+                                                  eval.metric = 'TSS', 
+                                                  eval.metric.quality.threshold = 0.7, 
+                                                  models.eval.meth = c('KAPPA','TSS','ROC'),
+                                                  prob.mean=FALSE, 
+                                                  prob.cv=TRUE, 
+                                                  committee.averaging=TRUE, 
+                                                  prob.mean.weight = TRUE, 
+                                                  VarImport = 3)
+  }
+  
+  else {
+    val_tss <- stats::quantile(all_tss, probs = 0.9,names=FALSE,na.rm=TRUE)
+    all_ensemble_model <- BIOMOD_EnsembleModeling(modeling.output = get(model_i), 
+                                                  em.by='all',
+                                                  eval.metric = 'TSS', 
+                                                  eval.metric.quality.threshold = val_tss, 
+                                                  models.eval.meth = c('KAPPA','TSS','ROC'), 
+                                                  prob.mean=FALSE, 
+                                                  prob.cv=TRUE,
+                                                  committee.averaging=TRUE, 
+                                                  prob.mean.weight = TRUE, 
+                                                  VarImport = 3)
+  }
+  
+  # Project ensemble model
+  models_ensemble_proj_current <- BIOMOD_EnsembleForecasting(EM.output = all_ensemble_model,
+                                                             projection.output = get(model_pi),
+                                                             binary.meth = "TSS",
+                                                             do.stack = FALSE )
+  
+})
+
+#Accuracy
+lapply(spp_list[1:length(spp_list)], function(i) {
+  
+  model_path <- paste0("C:/Users/dcla0008/Dropbox/PhD/Thesis/Data/Chapter_3/SpatialData/IAS_distributions/", name_model_folder)
+  setwd(model_path)
+  
+  #Load separated models
+  model_name <- file.path(model_path, i, paste0(i,".",model_class,".models.out"))
+  model_i <- load(model_name)
+  
+  #Load unique ensemble model
+  model_ensem <- file.path(model_path, i, paste0(i,".",model_class,"ensemble.models.out"))
+  model_ei <- load(model_ensem)
+  
+  # Get evaluations of ensemble models to decide which one to choose:
+  all_ensemble_models_scores <- get_evaluations(get(model_ei))
+  write.table(all_ensemble_models_scores, file = paste0(model_path, i, paste0(i,"_eval_ensemble.csv")))
+  
+  # Get variables importance for all models
+  all_models_var_import <- get_variables_importance(get(model_i))
+  
+  # Calculate the mean of variable importance by algorithm
+  table_importance <- apply(all_models_var_import, c(1,2), mean, na.rm=TRUE)
+  write.table(table_importance, file = paste0(model_path, i, paste0(i,"_importance_var.csv")))
+  
+})
+
+
+### Results
+# Here you decide which results you want the output from. Maybe I do it for both global and regional
+name_model_folder <- "IAS regional"
+dataset_type <- "_pres" # Options: _pres/ _pres_all ## from GBIF
+global <- "no"
+model_class <- "regional"
+raster_to_use <- Aus_raster 
+model_path <- paste0("C:/Users/dcla0008/Dropbox/PhD/Thesis/Data/Chapter_3/SpatialData/IAS_distributions/", name_model_folder)
+setwd(model_path)
+
+## Sample size (n)
+# empty vector to store n for all species
+col_n <- c()
+
+lapply(spp_list[1:length(spp_list)], function(i) {
+  
+  if (global=="no"){raster1 <- Aus_raster}
+  else {raster1 <- ref_raster}
+  
+  # GBIF points
+  sp_pres <- readOGR(file.path(occ_path,paste0(i,dataset_type,".shp")))
+  
+  # rasterize
+  points_mod_r <- rasterize(sp_pres,raster1,1,background=0)
+  
+  n_mod <- summary(as.factor(points_mod_r@data@values))["1"]
+  
+  # Create a vector with all the species:
+  col_n <- c(col_n,n_mod)
+  
+}) 
+
+## TSS, Sensitivity, Specificity, Cut-off (for binary transformation)
+# empty vectors to store information for all species
+col_tss <- c()
+col_sens <- c()
+col_spec <- c()
+col_cut <- c()
+
+lapply(spp_list[1:length(spp_list)], function(i) {
+  
+  # File with all the info. per species:
+  model_eval <- read.csv(file = paste0(model_path, i, paste0(i,"_eval_ensemble.csv")))
+  
+  # selecting the parameters that I want
+  tss_mod <- round(as.numeric(as.character(model_eval[2,5])),2)
+  sens_mod <- round(as.numeric(as.character(model_eval[2,7])),2)
+  spec_mod <- round(as.numeric(as.character(model_eval[2,8])),2)
+  cut_mod <- round(as.numeric(as.character(model_eval[2,6]))/1000,2)
+  
+  # Create vectors with all the species:
+  col_tss <- c(col_tss,tss_mod)
+  col_sens <- c(col_sens,sens_mod)
+  col_spec <- c(col_spec,spec_mod)
+  col_cut <- c(col_cut, cut_mod)
+  
+})
+
+## Mean CV within each ensemble model
+sp_mean_cv <- c()
+
+lapply(spp_list[1:length(spp_list)], function(i) {
+  
+  raster_sp <- raster(file.path(model_path, i, paste0("proj_", model_class), "individual_projections", paste0(i, "_EMcvByTSS_mergedAlgo_mergedRun_mergedData.grd")))
+  
+  r.min <- cellStats(raster_sp, "min")
+  r.max <- cellStats(raster_sp, "max")
+  
+  raster_sp_scale <- (raster_sp - r.min) / (r.max - r.min) 
+  raster_sp_scale <- raster::mask(raster_sp_scale,raster_to_use)
+  raster_list[[i]] <- raster_sp_scale
+  
+  # Calculate the mean CV for each species:
+  mean_sp <- cellStats(raster_sp_scale, stat='mean', na.rm=TRUE)
+  sp_mean_cv <- c(sp_mean_cv,mean_sp)
+})
+
+## Final table with info for all: 
+table_a <- as.data.frame(cbind(as.character(spp_list),col_n,col_tss,col_sens,col_spec,col_cut,sp_mean_cv))
+names(table_a) <- c("Species","n","TSS","Sensitivity","Specificity","Cut-off binary","Mean CV")
+
+# Write in the directory:
+write.table(table_a, 
+            file = file.path(model_path, paste0("Table_",name_model_folder,"_accuracy.txt")),
+            row.names = FALSE)
 
