@@ -2,7 +2,7 @@
 #Australia elevation
 #getData("alt", country = "AUS", mask = T, path = file.path("SpatialData", "Raster", "Elevation"))
 Aus_elev <- raster(file.path("SpatialData", "Raster", "Elevation", "Aus_msk_alt.gri"))
-Aus_elev <- raster("F:/SpatialData/Raster/Elevation/Aus_msk_alt.gri") #external drive
+Aus_elev <- raster("E:/SpatialData/Raster/Elevation/Aus_msk_alt.gri") #external drive
 Aus_elev <- crop(Aus_elev, Aus_Coast)
 Aus_elev <- mask(Aus_elev, Aus_Coast)
 #for resampling veg
@@ -26,6 +26,7 @@ Aus_elev_proj <- projectRaster(from = Aus_elev, res = 1000, crs = "+proj=aea +la
 # Aus_bio <- crop(Aus_bio, Aus_Coast)
 # writeRaster(Aus_bio, filename = file.path("SpatialData", "Raster", "Worldclim", "Aus_bio.grd"), bandorder = "BIL", overwrite = T)
 Aus_bio <- stack(file.path("SpatialData", "Raster", "Worldclim", "Aus_bio.gri"))
+Aus_bio <- stack("E:/SpatialData/Raster/Worldclim/Aus_bio.gri")
 
 #Make sure any NAs propagate through the layers
 Aus_bio <- check.env(Aus_bio)
@@ -136,10 +137,11 @@ rm(Aus_elev_proj)
 writeRaster(veg, filename = "F:/SpatialData/Raster/Aus_veg.grd", overwrite = T)
 
 #Surface Hydrology
-gdb_path <- file.path("SpatialData", "SurfaceHydrologyPolygonsNational.gdb")
+gdb_path <- "C:/Users/dcla0008/Dropbox/PhD/Thesis/Data/Chapter_3/SpatialData/SurfaceHydrologyPolygonsNational.gdb"
 ogrListLayers(gdb_path)
 HP <- readOGR(gdb_path, "HydroPolys")
 HP_sf <- st_as_sf(HP)
+rm(HP)
 HP_sf <- st_transform(HP_sf, 4326)
 HP_sf <- HP_sf %>%
   dplyr::select(FEATURETYPE, TYPE, SHAPE_Length, SHAPE_Area, geometry)
