@@ -713,17 +713,21 @@ dataset_type <- "_pres" # Options: _pres/ _pres_all ## from GBIF
 global <- "no"
 model_class <- "regional"
 raster_to_use <- Aus_raster 
-model_path <- paste0("C:/Users/dcla0008/Dropbox/PhD/Thesis/Data/Chapter_3/SpatialData/IAS_distributions/", name_model_folder)
-setwd(model_path)
+#model_path <- paste0("C:/Users/dcla0008/Dropbox/PhD/Thesis/Data/Chapter_3/SpatialData/IAS_distributions/", name_model_folder)
+setwd(regional_model_path)
 
 ## Sample size (n)
 # empty vector to store n for all species
 col_n <- c()
 
-lapply(spp_list[1:length(spp_list)], function(i) {
+#lapply(spp_list[1:length(spp_list)], function(i) {
+  for(i in spp_list){
   
   if (global=="no"){raster1 <- Aus_raster}
   else {raster1 <- ref_raster}
+  
+  #replace decimal
+  i <- gsub("\\.", "_", i)
   
   # GBIF points
   sp_pres <- readOGR(file.path(occ_path,paste0(i,dataset_type,".shp")))
@@ -735,8 +739,8 @@ lapply(spp_list[1:length(spp_list)], function(i) {
   
   # Create a vector with all the species:
   col_n <- c(col_n,n_mod)
-  
-}) 
+  }
+#}) 
 
 ## TSS, Sensitivity, Specificity, Cut-off (for binary transformation)
 # empty vectors to store information for all species
@@ -745,10 +749,10 @@ col_sens <- c()
 col_spec <- c()
 col_cut <- c()
 
-lapply(spp_list[1:length(spp_list)], function(i) {
+for(i in spp_list){
   
   # File with all the info. per species:
-  model_eval <- read.csv(file = paste0(model_path, i, paste0(i,"_eval_ensemble.csv")))
+  model_eval <- read.csv(file = paste0(regional_model_path, i, paste0(i,"_eval_ensemble.csv")), sep = " ")
   
   # selecting the parameters that I want
   tss_mod <- round(as.numeric(as.character(model_eval[2,5])),2)
@@ -757,19 +761,20 @@ lapply(spp_list[1:length(spp_list)], function(i) {
   cut_mod <- round(as.numeric(as.character(model_eval[2,6]))/1000,2)
   
   # Create vectors with all the species:
-  col_tss <- c(col_tss,tss_mod)
+  col_tss <- c(col_tss, tss_mod)
   col_sens <- c(col_sens,sens_mod)
   col_spec <- c(col_spec,spec_mod)
   col_cut <- c(col_cut, cut_mod)
   
-})
+}
 
 ## Mean CV within each ensemble model
 sp_mean_cv <- c()
+raster_list <- list()
 
-lapply(spp_list[1:length(spp_list)], function(i) {
+for(i in spp_list){
   
-  raster_sp <- raster(file.path(model_path, i, paste0("proj_", model_class), "individual_projections", paste0(i, "_EMcvByTSS_mergedAlgo_mergedRun_mergedData.grd")))
+  raster_sp <- raster(file.path(regional_model_path, i, paste0("proj_", model_class), "individual_projections", paste0(i, "_EMcvByTSS_mergedAlgo_mergedRun_mergedData.grd")))
   
   r.min <- cellStats(raster_sp, "min")
   r.max <- cellStats(raster_sp, "max")
@@ -781,7 +786,8 @@ lapply(spp_list[1:length(spp_list)], function(i) {
   # Calculate the mean CV for each species:
   mean_sp <- cellStats(raster_sp_scale, stat='mean', na.rm=TRUE)
   sp_mean_cv <- c(sp_mean_cv,mean_sp)
-})
+  
+}
 
 ## Final table with info for all: 
 table_a <- as.data.frame(cbind(as.character(spp_list),col_n,col_tss,col_sens,col_spec,col_cut,sp_mean_cv))
@@ -789,6 +795,10 @@ names(table_a) <- c("Species","n","TSS","Sensitivity","Specificity","Cut-off bin
 
 # Write in the directory:
 write.table(table_a, 
-            file = file.path(model_path, paste0("Table_",name_model_folder,"_accuracy.txt")),
+            file = file.path(regional_model_path, paste0("Table_",name_model_folder,"_accuracy.txt")),
             row.names = FALSE)
+
+#To load projected ensemble raster (committee averaging predictions)
+#e.g. Pheidole megacephala
+PM <- file.path(regional_model_path, "Pheidole.megacephala", "proj_regional", "individual_projections", paste0("Pheidole.megacephala","_EMcaByTSS_mergedAlgo_mergedRun_mergedData.gri"))
 
