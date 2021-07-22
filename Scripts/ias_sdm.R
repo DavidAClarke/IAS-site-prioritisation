@@ -1,6 +1,7 @@
 # IAS SDM - Based off Polaina et al 2020
 
 #Required libraries
+library(tidyverse)
 library(sf)
 library(sp)
 library(raster)
@@ -64,6 +65,8 @@ spp_list <- c("Solenopsis invicta", "Wasmannia auropunctata", "Digitonthophagus 
 #Those with enough records in Aus
 #"Digitonthophagus gazella", "Pheidole megacephala", "Vespula germanica","Icerya purchasi"
 #"Tetramorium bicarinatum", "Paratrechina longicornis"
+spp_list <- c("Digitonthophagus gazella","Icerya purchasi", "Pheidole megacephala",
+              "Vespula germanica", "Tetramorium bicarinatum", "Paratrechina longicornis")
 #Should also do some other taxa e.g. cane toad, some mammals, plants?
 
 #Download occurrence data
@@ -340,6 +343,8 @@ lapply(spp_list[1:length(spp_list)], function(i){
 #Ensemble model
 start_time <- Sys.time()
 lapply(spp_list[1:length(spp_list)], function(i) {
+  
+  setwd(global_model_path)
   
   #i <- gsub(".", "_", i)
   
