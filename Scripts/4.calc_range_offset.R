@@ -92,6 +92,12 @@ lapply(speciesNames_range[1:length(speciesNames_range)], function(i) {
     
   #selecting species
   Range <- RL_shp_Aus %>% dplyr::filter(acceptedName == i)
+  
+  #Checking geometry type
+  if(st_geometry_type(Range) == "GEOMETRYCOLLECTION") {
+    
+    Range <- st_cast(Range)
+  }
 
   #convert to sp
   Range <- as(Range, Class = "Spatial")
