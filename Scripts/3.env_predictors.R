@@ -2,11 +2,11 @@
 #Australia elevation
 #getData("alt", country = "AUS", mask = T, path = file.path("SpatialData", "Raster", "Elevation"))
 Aus_elev <- raster(file.path("SpatialData", "Raster", "Elevation", "Aus_msk_alt.gri"))
-Aus_elev <- raster("E:/SpatialData/Raster/Elevation/Aus_msk_alt.gri") #external drive
+#Aus_elev <- raster("E:/SpatialData/Raster/Elevation/Aus_msk_alt.gri") #external drive
 Aus_elev <- crop(Aus_elev, Aus_Coast)
 Aus_elev <- mask(Aus_elev, Aus_Coast)
 #for resampling veg
-Aus_elev_proj <- projectRaster(from = Aus_elev, res = 1000, crs = "+proj=aea +lat_0=0 +lon_0=132 +lat_1=-18 +lat_2=-36 +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs")
+#Aus_elev_proj <- projectRaster(from = Aus_elev, res = 1000, crs = "+proj=aea +lat_0=0 +lon_0=132 +lat_1=-18 +lat_2=-36 +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs")
 
 
 #Bioclim rasters
@@ -26,7 +26,6 @@ Aus_elev_proj <- projectRaster(from = Aus_elev, res = 1000, crs = "+proj=aea +la
 # Aus_bio <- crop(Aus_bio, Aus_Coast)
 # writeRaster(Aus_bio, filename = file.path("SpatialData", "Raster", "Worldclim", "Aus_bio.grd"), bandorder = "BIL", overwrite = T)
 Aus_bio <- stack(file.path("SpatialData", "Raster", "Worldclim", "Aus_bio.gri"))
-Aus_bio <- stack("E:/SpatialData/Raster/Worldclim/Aus_bio.gri")
 
 #Make sure any NAs propagate through the layers
 Aus_bio <- check.env(Aus_bio)
@@ -45,9 +44,11 @@ Aus_bio <- check.env(Aus_bio)
 #7 = Temperature annual range
 #14 = Precipitation of Driest Month
 #13 = Precipitation of Wettest Month
-Aus_bio_min <- Aus_bio[[c("layer.1", "layer.2", "layer.3","layer.5","layer.6","layer.7",
-                      "layer.13", "layer.14")]]
-#Maybe also see Bradie and Leung 2017 on the importance of variables
+Aus_bio_min <- Aus_bio[[c("layer.1", "layer.2", "layer.3", "layer.4", "layer.5","layer.6","layer.7", 
+                          "layer.12","layer.13", "layer.14")]]
+#Determine multicollinearity of predictors
+#raster.cor.plot(Aus_bio_min)
+
 
 #Global Lakes and Wetlands
 GLWD_3 <- raster(file.path("SpatialData", "Raster", "glwd_3", "w001001.adf"))
@@ -83,29 +84,29 @@ dist_raster <- rasterize(dist_sf, r, "dist", fun = "mean") #also try fasterize
 writeRaster(dist_raster, filename = file.path("SpatialData", "dist_to_water.grd"), overwrite = T)
 
 #Vegetation
-veg <- raster(file.path("SpatialData", "GRID_NVIS6_0_AUST_EXT_MVG", "aus6_0e_mvg", "w001000.adf"))
-veg <- resample(veg, Aus_elev_proj, method = "ngb")
-veg <- projectRaster(from = veg, to = Aus_elev, method = "ngb")
-veg <- mask(veg, Aus_Coast)
-veg <- as.factor(veg)
-rat <- levels(veg)[[1]]
-rat$Name <- c("Rainforests and Vine Thickets", "Eucalypt Tall Open Forests",
-              "Eucalypt Open Forests", "Eucalypt Low Open Forests", "Eucalypt Woodlands",
-              "Acacia Forests and Woodlands", "Callitris Forests and Woodlands",
-              "Casuarina Forests and Woodlands", "Melaleuca Forests and Woodlands",
-              "Other Forests and Woodlands", "Eucalypt Open Woodlands", "Tropical Eucalypt Woodlands/Grasslands",
-              "Acacia Open Woodlands", "Mallee Woodlands and Shrublands", "Low Closed Forests and Tall Closed Shrublands",
-             " Acacia Shrublands", "Other Shrublands", "Heathlands", "Tussock Grasslands", 
-              "Hummock Grasslands", "Other Grasslands, Herblands, Sedgelands and Rushlands", 
-              "Chenopod Shrublands, Samphire Shrublands and Forblands", "Mangroves",
-              "Inland Aquatic - freshwater, salt lakes, lagoons", "Cleared, non-native vegetation, buildings",
-              "Unclassified native vegetation", "Naturally bare - sand, rock, claypan, mudflat",
-              "Sea and estuaries", "Regrowth, modified native vegetation", "Unclassified forest",
-              "Other Open Woodlands", "Mallee Open Woodlands and Sparse Mallee Shrublands",
-              "Unknown/no data")
-levels(veg) <- rat
-#veg <- deratify(veg, "Name")
-rm(Aus_elev_proj)
+# veg <- raster(file.path("SpatialData", "GRID_NVIS6_0_AUST_EXT_MVG", "aus6_0e_mvg", "w001000.adf"))
+# veg <- resample(veg, Aus_elev_proj, method = "ngb")
+# veg <- projectRaster(from = veg, to = Aus_elev, method = "ngb")
+# veg <- mask(veg, Aus_Coast)
+# veg <- as.factor(veg)
+# rat <- levels(veg)[[1]]
+# rat$Name <- c("Rainforests and Vine Thickets", "Eucalypt Tall Open Forests",
+#               "Eucalypt Open Forests", "Eucalypt Low Open Forests", "Eucalypt Woodlands",
+#               "Acacia Forests and Woodlands", "Callitris Forests and Woodlands",
+#               "Casuarina Forests and Woodlands", "Melaleuca Forests and Woodlands",
+#               "Other Forests and Woodlands", "Eucalypt Open Woodlands", "Tropical Eucalypt Woodlands/Grasslands",
+#               "Acacia Open Woodlands", "Mallee Woodlands and Shrublands", "Low Closed Forests and Tall Closed Shrublands",
+#              " Acacia Shrublands", "Other Shrublands", "Heathlands", "Tussock Grasslands", 
+#               "Hummock Grasslands", "Other Grasslands, Herblands, Sedgelands and Rushlands", 
+#               "Chenopod Shrublands, Samphire Shrublands and Forblands", "Mangroves",
+#               "Inland Aquatic - freshwater, salt lakes, lagoons", "Cleared, non-native vegetation, buildings",
+#               "Unclassified native vegetation", "Naturally bare - sand, rock, claypan, mudflat",
+#               "Sea and estuaries", "Regrowth, modified native vegetation", "Unclassified forest",
+#               "Other Open Woodlands", "Mallee Open Woodlands and Sparse Mallee Shrublands",
+#               "Unknown/no data")
+# levels(veg) <- rat
+# #veg <- deratify(veg, "Name")
+# rm(Aus_elev_proj)
 #maybe need to separate each class into individual rasters, then stack them
 #Here is an example of how to do it:
 # New_LULC_2015 <- raster()
@@ -134,32 +135,35 @@ rm(Aus_elev_proj)
 # }
 
 
-writeRaster(veg, filename = "F:/SpatialData/Raster/Aus_veg.grd", overwrite = T)
+#writeRaster(veg, filename = "F:/SpatialData/Raster/Aus_veg.grd", overwrite = T)
+Aus_veg <- raster(file.path("SpatialData", "Raster", "Aus_veg.gri"))
 
 #Surface Hydrology
-gdb_path <- "C:/Users/dcla0008/Dropbox/PhD/Thesis/Data/Chapter_3/SpatialData/SurfaceHydrologyPolygonsNational.gdb"
-ogrListLayers(gdb_path)
-HP <- readOGR(gdb_path, "HydroPolys")
-HP_sf <- st_as_sf(HP)
-rm(HP)
-HP_sf <- st_transform(HP_sf, 4326)
-HP_sf <- HP_sf %>%
-  dplyr::select(FEATURETYPE, TYPE, SHAPE_Length, SHAPE_Area, geometry)
-#
-FeatureType <- HP_sf %>%
-  st_drop_geometry() %>%
-  distinct(FEATURETYPE = FEATURETYPE, .keep_all = T) %>%
-  arrange(TYPE) %>%
-  dplyr::select(FEATURETYPE)
-FeatureType <- as.vector(FeatureType$FEATURETYPE)
-#
-HP_sf <- st_make_valid(HP_sf)
-HP_sf <- st_crop(HP_sf, Aus_Coast)
-HP_sf <- st_cast(HP_sf, "MULTIPOLYGON")
-HP_rst <- fasterize(HP_sf, Aus_elev, field = "TYPE")
-HP_rst <- mask(HP_rst, Aus_Coast)
-#maybe need to separate each class into individual rasters, then stack them
-writeRaster(HP_rst, filename = "E:/SpatialData/Raster/Aus_Hyd.grd", overwrite = T)
+#gdb_path <- file.path("SpatialData", "SurfaceHydrologyPolygonsNational.gdb")
+#ogrListLayers(gdb_path)
+# HP <- readOGR(gdb_path, "HydroPolys")
+# HP_sf <- st_as_sf(HP)
+# rm(HP)
+# HP_sf <- st_transform(HP_sf, 4326)
+# HP_sf <- HP_sf %>%
+#   dplyr::select(FEATURETYPE, TYPE, SHAPE_Length, SHAPE_Area, geometry)
+# #
+# FeatureType <- HP_sf %>%
+#   st_drop_geometry() %>%
+#   distinct(FEATURETYPE = FEATURETYPE, .keep_all = T) %>%
+#   arrange(TYPE) %>%
+#   dplyr::select(FEATURETYPE)
+# FeatureType <- as.vector(FeatureType$FEATURETYPE)
+# #
+# HP_sf <- st_make_valid(HP_sf)
+# HP_sf <- st_crop(HP_sf, Aus_Coast)
+# HP_sf <- st_cast(HP_sf, "MULTIPOLYGON")
+# HP_rst <- fasterize(HP_sf, Aus_elev, field = "TYPE")
+# HP_rst <- mask(HP_rst, Aus_Coast)
+# #maybe need to separate each class into individual rasters, then stack them
+# writeRaster(HP_rst, filename = "E:/SpatialData/Raster/Aus_Hyd.grd", overwrite = T)
+HP_rst <- raster(file.path("SpatialData", "Raster", "Aus_Hyd.gri"))
 
 #Combine
-env_predictors <- stack(Aus_bio_min, Aus_elev, veg, HP_rst)
+env_predictors <- stack(Aus_bio_min, Aus_elev, Aus_veg, HP_rst)
+rm(Aus_bio, Aus_bio_min, Aus_elev, Aus_veg, HP_rst)
