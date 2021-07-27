@@ -8,26 +8,43 @@ library(maps)
 library(raster)
 library(MASS)
 library(bossMaps)
-library(dismo) #not to run but to evaluate maxent SDMs
+#library(dismo) #not to run but to evaluate maxent SDMs
 library(rJava)
 library(rgbif)
 library(CoordinateCleaner)
-library(galah)
-library(zonator)
+#library(galah)
+#library(zonator)
 library(biomod2)
 library(rgeos)
+#library(ENMTools)
+library(data.table)
+library(countryCode)
+library(rgdal)
+library(usdm)
 
 ##required to be installed
 #"taxize"
 #"traitdataform"
 
-##Load initially required data (other data can maybe come in later)
-source("Scripts/aus_coast.R")
-source("Scripts/env_predictors.R")
-#source("Scripts/RedList.R") #needs to be tidied up
-speciesNames <- read.csv(file.path("SpeciesData", "all_accepted_names.csv"))
-speciesNames <- speciesNames$x
 
+##Load xy_match function
+xy_match <- function(initial, pre, Layer, Long, Lat) {
+  pre <- initial
+  
+  coordinates(pre) <- ~ Long + Lat
+  crs(pre) <- crs(Layer)
+  
+  final <- cbind(initial, over(pre, Layer))
+  return(final)
+}
+
+##Load initially required data (other data can maybe come in later)
+source("Scripts/2.aus_coast.R")
+source("Scripts/3.env_predictors.R")
+source("Scripts/4.redlist_shp.R")
+source("Scripts/4.redlist_pts.R")
+source("Scripts/5.calc_range_offset.R")
+source("Scripts/6.plant_point_bias_files.R")
 
 ##Creating folder structure for running Maxent
 #Specify maxent path
