@@ -102,6 +102,7 @@ data_path <- paste0(getwd(), "/", file.path("SpatialData", "Vector", "IAS_Occurr
 
 #Maybe combine loading and cleaning functions
 #Load occurrence data, convert to spatial object, write to shapefile
+# note issue with head command; install cygwin; add to path, no spaces in full path, etc
 spp_list <- gsub(" ", ".", spp_list)
 
 my_cols <- fread(cmd = paste("head -n 1", data_path))
@@ -261,7 +262,7 @@ lapply(spp_list[1:length(spp_list)], function(i) {
 
 #Climate data (2.5 minutes of a degree)
 #Reducing collinearity
-nocorrvar <- vifstep(bio, th = 4)
+nocorrvar <- vifstep(bio, th = 5)
 predictors <- as.character(nocorrvar@results$Variables)
 clim_sub <- raster::subset(bio,c(predictors))
 
@@ -360,7 +361,7 @@ lapply(spp_list[1:length(spp_list)], function(i) {
   all_test <- get_evaluations(get(model_i))
   all_tss <- all_test[2, 1, 1:5, 1:4, 1:3]
   
-  if (all_tss>=0.7) {
+  if(length(all_tss[all_tss>=0.7]) != 0) {
     all_ensemble_model <- BIOMOD_EnsembleModeling(modeling.output = get(model_i), 
                                                   em.by='all',
                                                   eval.metric = 'TSS', 
@@ -518,7 +519,7 @@ Aus_veg_agg <- resample(Aus_veg_agg, Aus_bio_2.5 ,method = "bilinear")
 all_predictors <- stack(Aus_bio_2.5, Aus_elev_2.5, Aus_veg_agg)
 
 #Reducing collinearity
-nocorrvar <- vifstep(all_predictors, th = 4)
+nocorrvar <- vifstep(all_predictors, th = 5)
 predictors <- as.character(nocorrvar@results$Variables)
 pred_au_sub <- raster::subset(all_predictors,c(predictors))
 
@@ -648,7 +649,7 @@ lapply(spp_list[1:length(spp_list)], function(i) {
   all_test <- get_evaluations(get(model_i))
   all_tss <- all_test[2, 1, 1:5, 1:4, 1:3]
   
-  if (all_tss>=0.7) {
+  if (length(all_tss[all_tss>=0.7]) != 0) {
     all_ensemble_model <- BIOMOD_EnsembleModeling(modeling.output = get(model_i), 
                                                   em.by='all',
                                                   eval.metric = 'TSS', 
@@ -699,14 +700,14 @@ lapply(spp_list[1:length(spp_list)], function(i) {
   
   # Get evaluations of ensemble models to decide which one to choose:
   all_ensemble_models_scores <- get_evaluations(get(model_ei))
-  write.table(all_ensemble_models_scores, file = paste0(regional_model_path, i, paste0(i,"_eval_ensemble.csv")))
+  write.table(all_ensemble_models_scores, file = file.path(regional_model_path, i, paste0(i,"_eval_ensemble.csv")))
   
   # Get variables importance for all models
   all_models_var_import <- get_variables_importance(get(model_i))
   
   # Calculate the mean of variable importance by algorithm
   table_importance <- apply(all_models_var_import, c(1,2), mean, na.rm=TRUE)
-  write.table(table_importance, file = paste0(regional_model_path, i, paste0(i,"_importance_var.csv")))
+  write.table(table_importance, file = file.path(regional_model_path, i, paste0(i,"_importance_var.csv")))
   
 })
 
@@ -757,7 +758,7 @@ col_cut <- c()
 for(i in spp_list){
   
   # File with all the info. per species:
-  model_eval <- read.csv(file = paste0(regional_model_path, i, paste0(i,"_eval_ensemble.csv")), sep = " ")
+  model_eval <- read.csv(file = file.path(regional_model_path, i, paste0(i,"_eval_ensemble.csv")), sep = " ")
   
   # selecting the parameters that I want
   tss_mod <- round(as.numeric(as.character(model_eval[2,5])),2)
