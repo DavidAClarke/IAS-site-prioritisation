@@ -1,8 +1,8 @@
                   #Obtaining environmental data for use in bias file creation and SDMs
 #Australia elevation
 #getData("alt", country = "AUS", mask = T, path = file.path("SpatialData", "Raster", "Elevation"))
-Aus_elev <- raster(file.path("SpatialData", "Raster", "Elevation", "Aus_msk_alt.gri"))
-#Aus_elev <- raster("E:/SpatialData/Raster/Elevation/Aus_msk_alt.gri") #external drive
+#Aus_elev <- raster(file.path("SpatialData", "Raster", "Elevation", "Aus_msk_alt.gri"))
+Aus_elev <- raster("E:/SpatialData/Raster/Elevation/Aus_msk_alt.gri") #external drive
 Aus_elev <- crop(Aus_elev, Aus_Coast)
 Aus_elev <- mask(Aus_elev, Aus_Coast)
 #for resampling veg
@@ -51,37 +51,37 @@ Aus_bio_min <- Aus_bio[[c("layer.1", "layer.2", "layer.3", "layer.4", "layer.5",
 
 
 #Global Lakes and Wetlands
-GLWD_3 <- raster(file.path("SpatialData", "Raster", "glwd_3", "w001001.adf"))
-GLWD_3 <- raster("C:/Users/dcla0008/Documents/GLWD-level3/glwd_3/w001001.adf") #work computer 2
-crs(GLWD_3) <- crs(Aus_Coast)
-GLWD_3 <- crop(GLWD_3, Aus_Coast)
-rat <- levels(GLWD_3)[[1]]
-rat$Type <- c("Lake","Reservoir", "River", "Freshwater Marsh, Floodplain",
-              "Swamp Forest, Flooded Forest", 
-              "Coastal Wetland (incl. Mangrove, Estuary, Delta, Lagoon)", 
-              "Pan, Brackish/Saline Wetland", "Bog, Fen, Mire (Peatland)", 
-              "Intermittent Wetland/Lake", "50-100% Wetland", "25-50% Wetland", 
-              "Wetland Compex (0-25% Wetland)")
-levels(GLWD_3) <- rat
-GLWD_3 <- deratify(GLWD_3, "Type")
-crs(GLWD_3) <- crs(Aus_Coast)
-
-#Create distance to water layer (I think works)
-GLWD <- spex::polygonize(GLWD_3) #convert to polygon
-GLWD_proj <- st_transform(GLWD, 3577) #transform for dealing better with units
-GLWD_grid <- st_make_grid(GLWD_proj, cellsize = 5000, what = "centers") #cellsize influences file size
-GLWD_grid <- st_intersection(GLWD_grid, GLWD_proj)
-GLWD_proj <- st_cast(GLWD_proj, "MULTILINESTRING")
-save(GLWD_proj, file = file.path("SpatialData", "GLWD_proj.RData"))
-save(GLWD_grid, file = file.path("SpatialData", "GLWD_grid.RData"))
-dist <- st_distance(GLWD_proj, GLWD_grid) #big file!
-df <- data.frame(dist = as.vector(dist)/1000, st_coordinates(GLWD_grid))
-ext <- extent(as(GLWD_grid, "Spatial"))
-r <- raster(resolution = 1000, ext = ext, crs = "+proj=aea +lat_0=0 +lon_0=132 +lat_1=-18 +lat_2=-36 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0
-+units=m +no_defs")
-dist_sf <- st_as_sf(df, coords = c("X","Y")) %>% st_set_crs(3577)
-dist_raster <- rasterize(dist_sf, r, "dist", fun = "mean") #also try fasterize
-writeRaster(dist_raster, filename = file.path("SpatialData", "dist_to_water.grd"), overwrite = T)
+# GLWD_3 <- raster(file.path("SpatialData", "Raster", "glwd_3", "w001001.adf"))
+# GLWD_3 <- raster("C:/Users/dcla0008/Documents/GLWD-level3/glwd_3/w001001.adf") #work computer 2
+# crs(GLWD_3) <- crs(Aus_Coast)
+# GLWD_3 <- crop(GLWD_3, Aus_Coast)
+# rat <- levels(GLWD_3)[[1]]
+# rat$Type <- c("Lake","Reservoir", "River", "Freshwater Marsh, Floodplain",
+#               "Swamp Forest, Flooded Forest", 
+#               "Coastal Wetland (incl. Mangrove, Estuary, Delta, Lagoon)", 
+#               "Pan, Brackish/Saline Wetland", "Bog, Fen, Mire (Peatland)", 
+#               "Intermittent Wetland/Lake", "50-100% Wetland", "25-50% Wetland", 
+#               "Wetland Compex (0-25% Wetland)")
+# levels(GLWD_3) <- rat
+# GLWD_3 <- deratify(GLWD_3, "Type")
+# crs(GLWD_3) <- crs(Aus_Coast)
+# 
+# #Create distance to water layer (I think works)
+# GLWD <- spex::polygonize(GLWD_3) #convert to polygon
+# GLWD_proj <- st_transform(GLWD, 3577) #transform for dealing better with units
+# GLWD_grid <- st_make_grid(GLWD_proj, cellsize = 5000, what = "centers") #cellsize influences file size
+# GLWD_grid <- st_intersection(GLWD_grid, GLWD_proj)
+# GLWD_proj <- st_cast(GLWD_proj, "MULTILINESTRING")
+# save(GLWD_proj, file = file.path("SpatialData", "GLWD_proj.RData"))
+# save(GLWD_grid, file = file.path("SpatialData", "GLWD_grid.RData"))
+# dist <- st_distance(GLWD_proj, GLWD_grid) #big file!
+# df <- data.frame(dist = as.vector(dist)/1000, st_coordinates(GLWD_grid))
+# ext <- extent(as(GLWD_grid, "Spatial"))
+# r <- raster(resolution = 1000, ext = ext, crs = "+proj=aea +lat_0=0 +lon_0=132 +lat_1=-18 +lat_2=-36 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0
+# +units=m +no_defs")
+# dist_sf <- st_as_sf(df, coords = c("X","Y")) %>% st_set_crs(3577)
+# dist_raster <- rasterize(dist_sf, r, "dist", fun = "mean") #also try fasterize
+# writeRaster(dist_raster, filename = file.path("SpatialData", "dist_to_water.grd"), overwrite = T)
 
 #Vegetation
 # veg <- raster(file.path("SpatialData", "GRID_NVIS6_0_AUST_EXT_MVG", "aus6_0e_mvg", "w001000.adf"))
