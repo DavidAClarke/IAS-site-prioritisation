@@ -13,16 +13,15 @@ library(CoordinateCleaner)
 library(countrycode)
 
 #################################################################XY function###########################################
-xy_match <- function(initial, pre, Layer, Long, Lat) {
+xy_match <- function(initial, pre, Layer) {
   pre <- initial
   
-  coordinates(pre) <- ~ Long + Lat
+  coordinates(pre) <- ~ decimalLongitude + decimalLatitude
   crs(pre) <- crs(Layer)
   
   final <- cbind(initial, over(pre, Layer))
   return(final)
 }
-
 ###########################################################Spatial information
 #Load workspace
 load("/projects/nc57/Chapter_3/SpatialData/RL_shp_prepro.RData")
@@ -31,11 +30,10 @@ env_predictors <- stack("/projects/nc57/Chapter_3/SpatialData/Raster/env_predict
 #Species
 speciesNames_range <- speciesNames_range[1501:1750] #include range
 
-
 #Paths to local drive
-env_path <- "/projects/nc57/Chapter_3/Chapter_3/Maxent/Env_layers"
-bias_path <- "/projects/nc57/Chapter_3/Chapter_3/Maxent/Bias_layers"
-occ_path <- "/projects/nc57/Chapter_3/Chapter_3/Maxent/Occurrences"
+env_path <- "/projects/nc57/Chapter_3/Maxent/Env_layers"
+bias_path <- "/projects/nc57/Chapter_3/Maxent/Bias_layers"
+occ_path <- "/projects/nc57/Chapter_3/Maxent/Occurrences"
 gbif_path <- "/projects/nc57/Chapter_3/SpatialData/Vector/SpeciesOccurrences/0310609-200613084148143.csv"
 ala_path <- "/projects/nc57/Chapter_3/SpatialData/Vector/SpeciesOccurrences/ALA_occs.csv"
 
@@ -80,8 +78,6 @@ lapply(speciesNames_range[1:length(speciesNames_range)], function(i) {
     if(is_empty(occs)) stop("No occurrence records")
     
     
-    #think its here where I include cleaning stuff
-    
     # remove records without coordinates
     occs <- occs %>%
       filter(!is.na(decimalLongitude)) %>%
@@ -104,12 +100,12 @@ lapply(speciesNames_range[1:length(speciesNames_range)], function(i) {
     
     #Remove points that don't fall within Country
     Coast_sp <- as(Aus_Coast, Class = "Spatial")
-    occs_cl <- xy_match(occs_cl, occs_cl_n, Coast_sp, decimalLongitude, decimalLatitude)
+    occs_cl <- xy_match(occs_cl, occs_cl_n, Coast_sp)
     occs_cl <- occs_cl %>%
       drop_na(id)
     
     #The flagged records
-    occs_fl <- occs[!flags$.summary,]
+    #occs_fl <- occs[!flags$.summary,]
     
     #Excluding records with more than 500m uncertainty
     #occs_cl <- occs_cl %>%
@@ -117,7 +113,8 @@ lapply(speciesNames_range[1:length(speciesNames_range)], function(i) {
     
     #write csv of cleaned records
     i <- gsub("\\.", "_", i)
-    write.csv(occs_cl, file = file.path(occ_path,i, paste0(i,"_cl.csv")))
+    #write.csv(occs_cl, file = file.path(occ_path,i, paste0(i,"_cl.csv")))
+    write.csv(occs_cl, file = paste0(occ_path,"/",i,"/",i,"_cl.csv"))
     
     #write csv of flagged records
     #write.csv(gbif_occs_fl, file = file.path("SpatialData", "Vector", "SpeciesOccurrences", "GBIF", "Flagged", paste0(i,"_fl.csv")))
