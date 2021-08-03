@@ -11,68 +11,59 @@ drop_download(path = file.path("PhD", "Thesis", "Data", "Chapter_3", "Scripts"),
 #                                                                                          #
 ############################################################################################
 
-#Create path to a new project
-#dir.create("Zonation")
-project_path <- file.path("Zonation")
-
-#Define variant names
-#E.g. RL_all_ABF_eqw - All RL species, using the ABF rule and equal weights
-#E.g. RL_all_ABF_w - All RL species, using the ABF rule and different weights
-# variant_names <- c(
-#   #All Red List species
-#   "RL_all_ABF_eqw",
-#   "RL_all_ABF_w",
-#   "RL_all_CAZ_eqw",
-#   "RL_all_CAZ_w",
-#   "RL_all_RAN_eqw",
-#   "RL_all_RAN_w",
-#   
-#   #IAS threatened Red list species
-#   "RL_IAS_ABF_eqw",
-#   "RL_IAS_ABF_w",
-#   "RL_IAS_CAZ_eqw",
-#   "RL_IAS_CAZ_w",
-#   "RL_IAS_RAN_eqw",
-#   "RL_IAS_RAN_w",
-#   
-#   #All SNES species
-#   "SNES_all_ABF_eqw",
-#   "SNES_all_ABF_w",
-#   "SNES_all_CAZ_eqw",
-#   "SNES_all_CAZ_w",
-#   "SNES_all_RAN_eqw",
-#   "SNES_all_RAN_w",
-#   
-#   #IAS threatened SNES species
-#   "SNES_IAS_ABF_eqw",
-#   "SNES_IAS_ABF_w",
-#   "SNES_IAS_CAZ_eqw",
-#   "SNES_IAS_CAZ_w",
-#   "SNES_IAS_RAN_eqw",
-#   "SNES_IAS_RAN_w")
-
-#For final review just use one
-variant_names <- c("RL_IAS_ABF_eqw")
+#Define variant names (maybe don't do random; add mask to species only variants)
+variant_names <- c("species_ABF",
+                   "species_CAZ",
+                   "species_wgt_ABF",
+                   "species_wgt_CAZ",
+                   "species_wgt_ABF_KBA",
+                   "species_wgt_CAZ_KBA",
+                   "species_area_wgt_ABF",
+                   "species_area_wgt_CAZ",
+                   "species_area_wgt_ABF_KBA",
+                   "species_area_wgt_CAZ_KBA")
 
                              ##Create new Zonation project ##
 # See email from Jooma Lehtomaki (and script from his Japan SCP paper) on using different variants
 # I may need different projects, one for each species group (therefore 4 projects)
 
-#create dat_file (settings file)
-#Test text creation (this works! Perhaps turn into function)
-#try different (lower) warp factors for finer (but slower) solutions.
-#Also try adding  'add edge points = n'. See bottom of page 103 of user manual
-#Will also add a group setting at some point
-Settings <- "[Settings] 
+#cell removal rules
+cell_remove_rule <- c(1,2,5) #CAZ, ABF, Random (double check random number)
+
+#Input data (raster) paths (species or species+area)
+species_path <- file.path(Input_data_path, "species")
+species_area_path <- file.path(Input_data_path, "species_area")
+
+#### PERHAPS NESTED LOOPS CAN BE USED: 
+# FIRST LOOP OVER CELL REMOVAL RULES:
+  # ABF:
+    # LOOP OVER DATASETS PER CELL REMOVAL RULE:
+      # SPECIES, SPECIES+WEIGHTS, SPECIES+WEIGHTS+AREAS (WEIGHTED), SPECIES+WEIGHTS+AREAS (WEIGHTED) + MASK
+
+#create dat_files (settings file)
+ABF_settings <- "[Settings] 
 removal rule = 2 
 warp factor = 1 
-edge removal = 1"
-fileConn <- file("Zonation/output.dat")
+edge removal = 1
+add edge points = 1000"
+fileConn <- file(file.path(project_path,"ABF_settings.dat"))
 writeLines(Settings, fileConn)
 close(fileConn)
 
+CAZ_settings <- "[Settings] 
+removal rule = 1 
+warp factor = 1 
+edge removal = 1
+add edge points = 1000"
+fileConn <- file(file.path(project_path,"CAZ_settings.dat"))
+writeLines(Settings, fileConn)
+close(fileConn)
+
+#get list of dat files
+settings <- list.files(project_path, pattern = ".dat$", full.names = T)
+
 #group file could done using a function e.g. lapply over feature list and if name comes from 
-#a it is KBA els if from b it is PA, etc.
+#a it is KBA els if from b it is PA, etc. For species could be "class" names
 
 
 #There can be no spaces in tif files. This is a way to change file names in bulk
@@ -88,18 +79,18 @@ close(fileConn)
 #Doesn't like me using file.path() for this
 #input_raster_dir <- "C:/Users/David Clarke.DESKTOP-NNNNVLL/Dropbox/PhD/Thesis/Data/Chapter_3/SpatialData/test_data"
 #input_raster_dir <- "C:/Users/dcla0008/Dropbox/PhD/Thesis/Data/Chapter_3/SpatialData/Input_zonation/RL_IAS" #replace test_data
-input_raster_dir <- "C:/Users/david.clarke1/Documents/Chapter_3/Chapter_3/SpatialData/Input_zonation/RL_IAS" #replace test_data
+#input_raster_dir <- "C:/Users/david.clarke1/Documents/Chapter_3/Chapter_3/SpatialData/Input_zonation/RL_IAS" #replace test_data
 
 ##create template spp_file (feature file). As is, outputs based on R project.
-#Default template. (note I will need two different files: 300 species and 70 species)
+#Default template. Maybe I only have one feature group and can use get_variant and sppdata to filter features?
 create_spp(
-  filename = "Zonation/featurelist.spp",
+  filename = file.path(project_path,"species.spp"),
   weight = 1, #perhaps use equal weights as default
   alpha = 1,
   bqp = 1,
   bqp_p = 1,
   cellrem = 0.25,
-  spp_file_dir = input_raster_dir, #this will change depending on whether using all or only IAS threatened species
+  spp_file_dir = species_path, #this will change depending on which features; should match filename
   recursive = FALSE,
   spp_file_pattern = ".+\\.(tif|img)$",
   override_path = NULL
@@ -110,9 +101,67 @@ FinalReview_project <- create_zproject(name = "FinalReview_proj",
                 dir = project_path,
                 variants = variant_names,
                 spp_template_dir = input_raster_dir,
-                spp_template_file = file.path("Zonation","featurelist.spp"),
+                spp_template_file = file.path(project_path,"species.spp"),
                 dat_template_file = file.path("Zonation", "output.dat"))#,
                 #weight = c(1, 1, 1, 2, 3, 2, 1)) #could already have this info as vector
+
+#Edit variants (see Lehtomaki script for assistance)
+#do some testing to make sure edits work
+
+#try filtering features using sppdata
+
+#Adding red list status, taxonomic class and weights to species
+spp_list <- read.csv(file.path(project_path, "spp_list.csv")) #only contains shapefile species at moment
+spp_list <- spp_list %>% rename(acceptedName = "x")
+redlist_status <- read.csv(file.path("SpeciesData", "redlist_species_data_18052021", "assessments.csv"))
+redlist_taxonomy <- read.csv(file.path("SpeciesData", "redlist_species_data_18052021", "taxonomy.csv"))
+TaxInfo <- read.csv(file.path("SpeciesData", "TaxInfo_assess_names.csv"))
+spp_list <- spp_list %>%
+  left_join(TaxInfo, by = "acceptedName") %>%
+  left_join(redlist_status, by= "scientificName") %>%
+  left_join(redlist_taxonomy, by = "scientificName") %>%
+  dplyr::select(acceptedName, className, redlistCategory) %>%
+  dplyr::distinct(acceptedName = acceptedName, .keep_all = T) %>%
+  dplyr::mutate(weight = NA)
+
+for(i in 1:length(spp_list$acceptedName)) {
+  
+  if(spp_list[i,]$redlistCategory == "Least Concern") {
+    
+    spp_list[i,]$weight <- 1
+    
+  }
+  if(spp_list[i,]$redlistCategory == "Near Threatened") {
+    
+    spp_list[i,]$weight <- 2
+    
+  }
+  if(spp_list[i,]$redlistCategory == "Vulnerable") {
+  
+    spp_list[i,]$weight <- 4
+    
+  }
+  if(spp_list[i,]$redlistCategory == "Endangered") {
+    
+    spp_list[i,]$weight <- 6
+    
+  }
+  if(spp_list[i,]$redlistCategory == "Critically Endangered") {
+    
+    spp_list[i,]$weight <- 8
+    
+  }
+  if(spp_list[i,]$redlistCategory == "Data Deficient") {
+    
+    spp_list[i,]$weight <- 2
+    
+  }} 
+  
+spp_list <- spp_list %>%
+  drop_na(weight) #removing extinct species
+write.csv(spp_list,file.path(project_path, "spp_list.csv"))
+
+
 
 
 
