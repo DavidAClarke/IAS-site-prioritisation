@@ -29,7 +29,8 @@ load("/projects/nc57/Chapter_3/SpatialData/RL_shp_prepro.RData")
 env_predictors <- stack("/projects/nc57/Chapter_3/SpatialData/Raster/env_predictors.gri")
 
 #Species
-speciesNames_range <- speciesNames_range[251:500] 
+speciesNames_range <- speciesNames_range[251:500] #it failed at "Hydrophis major"
+
 
 #Paths to local drive
 env_path <- "/projects/nc57/Chapter_3/Maxent/Env_layers"
@@ -58,31 +59,26 @@ lapply(speciesNames_range[1:length(speciesNames_range)], function(i) {
                        quote = "", 
                        na.strings = c("",NA))
     gbif_occs <- gbif_occs %>% 
-      dplyr::select(my_cols_min) %>%
-      dplyr::mutate(decimalLongitude = as.numeric(decimalLongitude)) %>%
-      dplyr::mutate(decimalLatitude = as.numeric(decimalLatitude)) %>%
-      dplyr::mutate(coordinateUncertaintyInMeters = as.numeric(coordinateUncertaintyInMeters)) %>%
-      dplyr::mutate(coordinatePrecision = as.numeric(coordinatePrecision)) %>%
-      dplyr::mutate(individualCount = as.integer(individualCount))
+      dplyr::select(my_cols_min) 
     ala_occs <- fread(cmd = paste("grep", i ,ala_path), 
                       col.names = my_ala_cols, 
                       colClasses = "character",
                       na.strings = c("",NA))
     ala_occs <- ala_occs %>% 
-      dplyr::select(my_cols_min) %>%
+      dplyr::select(my_cols_min) 
+    occs <- rbind(gbif_occs, ala_occs)
+    if(is_empty(occs)) stop("No occurrence records")
+    occs <- occs %>%
       dplyr::mutate(decimalLongitude = as.numeric(decimalLongitude)) %>%
       dplyr::mutate(decimalLatitude = as.numeric(decimalLatitude)) %>%
       dplyr::mutate(coordinateUncertaintyInMeters = as.numeric(coordinateUncertaintyInMeters)) %>%
       dplyr::mutate(coordinatePrecision = as.numeric(coordinatePrecision)) %>%
       dplyr::mutate(individualCount = as.integer(individualCount))
-    occs <- rbind(gbif_occs, ala_occs)
-    if(is_empty(occs)) stop("No occurrence records")
-    
     
     # remove records without coordinates
     occs <- occs %>%
-      filter(!is.na(decimalLongitude)) %>%
-      filter(!is.na(decimalLatitude))
+      dplyr::filter(!is.na(decimalLongitude)) %>%
+      dplyr::filter(!is.na(decimalLatitude))
     
     #convert country code from ISO2c to ISO3c
     occs$countryCode <-  countrycode(occs$countryCode, origin =  'iso2c', destination = 'iso3c')
