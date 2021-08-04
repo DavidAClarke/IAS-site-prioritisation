@@ -1,76 +1,77 @@
                                           #Maxent via ENMTools
-#Environmental data needs to be cropped to species
-#use environmental data cropped during offset/bias
-#example
-Range <- RL_shp_Aus %>% dplyr::filter(acceptedName == "Onthophagus manya")
-Range <- as(Range, Class = "Spatial")
-Env <- env_predictors
-Env_Range <- crop(Env, Range)
-
-#get some points from gbif
-Om_points <- occ_data(scientificName = "Onthophagus manya", country = "AU", hasCoordinate = T, hasGeospatialIssue = F)
-Om_points <- Om_points$data
-Om_points <- Om_points %>%
-  dplyr::select(scientificName, decimalLongitude,decimalLatitude) %>%
-  rename(Longitude = "decimalLongitude") %>%
-  rename(Latitude = "decimalLatitude")
-
-#Writing to folder
-write.csv(Om_points, file.path("Maxent", "Occurrences", "Onthophagus_manya", "Onthophagus_manya_pres.csv"), row.names = F)
-
-#Offset rasters are not written with crs, therefore, need to be given after reading in
-Om_bias <- raster(file.path("Maxent", "Bias_layers", "Onthophagus_manya", "Onthophagus_manya_bias.asc"))
-crs(Om_bias) <- crs(Env_Range) #maybe not needed if saved as .grd
-
-#Create enmtools.species object
-species <- enmtools.species(species.name = "Onthophagus manya",
-                            presence.points = Om_points) #must be named Longitude and Latitude
-
-#Run maxent model
-#try adding additional arguments e.g. output type, also adding report = file.path()
-start_time <- Sys.time()
-Om_maxent <- enmtools.maxent(species = species,
-                             env = Env_Range,
-                             test.prop = 0.2, #also try with "block"
-                             bias = Om_bias,
-                             args = c("outputformat=raw", 
-                                      "replicates=10", 
-                                      "replicatetype=crossvalidate"))
-end_time <- Sys.time()
-end_time - start_time
-
-env.evaluate(species, Om_maxent, Env_Range, test.eval = T)
-
+#######################################################################################################################
+options(java.parameters = "-Xmx8g" )
+library(tidyverse)
+library(sf)
+library(ENMTools)
 
 #Add paths to necessary data
-env_path <- 
-occurrence_path <- 
-bias_path <- 
+env_path <- "E:/Maxent/Env_layers"
+occ_path <- "E:/Maxent/Occurrences"
+bias_path <- "E:/Maxent/Bias_layers"
+zonation_data_path <- "E:/Zonation/Input_data/maxent_output"
 
-#Get species list to loop over (speciesNames_range?)
+source("Scripts/2.aus_coast.R")
 
-lapply()
+#Get species list to loop over (speciesNames_range?) (using plants for testing)
+RL_plants <- read.csv("E:/SpatialData/Vector/redlist_species_data_plantpoints/RL_plants_points.csv")
+RL_plants <- subset(RL_plants, with(RL_plants, unsplit(table(acceptedName), acceptedName)) >= 5)
+speciesNames_points <- unique(RL_plants$acceptedName)
+rm(RL_plants)
+
+#Species list will ultimately just be all species
+
+#Removing points with no environmental data
+rm_occs <- function(env, pts) {
   
+  oc <- extract(env, pts[,2:3])
+  oc <- as.data.frame(oc)
+  pts <- cbind(pts, oc)
+  pts <- na.omit(pts)
+  pts <- pts %>% dplyr::select(scientificName, Longitude, Latitude)
+  return(pts)
+  
+}
+
+#Create empty vectors for model evaluations
+mod_evals <- data.frame(Species = character(), 
+                        n = numeric(), 
+                        np = numeric(), 
+                        auc = numeric(), 
+                        ECE = numeric(),
+                        MCE = numeric(),
+                        Boyce = numeric())
+write.csv(mod_evals, file = "E:/Maxent/mod_evals.csv")
+
+start_time <- Sys.time()
+res.out <- lapply(speciesNames_points[1:length(speciesNames_points)], function(i){
+  
+  print(i)
+  i <- gsub(" ", "_", i)
+  
+  tryCatch({
   #First look for occurrence records
-  occs_files <- list.files()
+  occs_files <- list.files(file.path(occ_path, i), pattern = ".csv")
   if(is_empty(occs_files)) stop("No occurrence records")
-  occs_cl <- read.csv()
-  if(nrows(occs_cl) < 15) stop("Less than 15 cleaned/non-duplicated occurrence records")
+  occs_cl <- read.csv(file.path(occ_path, i, paste0(i, "_cl.csv")))
+  
+  if(nrow(occs_cl) < 15) stop("Less than 15 cleaned/non-duplicated occurrence records")
   occs_cl <- occs_cl %>%
     dplyr::select(scientificName, decimalLongitude,decimalLatitude) %>%
-    rename(Longitude = "decimalLongitude") %>%
-    rename(Latitude = "decimalLatitude")
+    dplyr::rename(Longitude = "decimalLongitude") %>%
+    dplyr::rename(Latitude = "decimalLatitude")
   
   #Look for bias file
-  bias_files <- list.files()
+  bias_files <- list.files(file.path(bias_path, i), pattern = ".gri")
   if(is_empty(bias_files)) stop("No bias file")
-  bias <- raster() #does it have a crs after reading in?
+  bias <- raster(file.path(bias_path, i, paste0(i, "_bias.gri")))
   
   #Read in environmental data
-  Env_range <- raster()
-  #Make sure env and bias are the same extent, resolution, etc. Should be but check anyway
+  Env_range <- stack(file.path(env_path, i, paste0(i, "_env.gri")))
+  #Env and bias should be the same extent, resolution, etc. 
   
-  #Mask occurrences that aren't within Env_range?
+  #Remove occurrences that aren't within Env_range
+  occs_cl <- rm_occs(Env_range, occs_cl)
   
   #Create enmtools.species object
   species <- enmtools.species(species.name = i, 
@@ -78,16 +79,30 @@ lapply()
   
   #Run maxent model
   maxent_mod <- enmtools.maxent(species = species,
-                               env = Env_Range,
-                               test.prop = 0.2, #also try with "block"
-                               bias = Om_bias,
-                               args = c("outputformat=raw", 
-                                        "replicates=10", 
-                                        "replicatetype=crossvalidate"))
+                               env = Env_range[[1:11]], #for now just use the first 11
+                               nback = 2000,
+                               test.prop = 0.2, 
+                               bias = bias,
+                               args = "outputformat=raw")
   
-  #Evaluate
-  env.evaluate(species, maxent_mod, Env_Range, test.eval = T)
+  #Model calibration
+  mod_cal <- enmtools.calibrate(maxent_mod)
+  
+  #Model stats
+  n <- nrow(occs_cl)
+  np <- maxent_mod$test.evaluation@np
+  auc <- maxent_mod$test.evaluation@auc
+  ECE <- mod_cal$ECE
+  MCE <- mod_cal$MCE
+  Boyce <- mod_cal$continuous.boyce$Spearman.cor
+  evals <- cbind(i, n, np, auc, ECE, MCE, Boyce)
+  write.table(evals, file = "E:/Maxent/mod_evals.csv", append = T, sep = ",", col.names = F)
   
   #Write predicted distribution layer for input into zonation
-  zonation_data_path <- 
-  writeRaster()
+  suit_layer <- maxent_mod$suitability
+  suit_layer <- extend(suit_layer, Aus_Coast)
+  writeRaster(suit_layer, filename = file.path(zonation_data_path, paste0(i, "_pred.tif")), overwrite = T)
+  }, error = function(e) {cat("ERROR :", conditionMessage(e), "\n")})
+})
+end_time <- Sys.time()
+end_time - start_time
