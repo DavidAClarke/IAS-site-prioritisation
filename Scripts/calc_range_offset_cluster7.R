@@ -56,22 +56,47 @@ lapply(speciesNames_range[1:length(speciesNames_range)], function(i) {
                        colClasses = "character",
                        quote = "", 
                        na.strings = c("",NA))
-    gbif_occs <- gbif_occs %>% 
-      dplyr::select(my_cols_min) 
     ala_occs <- fread(cmd = paste("grep", i ,ala_path), 
                       col.names = my_ala_cols, 
                       colClasses = "character",
                       na.strings = c("",NA))
-    ala_occs <- ala_occs %>% 
-      dplyr::select(my_cols_min) 
-    occs <- rbind(gbif_occs, ala_occs)
-    if(is_empty(occs)) stop("No occurrence records")
-    occs <- occs %>%
-      dplyr::mutate(decimalLongitude = as.numeric(decimalLongitude)) %>%
-      dplyr::mutate(decimalLatitude = as.numeric(decimalLatitude)) %>%
-      dplyr::mutate(coordinateUncertaintyInMeters = as.numeric(coordinateUncertaintyInMeters)) %>%
-      dplyr::mutate(coordinatePrecision = as.numeric(coordinatePrecision)) %>%
-      dplyr::mutate(individualCount = as.integer(individualCount))
+    if(is_empty(gbif_occs) & is_empty(ala_occs)) stop("No occurrence records")
+    if(is_empty(gbif_occs) & is_empty(ala_occs) == F){
+      print("No GBIF but there are ALA records")
+      ala_occs <- ala_occs %>% 
+        dplyr::select(my_cols_min)
+      occs <- ala_occs %>%
+        dplyr::mutate(decimalLongitude = as.numeric(decimalLongitude)) %>%
+        dplyr::mutate(decimalLatitude = as.numeric(decimalLatitude)) %>%
+        dplyr::mutate(coordinateUncertaintyInMeters = as.numeric(coordinateUncertaintyInMeters)) %>%
+        dplyr::mutate(coordinatePrecision = as.numeric(coordinatePrecision)) %>%
+        dplyr::mutate(individualCount = as.integer(individualCount))
+    } else 
+      if(is_empty(gbif_occs) == F & is_empty(ala_occs)){
+        print("No ALA but there are GBIF records")
+        gbif_occs <- gbif_occs %>% 
+          dplyr::select(my_cols_min) 
+        occs <- gbif_occs %>%
+          dplyr::mutate(decimalLongitude = as.numeric(decimalLongitude)) %>%
+          dplyr::mutate(decimalLatitude = as.numeric(decimalLatitude)) %>%
+          dplyr::mutate(coordinateUncertaintyInMeters = as.numeric(coordinateUncertaintyInMeters)) %>%
+          dplyr::mutate(coordinatePrecision = as.numeric(coordinatePrecision)) %>%
+          dplyr::mutate(individualCount = as.integer(individualCount))
+      } else 
+        if(is_empty(gbif_occs) == F & is_empty(ala_occs) == F){
+          print("Both GBIF and ALA records present")
+          gbif_occs <- gbif_occs %>% 
+            dplyr::select(my_cols_min)
+          ala_occs <- ala_occs %>% 
+            dplyr::select(my_cols_min)
+          occs <- rbind(gbif_occs, ala_occs)
+          occs <- occs %>%
+            dplyr::mutate(decimalLongitude = as.numeric(decimalLongitude)) %>%
+            dplyr::mutate(decimalLatitude = as.numeric(decimalLatitude)) %>%
+            dplyr::mutate(coordinateUncertaintyInMeters = as.numeric(coordinateUncertaintyInMeters)) %>%
+            dplyr::mutate(coordinatePrecision = as.numeric(coordinatePrecision)) %>%
+            dplyr::mutate(individualCount = as.integer(individualCount))
+        }
     
     # remove records without coordinates
     occs <- occs %>%
@@ -141,8 +166,8 @@ lapply(speciesNames_range[1:length(speciesNames_range)], function(i) {
     # 
     # if(extent(Range) > occ_extent) {
     #     
-    Env_Range <- crop(env_predictors, Range)
-    Env_Range <- raster::stack(Env_Range)
+    Env_Range <- crop(env_predictors[[1]], Range)
+    #Env_Range <- raster::stack(Env_Range)
     #} else {
     
     #   Range@bbox <- as.matrix(extent(occ_extent))
