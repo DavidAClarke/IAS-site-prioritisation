@@ -1,9 +1,10 @@
                                           #Maxent via ENMTools
 #######################################################################################################################
-options(java.parameters = "-Xmx8g" )
+options(java.parameters = "-Xmx8g" ) #8gb on my computer
 library(tidyverse)
 library(sf)
 library(ENMTools)
+library(rJava)
 
 #Add paths to necessary data
 env_path <- "E:/Maxent/Env_layers"
@@ -68,6 +69,7 @@ res.out <- lapply(speciesNames_points[1:length(speciesNames_points)], function(i
   
   #Read in environmental data
   Env_range <- stack(file.path(env_path, i, paste0(i, "_env.gri")))
+  Env_range <- check.env(Env_range)
   #Env and bias should be the same extent, resolution, etc. 
   
   #Remove occurrences that aren't within Env_range
@@ -79,7 +81,7 @@ res.out <- lapply(speciesNames_points[1:length(speciesNames_points)], function(i
   
   #Run maxent model
   maxent_mod <- enmtools.maxent(species = species,
-                               env = Env_range[[1:11]], #for now just use the first 11
+                               env = Env_range, #for now just use the first 11
                                nback = 2000,
                                test.prop = 0.2, 
                                bias = bias,
@@ -101,7 +103,7 @@ res.out <- lapply(speciesNames_points[1:length(speciesNames_points)], function(i
   #Write predicted distribution layer for input into zonation
   suit_layer <- maxent_mod$suitability
   suit_layer <- extend(suit_layer, Aus_Coast)
-  writeRaster(suit_layer, filename = file.path(zonation_data_path, paste0(i, "_pred.tif")), overwrite = T)
+  writeRaster(suit_layer, filename = paste0(zonation_data_path, "/",i, "_pred.tif"), overwrite = T)
   }, error = function(e) {cat("ERROR :", conditionMessage(e), "\n")})
 })
 end_time <- Sys.time()
