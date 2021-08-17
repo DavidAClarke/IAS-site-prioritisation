@@ -1,0 +1,19 @@
+#!/bin/bash
+#SBATCH --job-name=maxent_set2
+#SBATCH --account=nc57
+#SBATCH --ntasks=1
+#SBATCH --mem=32G
+#SBATCH --partition=comp
+#SBATCH --time=96:00:00
+#SBATCH --mail-type=BEGIN,FAIL,END
+#SBATCH --mail-user=david.clarke1@monash.edu
+#SBATCH --output=maxent_set2.txt
+cd nc57/Chapter_3/Scripts
+module load R/4.1.0-mkl
+export R_LIBS=~/R/libs
+module load java
+module load udunits2/2.2.20-2
+module load gdal/3.0.2
+module load proj/6.2.1
+module load geos/3.7.2
+R --vanilla < maxent_cluster2.R
