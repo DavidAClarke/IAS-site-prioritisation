@@ -1,11 +1,16 @@
                                # Plant bias files
-#Only species names required are those with Red List plant points
-RL_plants <- read.csv("E:/SpatialData/Vector/redlist_species_data_plantpoints/RL_plants_points.csv")
-#Need remove species with few/one points e.g. "Scleria tessellata" has only one point
-RL_plants <- subset(RL_plants, with(RL_plants, unsplit(table(acceptedName), acceptedName)) >= 5)
-speciesNames_points <- unique(RL_plants$acceptedName)
 
-#XY function
+################################################################ Libraries #################################################
+library(tidyverse)
+library(sf)
+library(sp)
+library(raster)
+library(data.table)
+library(CoordinateCleaner)
+library(countrycode)
+library(MASS)
+
+#################################################################XY function###########################################
 xy_match <- function(initial, pre, Layer) {
   pre <- initial
   
@@ -16,16 +21,22 @@ xy_match <- function(initial, pre, Layer) {
   return(final)
 }
 
-### I am up to using "Croton choristadenius": it has "only finite values are allowed in 'lims'" issue with kde2d
-#Load workspace
-env_predictors <- stack("E:/SpatialData/Raster/env_predictors.gri")
+#Load data
+env_predictors <- stack("/projects/nc57/Chapter_3/SpatialData/Raster/env_predictors.gri")
+load("/projects/nc57/Chapter_3/SpatialData/RL_shp_prepro.RData")
+rm(RL_shp_Aus)
+#Only species names required are those with Red List plant points
+RL_plants <- read.csv("/projects/nc57/Chapter_3/SpatialData/Vector/RL_plants_points.csv")
+#Need remove species with few/one points e.g. "Scleria tessellata" has only one point
+RL_plants <- subset(RL_plants, with(RL_plants, unsplit(table(acceptedName), acceptedName)) >= 5)
+speciesNames_points <- unique(RL_plants$acceptedName)
 
 #Paths to local drive
-env_path <- "E:/Maxent/Env_layers"
-bias_path <- "E:/Maxent/Bias_layers"
-occ_path <- "E:/Maxent/Occurrences"
-gbif_path <- "E:/SpatialData/Vector/SpeciesOccurrences/GBIF/0310609-200613084148143/0310609-200613084148143.csv"
-ala_path <- "E:/SpatialData/Vector/SpeciesOccurrences/ALA/ALA_occs.csv"
+env_path <- "/home/dcla0008/nc57_scratch/Maxent/Env_layers"
+bias_path <- "/home/dcla0008/nc57_scratch/Maxent/Bias_layers"
+occ_path <- "/home/dcla0008/nc57_scratch/Maxent/Occurrences"
+gbif_path <- "/projects/nc57/Chapter_3/SpatialData/Vector/SpeciesOccurrences/0310609-200613084148143.csv"
+ala_path <- "/projects/nc57/Chapter_3/SpatialData/Vector/SpeciesOccurrences/ALA_occs.csv"
 
 
 lapply(speciesNames_points[1:length(speciesNames_points)], function(i){
@@ -39,29 +50,56 @@ lapply(speciesNames_points[1:length(speciesNames_points)], function(i){
   my_ala_cols <- as.character(my_ala_cols[1,])
   
   my_cols_min <- c("family","species", "taxonRank","scientificName","decimalLongitude","decimalLatitude","countryCode","stateProvince", "coordinateUncertaintyInMeters", "coordinatePrecision","basisOfRecord","year", "individualCount", "institutionCode")
-    
+  
+  
   tryCatch({
     gbif_occs <- fread(cmd = paste("grep", i ,gbif_path), 
                        col.names = names(my_gbif_cols), 
                        colClasses = "character",
                        quote = "", 
                        na.strings = c("",NA))
-    gbif_occs <- gbif_occs %>% 
-      dplyr::select(my_cols_min) 
     ala_occs <- fread(cmd = paste("grep", i ,ala_path), 
                       col.names = my_ala_cols, 
                       colClasses = "character",
                       na.strings = c("",NA))
-    ala_occs <- ala_occs %>% 
-      dplyr::select(my_cols_min) 
-    occs <- rbind(gbif_occs, ala_occs)
-    if(is_empty(occs)) stop("No occurrence records")
-    occs <- occs %>%
-      dplyr::mutate(decimalLongitude = as.numeric(decimalLongitude)) %>%
-      dplyr::mutate(decimalLatitude = as.numeric(decimalLatitude)) %>%
-      dplyr::mutate(coordinateUncertaintyInMeters = as.numeric(coordinateUncertaintyInMeters)) %>%
-      dplyr::mutate(coordinatePrecision = as.numeric(coordinatePrecision)) %>%
-      dplyr::mutate(individualCount = as.integer(individualCount))
+    if(is_empty(gbif_occs) & is_empty(ala_occs)) stop("No occurrence records")
+    if(is_empty(gbif_occs) & is_empty(ala_occs) == F){
+      print("No GBIF but there are ALA records")
+      ala_occs <- ala_occs %>% 
+        dplyr::select(my_cols_min)
+      occs <- ala_occs %>%
+        dplyr::mutate(decimalLongitude = as.numeric(decimalLongitude)) %>%
+        dplyr::mutate(decimalLatitude = as.numeric(decimalLatitude)) %>%
+        dplyr::mutate(coordinateUncertaintyInMeters = as.numeric(coordinateUncertaintyInMeters)) %>%
+        dplyr::mutate(coordinatePrecision = as.numeric(coordinatePrecision)) %>%
+        dplyr::mutate(individualCount = as.integer(individualCount))
+    } else 
+      if(is_empty(gbif_occs) == F & is_empty(ala_occs)){
+        print("No ALA but there are GBIF records")
+        gbif_occs <- gbif_occs %>% 
+          dplyr::select(my_cols_min) 
+        occs <- gbif_occs %>%
+          dplyr::mutate(decimalLongitude = as.numeric(decimalLongitude)) %>%
+          dplyr::mutate(decimalLatitude = as.numeric(decimalLatitude)) %>%
+          dplyr::mutate(coordinateUncertaintyInMeters = as.numeric(coordinateUncertaintyInMeters)) %>%
+          dplyr::mutate(coordinatePrecision = as.numeric(coordinatePrecision)) %>%
+          dplyr::mutate(individualCount = as.integer(individualCount))
+      } else 
+        if(is_empty(gbif_occs) == F & is_empty(ala_occs) == F){
+          print("Both GBIF and ALA records present")
+          gbif_occs <- gbif_occs %>% 
+            dplyr::select(my_cols_min)
+          ala_occs <- ala_occs %>% 
+            dplyr::select(my_cols_min)
+          occs <- rbind(gbif_occs, ala_occs)
+          occs <- occs %>%
+            dplyr::mutate(decimalLongitude = as.numeric(decimalLongitude)) %>%
+            dplyr::mutate(decimalLatitude = as.numeric(decimalLatitude)) %>%
+            dplyr::mutate(coordinateUncertaintyInMeters = as.numeric(coordinateUncertaintyInMeters)) %>%
+            dplyr::mutate(coordinatePrecision = as.numeric(coordinatePrecision)) %>%
+            dplyr::mutate(individualCount = as.integer(individualCount))
+        }
+    
     
     # remove records without coordinates
     occs <- occs %>%
@@ -109,7 +147,7 @@ lapply(speciesNames_points[1:length(speciesNames_points)], function(i){
     #predictors <- mask(predictors, Aus_Coast) #already taken care of in env_predictors
     predictors <- crop(env_predictors, species) #maybe use species occurrence extent
     i <- gsub(" ", "_", i)
-    writeRaster(predictors, filename = file.path(env_path, i, paste0(i, "_env.grd")), overwrite = T)
+    writeRaster(predictors, filename = paste0(env_path,"/", i,"/",i, "_env.grd"), overwrite = T)
     #model.extent <- extent(min(occs$decimalLongitude)-10,
       #max(occs$decimalLongitude)+10,
       #min(occs$decimalLatitude)-10,
@@ -128,8 +166,8 @@ lapply(speciesNames_points[1:length(speciesNames_points)], function(i){
     dens <- kde2d(pres.locs[,1], pres.locs[,2], n = c(nrow(species_ras), ncol(species_ras)))
     dens.ras <- raster(dens)
     bias <- resample(dens.ras, predictors)
-    path <- file.path(bias_path, i)
-    writeRaster(bias, filename = file.path(path, paste0(i, "_bias.grd")), overwrite = T) #change
+    path <- paste0(bias_path,"/", i)
+    writeRaster(bias, filename = paste0(path,"/",i, "_bias.grd"), overwrite = T) #change
     }, error = function(e) {cat("ERROR :", conditionMessage(e), "\n")})
   })
 

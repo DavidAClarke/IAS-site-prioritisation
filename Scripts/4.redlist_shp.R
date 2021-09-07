@@ -9,11 +9,11 @@
 
 #Updated downloaded shapefiles. 
 RL_shp_0 <- st_read("SpatialData/Vector/redlist_species_data_18052021/data_0.shp")
-#RL_shp_0 <- st_read("E:/SpatialData/Vector/redlist_species_data_18052021/data_0.shp") #external drive
+RL_shp_0 <- st_read("E:/SpatialData/Vector/redlist_species_data_18052021/data_0.shp") #external drive
 RL_shp_1 <- st_read("SpatialData/Vector/redlist_species_data_18052021/data_1.shp")
-#RL_shp_1 <- st_read("E:/SpatialData/Vector/redlist_species_data_18052021/data_1.shp") #external drive
+RL_shp_1 <- st_read("E:/SpatialData/Vector/redlist_species_data_18052021/data_1.shp") #external drive
 RL_shp_2 <- st_read("SpatialData/Vector/redlist_species_data_18052021/data_2.shp")
-#RL_shp_2 <- st_read("E:/SpatialData/Vector/redlist_species_data_18052021/data_2.shp") #external drive
+RL_shp_2 <- st_read("E:/SpatialData/Vector/redlist_species_data_18052021/data_2.shp") #external drive
 RL_shp <- rbind(RL_shp_0,RL_shp_1,RL_shp_2)
 rm(RL_shp_0,RL_shp_1,RL_shp_2)
 
@@ -71,7 +71,7 @@ RL_info_names <- unique(RL_info$scientificName)
 ############################################ Taxonomic harmonization #####################################
 ##Shapefile
 RL_shp_Aus <- RL_shp_Aus %>%
-  filter(BINOMIAL %in% RL_info_names)
+  dplyr::filter(BINOMIAL %in% RL_info_names)
 # species_names <- unique(RL_shp_Aus$BINOMIAL)
 # TaxInfo <- traitdataform::get_gbif_taxonomy(species_names) #function from traitdataform package
 # write.csv(TaxInfo, file = file.path("SpeciesData", "TaxInfo_shp.csv"))

@@ -1,7 +1,7 @@
                         ## Loading and pre-processing of coastal shapefile ##
 
 #Load spatial data
-Coast_shp <- st_read("SpatialData/Vector/coastal-gshhg-shp-2.3.7/GSHHS_shp/f/GSHHS_f_L1.shp")
+Coast_shp <- st_read("E:/SpatialData/Vector/coastal-gshhg-shp-2.3.7/GSHHS_shp/f/GSHHS_f_L1.shp")
 #Coast_shp <- st_read("C:/Users/dcla0008/Documents/coastal-gshhg-shp-2.3.7/GSHHS_shp/f/GSHHS_f_L1.shp")
 
 #Only keep mainland and Tasmania

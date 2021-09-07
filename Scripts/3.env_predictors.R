@@ -6,7 +6,7 @@ Aus_elev <- raster("E:/SpatialData/Raster/Elevation/Aus_msk_alt.gri") #external 
 Aus_elev <- crop(Aus_elev, Aus_Coast)
 Aus_elev <- mask(Aus_elev, Aus_Coast)
 #for resampling veg
-#Aus_elev_proj <- projectRaster(from = Aus_elev, res = 1000, crs = "+proj=aea +lat_0=0 +lon_0=132 +lat_1=-18 +lat_2=-36 +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs")
+Aus_elev_proj <- projectRaster(from = Aus_elev, res = 1000, crs = "+proj=aea +lat_0=0 +lon_0=132 +lat_1=-18 +lat_2=-36 +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs")
 
 
 #Bioclim rasters
@@ -26,6 +26,7 @@ Aus_elev <- mask(Aus_elev, Aus_Coast)
 # Aus_bio <- crop(Aus_bio, Aus_Coast)
 # writeRaster(Aus_bio, filename = file.path("SpatialData", "Raster", "Worldclim", "Aus_bio.grd"), bandorder = "BIL", overwrite = T)
 Aus_bio <- stack(file.path("SpatialData", "Raster", "Worldclim", "Aus_bio.gri"))
+Aus_bio <- stack("E:/SpatialData/Raster/Worldclim/Aus_bio.gri")
 
 #Make sure any NAs propagate through the layers
 Aus_bio <- check.env(Aus_bio)
@@ -84,29 +85,28 @@ Aus_bio_min <- Aus_bio[[c("layer.1", "layer.2", "layer.3", "layer.4", "layer.5",
 # writeRaster(dist_raster, filename = file.path("SpatialData", "dist_to_water.grd"), overwrite = T)
 
 #Vegetation
-# veg <- raster(file.path("SpatialData", "GRID_NVIS6_0_AUST_EXT_MVG", "aus6_0e_mvg", "w001000.adf"))
-# veg <- resample(veg, Aus_elev_proj, method = "ngb")
-# veg <- projectRaster(from = veg, to = Aus_elev, method = "ngb")
-# veg <- mask(veg, Aus_Coast)
-# veg <- as.factor(veg)
-# rat <- levels(veg)[[1]]
-# rat$Name <- c("Rainforests and Vine Thickets", "Eucalypt Tall Open Forests",
-#               "Eucalypt Open Forests", "Eucalypt Low Open Forests", "Eucalypt Woodlands",
-#               "Acacia Forests and Woodlands", "Callitris Forests and Woodlands",
-#               "Casuarina Forests and Woodlands", "Melaleuca Forests and Woodlands",
-#               "Other Forests and Woodlands", "Eucalypt Open Woodlands", "Tropical Eucalypt Woodlands/Grasslands",
-#               "Acacia Open Woodlands", "Mallee Woodlands and Shrublands", "Low Closed Forests and Tall Closed Shrublands",
-#              " Acacia Shrublands", "Other Shrublands", "Heathlands", "Tussock Grasslands", 
-#               "Hummock Grasslands", "Other Grasslands, Herblands, Sedgelands and Rushlands", 
-#               "Chenopod Shrublands, Samphire Shrublands and Forblands", "Mangroves",
-#               "Inland Aquatic - freshwater, salt lakes, lagoons", "Cleared, non-native vegetation, buildings",
-#               "Unclassified native vegetation", "Naturally bare - sand, rock, claypan, mudflat",
-#               "Sea and estuaries", "Regrowth, modified native vegetation", "Unclassified forest",
-#               "Other Open Woodlands", "Mallee Open Woodlands and Sparse Mallee Shrublands",
-#               "Unknown/no data")
-# levels(veg) <- rat
-# #veg <- deratify(veg, "Name")
-# rm(Aus_elev_proj)
+veg <- raster(file.path("SpatialData", "GRID_NVIS6_0_AUST_EXT_MVG", "aus6_0e_mvg", "w001000.adf"))
+veg <- resample(veg, Aus_elev_proj, method = "ngb")
+veg <- projectRaster(from = veg, to = Aus_elev, method = "ngb")
+veg <- mask(veg, Aus_Coast)
+veg <- as.factor(veg)
+rat <- levels(veg)[[1]]
+rat$Name <- c("Rainforests and Vine Thickets", "Eucalypt Tall Open Forests",
+              "Eucalypt Open Forests", "Eucalypt Low Open Forests", "Eucalypt Woodlands",
+              "Acacia Forests and Woodlands", "Callitris Forests and Woodlands",
+              "Casuarina Forests and Woodlands", "Melaleuca Forests and Woodlands",
+              "Other Forests and Woodlands", "Eucalypt Open Woodlands", "Tropical Eucalypt Woodlands/Grasslands",
+              "Acacia Open Woodlands", "Mallee Woodlands and Shrublands", "Low Closed Forests and Tall Closed Shrublands",
+             "Acacia Shrublands", "Other Shrublands", "Heathlands", "Tussock Grasslands",
+              "Hummock Grasslands", "Other Grasslands, Herblands, Sedgelands and Rushlands",
+              "Chenopod Shrublands, Samphire Shrublands and Forblands", "Mangroves",
+              "Inland Aquatic - freshwater, salt lakes, lagoons", "Cleared, non-native vegetation, buildings",
+              "Unclassified native vegetation", "Naturally bare - sand, rock, claypan, mudflat",
+              "Sea and estuaries", "Regrowth, modified native vegetation", "Unclassified forest",
+              "Other Open Woodlands", "Unknown")
+levels(veg) <- rat
+#veg <- deratify(veg, "Name")
+rm(Aus_elev_proj)
 #maybe need to separate each class into individual rasters, then stack them
 #Here is an example of how to do it:
 # New_LULC_2015 <- raster()

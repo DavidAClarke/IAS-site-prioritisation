@@ -141,7 +141,8 @@ lapply(spp_list[1:length(spp_list)], function(i) {
   
   #Save as shapefile
   st_write(gbif_occs_shp, 
-           dsn = file.path(occ_path, paste0(i,"_data.shp")))
+           dsn = file.path(occ_path, paste0(i,"_data.shp")), 
+           append = F)
            
 })
 
@@ -200,10 +201,12 @@ lapply(spp_list[1:length(spp_list)], function(i) {
   
   #Save as shapefile
   st_write(occ_sf, 
-           dsn = file.path(occ_path,paste0(i,"_occ.shp")))
+           dsn = file.path(occ_path,paste0(i,"_occ.shp")),
+           append = F)
   
   st_write(pres_sf, 
-           dsn = file.path(occ_path,paste0(i,"_pres.shp")))
+           dsn = file.path(occ_path,paste0(i,"_pres.shp")),
+           append = F)
   
   
   #Keeping the NAs as well as those with "certain" data
@@ -251,10 +254,12 @@ lapply(spp_list[1:length(spp_list)], function(i) {
   
   #Save as shapefile
   st_write(occ_sf_2, 
-           dsn = file.path(occ_path,paste0(i,"_occ_all.shp")))
+           dsn = file.path(occ_path,paste0(i,"_occ_all.shp")),
+           append = F)
   
   st_write(pres_sf_2, 
-           dsn = file.path(occ_path,paste0(i,"_pres_all.shp")))
+           dsn = file.path(occ_path,paste0(i,"_pres_all.shp")),
+           append = F)
   
 })
 ###########################################################################################
@@ -262,7 +267,7 @@ lapply(spp_list[1:length(spp_list)], function(i) {
 
 #Climate data (2.5 minutes of a degree)
 #Reducing collinearity
-nocorrvar <- vifstep(bio, th = 5)
+nocorrvar <- vifstep(bio, th = 4)
 predictors <- as.character(nocorrvar@results$Variables)
 clim_sub <- raster::subset(bio,c(predictors))
 
@@ -274,7 +279,7 @@ model_class <- "global"
 my_models <- c("GLM","GAM","MAXENT.Phillips","FDA","GBM") # Algorithms to fit the models   
 my_pa_strategy <- c("random") # Strategy to select PAs   
 my_pa_dist_min <- 0 # Distance where to start throwing PAs  
-my_runs <- 3 # Number of PAs runs
+my_runs <- 4 # Number of PAs runs
 my_n_pa <- 20000 # Number of pseudoabsences, when not dependent of no. presences
 my_proj_name <- "global"  # Name for the output projections
 
@@ -394,7 +399,7 @@ lapply(spp_list[1:length(spp_list)], function(i) {
                                                              binary.meth = "TSS",
                                                              do.stack = FALSE )
 })
-end_time <- Sys.time()
++end_time <- Sys.time()
 end_time - start_time
 
 #Accuracy
@@ -532,7 +537,7 @@ regional_model_path <- "C:/Users/dcla0008/Dropbox/PhD/Thesis/Data/Chapter_3/Spat
 my_models <- c("GLM","GAM","MAXENT.Phillips","FDA","GBM") # Algorithms to fit the models   
 my_pa_strategy <- c("random") # Strategy to select PAs   
 my_pa_dist_min <- 0 # Distance where to start throwing PAs  
-my_runs <- 3 # Number of PAs runs
+my_runs <- 4 # Number of PAs runs
 my_n_pa <- 5000 # Number of pseudoabsences, when not dependent of no. presences
 my_proj_name <- "regional"
 
@@ -658,7 +663,7 @@ lapply(spp_list[1:length(spp_list)], function(i) {
                                                   prob.mean=FALSE, 
                                                   prob.cv=TRUE, 
                                                   committee.averaging=TRUE, 
-                                                  prob.mean.weight = TRUE, 
+                                                  prob.mean.weight = FALSE, 
                                                   VarImport = 3)
   }
   
@@ -804,7 +809,5 @@ write.table(table_a,
             file = file.path(regional_model_path, paste0("Table_",name_model_folder,"_accuracy.txt")),
             row.names = FALSE)
 
-#To load projected ensemble raster (committee averaging predictions)
-#e.g. Pheidole megacephala
-PM <- file.path(regional_model_path, "Pheidole.megacephala", "proj_regional", "individual_projections", paste0("Pheidole.megacephala","_EMcaByTSS_mergedAlgo_mergedRun_mergedData.gri"))
+
 
