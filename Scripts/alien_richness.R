@@ -35,3 +35,19 @@ r <- mask(r, PM_bin)
 r <- round(r)
 writeRaster(r, filename = file.path("SpatialData", "Raster", "alien_richness.tif"), overwrite = T)
 plot(r, col = rev(bpy.colors(60)))
+
+#or
+rdf <- raster::as.data.frame(r, xy = T)
+rdf <- na.omit(rdf)
+ggplot() +
+  geom_raster(data = rdf , aes(x = x, y = y, fill = alien_richness)) +
+  scale_fill_viridis_c(option = "C") +
+  theme_bw() +
+  theme(axis.line = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        axis.text = element_blank(),
+        axis.title = element_blank(),
+        panel.border = element_blank(),
+        axis.ticks = element_blank())
