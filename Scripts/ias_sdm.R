@@ -522,6 +522,7 @@ Aus_veg_agg <- resample(Aus_veg_agg, Aus_bio_2.5 ,method = "bilinear")
 
 #Stacking all
 all_predictors <- stack(Aus_bio_2.5, Aus_elev_2.5, Aus_veg_agg)
+all_predictors <- stack(file.path("SpatialData", "Raster", "env_predictors.gri"))
 
 #Reducing collinearity
 nocorrvar <- vifstep(all_predictors, th = 5)
@@ -549,7 +550,7 @@ lapply(spp_list[1:length(spp_list)], function(i) {
   i <- gsub("\\.", "_", i)
   
   #Load presences
-  sp_pres <- readOGR(file.path(occ_path,paste0(i,"_pres.shp")))
+  sp_pres <- readOGR(file.path(occ_path,paste0(i,"_pres.shp"))) #try with pres_all.shp
   
   #Remove decimal in species name
   i <- gsub("_", ".", i)
