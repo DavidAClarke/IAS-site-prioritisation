@@ -1,4 +1,4 @@
-# IAS SDM - Based off Polaina et al 2020
+# IAS SDM - Setup largely inlfuenced by Polaina et al 2020
 
 #Required libraries
 library(tidyverse)
@@ -16,7 +16,7 @@ library(rgdal)
 #Required initial data
 #bio <- getData("worldclim", var = "bio", res = 2.5, path = "E:/SpatialData/Raster/Worldclim")
 #Personal PC = F:, original work PC = E:
-bio_names <- list.files(path = "E:/SpatialData/Raster/Worldclim/wc2-5", pattern = ".bil$", full.names = T)
+bio_names <- list.files(path = "C:/Users/david/Documents/PhD/Chapter_3/SpatialData/Raster/Worldclim/wc2-5", pattern = ".bil$", full.names = T)
 bio <- stack(bio_names)
 source("Scripts/2.aus_coast.R") #if not already loaded
 
@@ -33,38 +33,16 @@ Aus_raster <- crop(ref_raster, extent(Aus_Coast))
 ## Create directories and Set all required paths
 #Gloal models
 dir.create(file.path("SpatialData", "IAS_distributions", "IAS_global"))
-global_model_path <- paste0("C:/Users/dcla0008/Dropbox/PhD/Thesis/Data/Chapter_3/SpatialData/IAS_distributions/IAS_global")
+global_model_path <- paste0("C:/Users/david/Documents/PhD/Chapter_3/SpatialData/IAS_distributions/IAS_global")
 
 #Regional models
 dir.create(file.path("SpatialData", "IAS_distributions", "IAS_regional"))
-regional_model_path <- paste0("C:/Users/dcla0008/Dropbox/PhD/Thesis/Data/Chapter_3/SpatialData/IAS_distributions/IAS_regional")
-##
+regional_model_path <- paste0("C:/Users/david/Documents/PhD/Chapter_3/SpatialData/IAS_distributions/IAS_regional")
 
 #Maxent path
-maxent_jar_path <- "C:/Users/dcla0008/Dropbox/PhD/Thesis/Data/Chapter_3/maxent.jar" #could change. No spaces allowed
+maxent_jar_path <- "C:/Users/david/Documents/PhD/Chapter_3/maxent.jar" #could change. No spaces allowed
 
-#IAS insect species list (maybe only use species with Aus occurrences)
-spp_list <- c("Vespa velutina", "Bombus impatiens", "Lymantria dispar", "Harmonia axyridis", 
-              "Solenopsis invicta", "Wasmannia auropunctata", "Glischrochilus quadrisignatus",
-              "Digitonthophagus gazella", "Icerya purchasi", "Pheidole megacephala")
-#Which species do and do not have occurrences in Australia?
-#Do
-spp_list_AUS <- c("Solenopsis invicta", "Wasmannia auropunctata", "Digitonthophagus gazella",
-                  "Icerya purchasi", "Pheidole megacephala")
-#Do not (these will only be predictions I guess? i.e. they have no realized niche in AUS)
-spp_list_NoAUS <- c("Vespa velutina", "Bombus impatiens", "Lymantria dispar", "Harmonia axyridis",
-                    "Glischrochilus quadrisignatus")
-
-#Maybe also use:
-#Anoplolepis gracilipes, Vespula germanica, Tetramorium bicarinatum, Aethina tumida, Paratrechina longicornis
-#New list
-spp_list <- c("Solenopsis invicta", "Wasmannia auropunctata", "Digitonthophagus gazella",
-              "Icerya purchasi", "Pheidole megacephala", "Anoplolepis gracilipes",
-              "Vespula germanica", "Tetramorium bicarinatum", "Aethina tumida","Paratrechina longicornis")
-
-#Those with enough records in Aus
-#"Digitonthophagus gazella", "Pheidole megacephala", "Vespula germanica","Icerya purchasi"
-#"Tetramorium bicarinatum", "Paratrechina longicornis"
+#Insect species to model
 spp_list <- c("Digitonthophagus gazella","Icerya purchasi", "Pheidole megacephala",
               "Vespula germanica", "Tetramorium bicarinatum", "Paratrechina longicornis")
 #Should also do some other taxa e.g. cane toad, some mammals, plants?
@@ -94,21 +72,22 @@ res <- occ_download(
   user=user,pwd=pwd,email=email)
 
 #Download data
-occ_path <- "C:/Users/dcla0008/Dropbox/PhD/Thesis/Data/Chapter_3/SpatialData/Vector/IAS_Occurrences"
+occ_path <- "C:/Users/david/Documents/PhD/Chapter_3/SpatialData/Vector/IAS_Occurrences"
 #occ_download_get("0325811-200613084148143", path = occ_path)
 
 #Occurrence data path
 data_path <- paste0(getwd(), "/", file.path("SpatialData", "Vector", "IAS_Occurrences", "0325811-200613084148143.csv"))
 
-#Maybe combine loading and cleaning functions
-#Load occurrence data, convert to spatial object, write to shapefile
-# note issue with head command; install cygwin; add to path, no spaces in full path, etc
+#Add decimal point for use in fread()
 spp_list <- gsub(" ", ".", spp_list)
 
+#Obtain just column names of occurrence dataset
 my_cols <- fread(cmd = paste("head -n 1", data_path))
 
+#Columns to get subset
 my_cols_min <- c("family","species", "taxonRank","scientificName","decimalLongitude","decimalLatitude","countryCode","stateProvince", "coordinateUncertaintyInMeters", "coordinatePrecision","basisOfRecord","year", "individualCount", "institutionCode")
 
+#Convert occurrences to shapefiles
 lapply(spp_list[1:length(spp_list)], function(i) {
   
   #Load data
@@ -147,7 +126,6 @@ lapply(spp_list[1:length(spp_list)], function(i) {
 })
 
 #Clean occurrence data
-
 radius_uncert <- 2500 #radius of cell size: 2.5 arc min very ~ 5km
   
 lapply(spp_list[1:length(spp_list)], function(i) {
@@ -263,7 +241,7 @@ lapply(spp_list[1:length(spp_list)], function(i) {
   
 })
 ###########################################################################################
-#PREDICTORS - Polaina et al 2020 only use climatic variables for global model
+#PREDICTORS 
 
 #Climate data (2.5 minutes of a degree)
 #Reducing collinearity
@@ -347,7 +325,6 @@ lapply(spp_list[1:length(spp_list)], function(i){
 #model_path <- paste0("C:/Users/dcla0008/Dropbox/PhD/Thesis/Data/Chapter_3/SpatialData/IAS_distributions/", name_model_folder)
 
 #Ensemble model
-start_time <- Sys.time()
 lapply(spp_list[1:length(spp_list)], function(i) {
   
   setwd(global_model_path)
@@ -365,6 +342,7 @@ lapply(spp_list[1:length(spp_list)], function(i) {
   # Fit ensemble model
   all_test <- get_evaluations(get(model_i))
   all_tss <- all_test[2, 1, 1:5, 1:4, 1:3]
+  all_tss[is.na(all_tss)] <- 0 #if there are any NAs the following won't work properly
   
   if(length(all_tss[all_tss>=0.7]) != 0) {
     all_ensemble_model <- BIOMOD_EnsembleModeling(modeling.output = get(model_i), 
@@ -373,9 +351,9 @@ lapply(spp_list[1:length(spp_list)], function(i) {
                                                   eval.metric.quality.threshold = 0.7, 
                                                   models.eval.meth = c('KAPPA','TSS','ROC'),
                                                   prob.mean=FALSE, 
-                                                  prob.cv=TRUE, 
+                                                  prob.cv=FALSE, 
                                                   committee.averaging=TRUE, 
-                                                  prob.mean.weight = TRUE, 
+                                                  prob.mean.weight = FALSE, 
                                                   VarImport = 3)
   }
   
@@ -387,9 +365,9 @@ lapply(spp_list[1:length(spp_list)], function(i) {
                                                   eval.metric.quality.threshold = val_tss, 
                                                   models.eval.meth = c('KAPPA','TSS','ROC'), 
                                                   prob.mean=FALSE, 
-                                                  prob.cv=TRUE,
+                                                  prob.cv=FALSE,
                                                   committee.averaging=TRUE, 
-                                                  prob.mean.weight = TRUE, 
+                                                  prob.mean.weight = FALSE, 
                                                   VarImport = 3)
   }
   
@@ -399,8 +377,7 @@ lapply(spp_list[1:length(spp_list)], function(i) {
                                                              binary.meth = "TSS",
                                                              do.stack = FALSE )
 })
-+end_time <- Sys.time()
-end_time - start_time
+
 
 #Accuracy
 lapply(spp_list[1:length(spp_list)], function(i) {
@@ -430,41 +407,14 @@ lapply(spp_list[1:length(spp_list)], function(i) {
 })
   
 ###Australian predictions
-#Predictors
 #worldclim - use already loaded "bio"
 Aus_bio_2.5 <- crop(bio, Aus_raster)
 
-
 #Elevation
-Aus_elev_2.5 <- resample(Aus_elev, Aus_bio_2.5, method = "bilinear") 
+Aus_elev_2.5 <- resample(Aus_elev, Aus_bio_2.5[[1]], method = "bilinear") 
 
-#Vegatation
-Aus_veg <- raster("E:/SpatialData/Raster/Aus_veg.grd")
-# Aus_veg_2.5 <- resample(Aus_veg, Aus_raster, methood = "ngb")
-# Aus_veg_2.5 <- ratify(Aus_veg_2.5, count = TRUE)
-# rat <- levels(Aus_veg_2.5)[[1]]
-# rat$Name <- c("Rainforests and Vine Thickets", "Eucalypt Tall Open Forests",
-#               "Eucalypt Open Forests", "Eucalypt Low Open Forests", "Eucalypt Woodlands",
-#               "Acacia Forests and Woodlands", "Callitris Forests and Woodlands",
-#               "Casuarina Forests and Woodlands", "Melaleuca Forests and Woodlands",
-#               "Other Forests and Woodlands", "Eucalypt Open Woodlands", "Tropical Eucalypt Woodlands/Grasslands",
-#               "Acacia Open Woodlands", "Mallee Woodlands and Shrublands", "Low Closed Forests and Tall Closed Shrublands",
-#               " Acacia Shrublands", "Other Shrublands", "Heathlands", "Tussock Grasslands", 
-#               "Hummock Grasslands", "Other Grasslands, Herblands, Sedgelands and Rushlands", 
-#               "Chenopod Shrublands, Samphire Shrublands and Forblands", "Mangroves",
-#               "Inland Aquatic - freshwater, salt lakes, lagoons", "Cleared, non-native vegetation, buildings",
-#               "Unclassified native vegetation", "Naturally bare - sand, rock, claypan, mudflat",
-#               "Sea and estuaries", "Regrowth, modified native vegetation", "Unclassified forest",
-#               "Other Open Woodlands", "Mallee Open Woodlands and Sparse Mallee Shrublands",
-#               "Unknown/no data")
-# levels(Aus_veg_2.5) <- rat
-# #Aus_veg_2.5 <- deratify(Aus_veg_2.5, "Name")
-# Aus_veg_2.5 <- mask(Aus_veg_2.5, Aus_raster)
-# Aus_veg_2.5 <- mask(Aus_veg_2.5, Aus_Coast)
-
-
-#Reclassify vegetation layer
-#ID groups:
+#Vegetation
+Aus_veg <- raster("C:/Users/david/Documents/PhD/Chapter_3/SpatialData/Raster/Aus_veg.gri")
 
 # reclassify
 Aus_veg[Aus_veg %in% c(1:4, 30)] <- 1 #1, 2,3,4, 30 - Open forests/Rainforests and Vine Thickets
@@ -490,49 +440,29 @@ rat <- data.frame(
                 "Disturbed/bare/unknown")
 )
 levels(Aus_veg) <- rat
+Aus_veg_2.5 <- resample(Aus_veg, Aus_bio_2.5[[1]], method = "ngb")
+Aus_veg_2.5 <- mask(Aus_veg_2.5, Aus_bio_2.5[[1]])
 
-
-Aus_veg_agg <- lapply(unique(Aus_veg), function(land_class) {
-  
-  aggregate(Aus_veg, fact = 5, fun = function(vals, na.rm){
-    
-    sum(vals == land_class, na.rm = na.rm)/length(vals)
-  })
-  
-})
-Aus_veg_agg <- stack(Aus_veg_agg)
-names(Aus_veg_agg) <- rat$landcover
-Aus_veg_agg <- mask(Aus_veg_agg, Aus_Coast)
-Aus_veg_agg <- resample(Aus_veg_agg, Aus_bio_2.5 ,method = "bilinear")
-
-#Surface hydrology
-# Aus_hyd <- raster("E:/SpatialData/Raster/Aus_Hyd.gri")
-# Aus_hyd_2.5 <- resample(Aus_hyd, Aus_raster, method = "ngb")
-# Aus_hyd_2.5 <- ratify(Aus_hyd_2.5, count = TRUE)
-# rat <- levels(Aus_hyd_2.5)[[1]]
-# FeatureType <- FeatureType[-c(5,15)]
-# rat$FeatureType <- FeatureType
-# levels(Aus_hyd) <- rat
-# Aus_hyd <- mask(Aus_hyd, Aus_raster)
-# tst <- Aus_hyd
-# rc <- as.matrix(data.frame(from = c(7,8,10, 11, 12, 16), to = c(9,9,10,10,10,14)))
-# tst_rc <- reclassify(tst,rc)
-# tst_rc <- ratify(tst_rc, count = T)
-#Aus_hyd_de <- deratify(Aus_hyd)
+#Human footprint
+impact <- raster(file.path("SpatialData", "Raster", "wildareas-v3-2009-human-footprint.tif"))
+Aus_Coast_moll <- st_transform(Aus_Coast, crs = "+proj=moll")
+aus_impact <- crop(impact, Aus_Coast_moll)
+aus_impact <- projectRaster(from = aus_impact, res = 0.008333333, crs = "+proj=longlat +datum=WGS84 +no_defs")
+aus_impact <- mask(aus_impact, Aus_Coast)
+aus_impact_2.5 <- resample(aus_impact, Aus_bio_2.5[[1]])
 
 #Stacking all
-all_predictors <- stack(Aus_bio_2.5, Aus_elev_2.5, Aus_veg_agg)
-all_predictors <- stack(file.path("SpatialData", "Raster", "env_predictors.gri"))
+all_predictors <- stack(Aus_bio_2.5, Aus_elev_2.5, Aus_veg_2.5, aus_impact_2.5)
 
 #Reducing collinearity
-nocorrvar <- vifstep(all_predictors, th = 5)
+nocorrvar <- vifstep(all_predictors, th = 4)
 predictors <- as.character(nocorrvar@results$Variables)
 pred_au_sub <- raster::subset(all_predictors,c(predictors))
 
 ###Set parameters for regional model
 name_model_folder <- "IAS_regional" 
 model_class <- "regional" 
-regional_model_path <- "C:/Users/dcla0008/Dropbox/PhD/Thesis/Data/Chapter_3/SpatialData/IAS_distributions/IAS_regional"
+regional_model_path <- "C:/Users/david/Documents/PhD/Chapter_3/SpatialData/IAS_distributions/IAS_regional"
 
 #Individual models
 my_models <- c("GLM","GAM","MAXENT.Phillips","FDA","GBM") # Algorithms to fit the models   
@@ -542,8 +472,7 @@ my_runs <- 4 # Number of PAs runs
 my_n_pa <- 5000 # Number of pseudoabsences, when not dependent of no. presences
 my_proj_name <- "regional"
 
-#To begin with, just use spp_list_AUS
-start_time <- Sys.time()
+
 lapply(spp_list[1:length(spp_list)], function(i) {
   
   #Remove decimal in species name
@@ -637,8 +566,7 @@ lapply(spp_list[1:length(spp_list)], function(i) {
                                            binary.meth = "TSS",
                                            do.stack = FALSE )
 })
-end_time <- Sys.time()
-end_time - start_time
+
 
 #Ensemble model
 lapply(spp_list[1:length(spp_list)], function(i) {
@@ -654,6 +582,7 @@ lapply(spp_list[1:length(spp_list)], function(i) {
   # Fit ensemble model
   all_test <- get_evaluations(get(model_i))
   all_tss <- all_test[2, 1, 1:5, 1:4, 1:3]
+  all_tss[is.na(all_tss)] <- 0 #if there are any NAs the following won't work properly
   
   if (length(all_tss[all_tss>=0.7]) != 0) {
     all_ensemble_model <- BIOMOD_EnsembleModeling(modeling.output = get(model_i), 
@@ -662,7 +591,7 @@ lapply(spp_list[1:length(spp_list)], function(i) {
                                                   eval.metric.quality.threshold = 0.7, 
                                                   models.eval.meth = c('KAPPA','TSS','ROC'),
                                                   prob.mean=FALSE, 
-                                                  prob.cv=TRUE, 
+                                                  prob.cv=FALSE, 
                                                   committee.averaging=TRUE, 
                                                   prob.mean.weight = FALSE, 
                                                   VarImport = 3)
@@ -676,9 +605,9 @@ lapply(spp_list[1:length(spp_list)], function(i) {
                                                   eval.metric.quality.threshold = val_tss, 
                                                   models.eval.meth = c('KAPPA','TSS','ROC'), 
                                                   prob.mean=FALSE, 
-                                                  prob.cv=TRUE,
+                                                  prob.cv=FALSE,
                                                   committee.averaging=TRUE, 
-                                                  prob.mean.weight = TRUE, 
+                                                  prob.mean.weight = FALSE, 
                                                   VarImport = 3)
   }
   
@@ -767,10 +696,10 @@ for(i in spp_list){
   model_eval <- read.csv(file = file.path(regional_model_path, i, paste0(i,"_eval_ensemble.csv")), sep = " ")
   
   # selecting the parameters that I want
-  tss_mod <- round(as.numeric(as.character(model_eval[2,5])),2)
-  sens_mod <- round(as.numeric(as.character(model_eval[2,7])),2)
-  spec_mod <- round(as.numeric(as.character(model_eval[2,8])),2)
-  cut_mod <- round(as.numeric(as.character(model_eval[2,6]))/1000,2)
+  tss_mod <- round(as.numeric(as.character(model_eval[2,1])),2)
+  sens_mod <- round(as.numeric(as.character(model_eval[2,3])),2)
+  spec_mod <- round(as.numeric(as.character(model_eval[2,4])),2)
+  cut_mod <- round(as.numeric(as.character(model_eval[2,2]))/1000,2)
   
   # Create vectors with all the species:
   col_tss <- c(col_tss, tss_mod)
@@ -780,30 +709,10 @@ for(i in spp_list){
   
 }
 
-## Mean CV within each ensemble model
-sp_mean_cv <- c()
-raster_list <- list()
-
-for(i in spp_list){
-  
-  raster_sp <- raster(file.path(regional_model_path, i, paste0("proj_", model_class), "individual_projections", paste0(i, "_EMcvByTSS_mergedAlgo_mergedRun_mergedData.grd")))
-  
-  r.min <- cellStats(raster_sp, "min")
-  r.max <- cellStats(raster_sp, "max")
-  
-  raster_sp_scale <- (raster_sp - r.min) / (r.max - r.min) 
-  raster_sp_scale <- raster::mask(raster_sp_scale,raster_to_use)
-  raster_list[[i]] <- raster_sp_scale
-  
-  # Calculate the mean CV for each species:
-  mean_sp <- cellStats(raster_sp_scale, stat='mean', na.rm=TRUE)
-  sp_mean_cv <- c(sp_mean_cv,mean_sp)
-  
-}
 
 ## Final table with info for all: 
-table_a <- as.data.frame(cbind(as.character(spp_list),col_n,col_tss,col_sens,col_spec,col_cut,sp_mean_cv))
-names(table_a) <- c("Species","n","TSS","Sensitivity","Specificity","Cut-off binary","Mean CV")
+table_a <- as.data.frame(cbind(as.character(spp_list),col_n,col_tss,col_sens,col_spec,col_cut))
+names(table_a) <- c("Species","n","TSS","Sensitivity","Specificity","Cut-off binary")
 
 # Write in the directory:
 write.table(table_a, 
