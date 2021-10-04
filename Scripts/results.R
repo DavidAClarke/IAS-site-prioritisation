@@ -417,26 +417,9 @@ ggarrange(p7,p10,
           common.legend = F, 
           ncol = 1, nrow = 2)
 ######################################################################
-#Map for inset (species + weights)
-for_inset <- ggplot()+
-  geom_sf(data = CAZ_wgt_var_ras_sf, aes(fill=species_wgt_CAZ.CAZ_E.rank.compressed), 
-          color=NA, 
-          show.legend = T) + 
-  scale_fill_gradientn(colours = leg$colors,
-                       values = leg$values,
-                       name = "Site sensitivity",
-                       breaks = c(0.0, 0.2, 0.4, 0.6, 0.8,1)) +
-  theme_bw() +
-  theme(axis.line = element_blank(),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        panel.background = element_blank(),
-        axis.text = element_blank(),
-        panel.border = element_blank(),
-        axis.ticks = element_blank())
 
                                     ##IAS SDMs##
-regional_model_path <- "E:/PhD/Chapter_3/Data/IAS_distributions/IAS_regional"
+regional_model_path <- "F:/PhD/Chapter_3/Data/IAS_distributions/IAS_regional"
 spp_list <- c("Digitonthophagus gazella", "Pheidole megacephala",
               "Vespula germanica", "Tetramorium bicarinatum", "Paratrechina longicornis")
 
@@ -452,8 +435,6 @@ lapply(spp_list[1:length(spp_list)], FUN = function(i){
 
 
                               ##CAZ with weights##
-
-
 #Pheidole megacephala
 PM_bin <- raster(file.path(regional_model_path, "Pheidole.megacephala", "proj_regional", "individual_projections", paste0("Pheidole.megacephala","_EMcaByTSS_mergedAlgo_mergedRun_mergedData_TSSbin.gri")))
 PM_bin2 <- PM_bin
@@ -462,6 +443,9 @@ PM_bin2[PM_bin2 != 0] <- 1
 # Re-class zeros as NA
 PM_bin[PM_bin == 0] <- NA
 PM_bin <- resample(PM_bin, CAZ_wgt_var_ras) #get equal extent
+PM_bin_p <- rasterToPolygons(PM_bin, dissolve = T)
+PM_bin_sf <- st_as_sf(PM_bin_p)
+PM_bin_sf_bb <- st_as_sfc(st_bbox(PM_bin_sf))
 
 
 #Vespula germanica
@@ -472,6 +456,9 @@ VG_bin2[VG_bin2 != 0] <- 1
 # Re-class zeros as NA
 VG_bin[VG_bin == 0] <- NA
 VG_bin <- resample(VG_bin, CAZ_wgt_var_ras) #get equal extent
+VG_bin_p <- rasterToPolygons(VG_bin, dissolve = T)
+VG_bin_sf <- st_as_sf(VG_bin_p)
+VG_bin_sf_bb <- st_as_sfc(st_bbox(VG_bin_sf))
 
 #Digitonthophagus gazella
 DG_bin <- raster(file.path(regional_model_path, "Digitonthophagus.gazella", "proj_regional", "individual_projections", paste0("Digitonthophagus.gazella","_EMcaByTSS_mergedAlgo_mergedRun_mergedData_TSSbin.gri")))
@@ -481,6 +468,9 @@ DG_bin2[DG_bin2 != 0] <- 1
 # Re-class zeros as NA
 DG_bin[DG_bin == 0] <- NA
 DG_bin <- resample(DG_bin, CAZ_wgt_var_ras) #get equal extent
+DG_bin_p <- rasterToPolygons(DG_bin, dissolve = T)
+DG_bin_sf <- st_as_sf(DG_bin_p)
+DG_bin_sf_bb <- st_as_sfc(st_bbox(DG_bin_sf))
 
 #Tetramorium bicarinatum
 TB_bin <- raster(file.path(regional_model_path, "Tetramorium.bicarinatum", "proj_regional", "individual_projections", paste0("Tetramorium.bicarinatum","_EMcaByTSS_mergedAlgo_mergedRun_mergedData_TSSbin.gri")))
@@ -490,6 +480,9 @@ TB_bin2[TB_bin2 != 0] <- 1
 # Re-class zeros as NA
 TB_bin[TB_bin == 0] <- NA
 TB_bin <- resample(TB_bin, CAZ_wgt_var_ras) #get equal extent
+TB_bin_p <- rasterToPolygons(TB_bin, dissolve = T)
+TB_bin_sf <- st_as_sf(TB_bin_p)
+TB_bin_sf_bb <- st_as_sfc(st_bbox(TB_bin_sf))
 
 #Paratrechina longicornis
 PL_bin <- raster(file.path(regional_model_path, "Paratrechina.longicornis", "proj_regional", "individual_projections", paste0("Paratrechina.longicornis","_EMcaByTSS_mergedAlgo_mergedRun_mergedData_TSSbin.gri")))
@@ -499,6 +492,37 @@ PL_bin2[PL_bin2 != 0] <- 1
 # Re-class zeros as NA
 PL_bin[PL_bin == 0] <- NA
 PL_bin <- resample(PL_bin, CAZ_wgt_var_ras) #get equal extent
+PL_bin_p <- rasterToPolygons(PL_bin, dissolve = T)
+PL_bin_sf <- st_as_sf(PL_bin_p)
+PL_bin_sf_bb <- st_as_sfc(st_bbox(PL_bin_sf))
+
+#Map for inset (species + weights)
+CAZ_wgt_var_ras_st <- st_as_stars(CAZ_wgt_var_ras)
+CAZ_wgt_var_ras_sf <- st_as_sf(CAZ_wgt_var_ras_st)
+for_inset <- ggplot()+
+  geom_sf(data = CAZ_wgt_var_ras_sf, aes(fill=species_wgt_CAZ.CAZ_E.rank.compressed), 
+          color=NA, 
+          show.legend = T) + 
+  scale_fill_gradientn(colours = leg$colors,
+                       values = leg$values,
+                       name = "Site sensitivity",
+                       breaks = c(0.0, 0.2, 0.4, 0.6, 0.8,1)) +
+  theme_bw() +
+  theme(axis.line = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        axis.text = element_blank(),
+        panel.border = element_blank(),
+        axis.ticks = element_blank(),
+        legend.position = "top")
+#to add rectangles for bbox of IAS sdm
+map_w_borders <- for_inset + 
+                  geom_sf(data = PM_bin_sf_bb, fill = NA, color = "#5bb4f2") +
+                  geom_sf(data = VG_bin_sf_bb, fill = NA, color = "#9c5200") +
+                  geom_sf(data = DG_bin_sf_bb, fill = NA, color = "#b409a7") +
+                  geom_sf(data = TB_bin_sf_bb, fill = NA, color = "#040200") +
+                  geom_sf(data = PL_bin_sf_bb, fill = NA, color = "#0db02f")
 
 #Histograms of IAS overlap with sensitive sites
 PM_hist <- mask_hist(CAZ_wgt_var_ras, PM_bin)
@@ -510,11 +534,11 @@ PL_hist <- mask_hist(CAZ_wgt_var_ras, PL_bin)
 
 #Priority plots - overlap of sensitive and susceptible sites (predicted IAS range)
 #sdm_col = colour of the predicted range, sdm_brd_col = colour of rectangle delineating range extent
-PM_priority <- Priority_plot(PM_bin, CAZ_wgt_var_ras, sdm_col = "black", sdm_brd_col = NA) #use sdm_brd_col = NA if you don't want a rectangle
-VG_priority <- Priority_plot(VG_bin, CAZ_wgt_var_ras, sdm_col = "black", sdm_brd_col = "purple")
-DG_priority <- Priority_plot(DG_bin, CAZ_wgt_var_ras, sdm_col = "black", sdm_brd_col = "purple")
-TB_priority <- Priority_plot(TB_bin, CAZ_wgt_var_ras, sdm_col = "black", sdm_brd_col = "purple")
-PL_priority <- Priority_plot(PL_bin, CAZ_wgt_var_ras, sdm_col = "black", sdm_brd_col = "purple")
+PM_priority <- Priority_plot(PM_bin, CAZ_wgt_var_ras, sdm_col = "black", sdm_brd_col = "#5bb4f2") #use sdm_brd_col = NA if you don't want a rectangle
+VG_priority <- Priority_plot(VG_bin, CAZ_wgt_var_ras, sdm_col = "black", sdm_brd_col = "#9c5200")
+DG_priority <- Priority_plot(DG_bin, CAZ_wgt_var_ras, sdm_col = "black", sdm_brd_col = "#b409a7")
+TB_priority <- Priority_plot(TB_bin, CAZ_wgt_var_ras, sdm_col = "black", sdm_brd_col = "#040200")
+PL_priority <- Priority_plot(PL_bin, CAZ_wgt_var_ras, sdm_col = "black", sdm_brd_col = "#0db02f")
 
 
 #Overlap among all three species (turn into function?)
@@ -591,55 +615,88 @@ ks.test(PL_KBA_vals, PL_vals, alternative = "two.sided")
 
 
 #Difference between species + weight IAS
-ks.test(PM_vals, VG_vals, alternative = "two.sided")
-ks.test(PM_vals, DG_vals, alternative = "two.sided")
-ks.test(PM_vals, TB_vals, alternative = "two.sided")
-ks.test(PM_vals, PL_vals, alternative = "two.sided")
+PM_VG <- ks.test(PM_vals, VG_vals, alternative = "two.sided")
+PM_DG <- ks.test(PM_vals, DG_vals, alternative = "two.sided")
+PM_TB <- ks.test(PM_vals, TB_vals, alternative = "two.sided")
+PM_PL <- ks.test(PM_vals, PL_vals, alternative = "two.sided")
 
-ks.test(VG_vals, DG_vals, alternative = "two.sided")
-ks.test(VG_vals, PL_vals, alternative = "two.sided")
-ks.test(VG_vals, TB_vals, alternative = "two.sided")
+VG_DG <- ks.test(VG_vals, DG_vals, alternative = "two.sided")
+VG_PL <- ks.test(VG_vals, PL_vals, alternative = "two.sided")
+VG_TB <- ks.test(VG_vals, TB_vals, alternative = "two.sided")
 
-ks.test(DG_vals, TB_vals, alternative = "two.sided")
-ks.test(DG_vals, PL_vals, alternative = "two.sided")
+DG_TB <- ks.test(DG_vals, TB_vals, alternative = "two.sided")
+DG_PL <- ks.test(DG_vals, PL_vals, alternative = "two.sided")
 
-ks.test(TB_vals, PL_vals, alternative = "two.sided")
+TB_PL <- ks.test(TB_vals, PL_vals, alternative = "two.sided")
 
-
+v <- c(0,PM_VG$statistic,PM_DG$statistic,PM_TB$statistic, PM_PL$statistic,
+       0,0,VG_DG$statistic,VG_PL$statistic,VG_TB$statistic,
+       0,0,0,DG_TB$statistic,DG_PL$statistic,
+       0,0,0,0,TB_PL$statistic,)
+tm <- matrix(v, nrow = 5, ncol = 4)
+rownames(tm) <- c("Pm", "Vg", "Dg", "Tb", "Pl")
+colnames(tm) <- c("Pm", "Vg", "Dg", "Tb")
+corrplot::corrplot(tm, type = "lower", method = "color", 
+                   cl.pos = "n", col=brewer.pal(n=10, name="Spectral"), 
+                   tl.srt = 0, tl.col = "black", addCoef.col = "black")
 
 #Proportion difference (KBA vs no KBA) in number of top sensitive sites
 #Top two (i.e. >= 0.98 sensitivity)
-PM_prop <- prop_diff(PM_vals, 0.98)
-PM_KBA_prop <- prop_diff(PM_KBA_vals, 0.98)
+props <- c(0.98, 0.95, 0.90, 0.75, 0.50, 0.25, 0.00)
+diffs <- c()
+PM_prop <- multi_props(PM_vals, props)
+PM_KBA_prop <- multi_props(PM_KBA_vals, props)
 
-VG_prop <- prop_diff(VG_vals, 0.98)
-VG_KBA_prop <- prop_diff(VG_KBA_vals, 0.98)
+VG_prop <- multi_props(VG_vals, props)
+VG_KBA_prop <- multi_props(VG_KBA_vals, props)
 
-DG_prop <- prop_diff(DG_vals, 0.98)
-DG_KBA_prop <- prop_diff(DG_KBA_vals, 0.98)
+DG_prop <- multi_props(DG_vals, props)
+DG_KBA_prop <- multi_props(DG_KBA_vals, props)
 
-TB_prop <- prop_diff(TB_vals, 0.98)
-TB_KBA_prop <- prop_diff(TB_KBA_vals, 0.98)
+TB_prop <- multi_props(TB_vals, props)
+TB_KBA_prop <- multi_props(TB_KBA_vals, props)
 
-PL_prop <- prop_diff(PL_vals, 0.98)
-PL_KBA_prop <- prop_diff(PL_KBA_vals, 0.98)
+PL_prop <- multi_props(VG_vals, props)
+PL_KBA_prop <- multi_props(VG_KBA_vals, props)
 
+Total <- as.data.frame(rbind(PM_prop, VG_prop, DG_prop, TB_prop, PL_prop,
+           PM_KBA_prop, VG_KBA_prop, DG_KBA_prop, TB_KBA_prop, PL_KBA_prop))
+Type <- c(rep("Unmasked", 5), rep("Masked", 5))
+Species <- rep(c("P. megacephala", "V. germanica", "D. gazella",
+                 "T. bicarinatum", "P. longicornis"), 2)
+Total <- cbind(Species, Type,Total)
+Total <- Total %>%
+  as_tibble() %>%
+  mutate(Species = factor(Species)) %>%
+  mutate(Type = factor(Type)) %>%
+  pivot_longer(cols = !Species & !Type, 
+               names_to = "SiteSensitivity", 
+               values_to = "DistributionCoverage") %>%
+  mutate(SiteSensitivity = as.double(SiteSensitivity))
+cols <- c("#b409a7","#0db02f", "#5bb4f2","#040200","#9c5200")
+ggplot(Total, 
+       aes(x = SiteSensitivity, 
+           y = DistributionCoverage, 
+           colour = Species,
+           group = interaction(Species,Type))) +
+  geom_line(aes(linetype = Type)) +
+  scale_colour_manual(values = cols) +
+  ylab("Distribution Coverage (%)") +
+  xlab("Site Sensitivity") +
+  theme_bw() +
+  theme(axis.line = element_line(colour = "black"),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        axis.text = element_text(size = 12), 
+        axis.title.x = element_text(size = 14),
+        axis.title.y = element_text(size = 14)) +
+  scale_x_continuous(expand = c(0,0),
+                     limits = c(1,0),
+                     trans = "reverse") +
+  scale_y_continuous(expand = c(0,0))
+  
 
-#Top quarter (i.e. >= 0.75 sensitivity)
-PM_prop <- prop_diff(PM_vals, 0.75)
-PM_KBA_prop <- prop_diff(PM_KBA_vals, 0.75)
-
-VG_prop <- prop_diff(VG_vals, 0.75)
-VG_KBA_prop <- prop_diff(VG_KBA_vals, 0.75)
-
-DG_prop <- prop_diff(DG_vals, 0.75)
-DG_KBA_prop <- prop_diff(DG_KBA_vals, 0.75)
-
-TB_prop <- prop_diff(TB_vals, 0.75)
-TB_KBA_prop <- prop_diff(TB_KBA_vals, 0.75)
-
-PL_prop <- prop_diff(PL_vals, 0.75)
-PL_KBA_prop <- prop_diff(PL_KBA_vals, 0.75)
 
 #################################### Jaccards similarity #############################
 #Variant names
