@@ -179,3 +179,18 @@ IAS_plot <- function(species){
           strip.text.x = element_text(size = 12))
   return(r_plot)
 }
+
+
+#Get proportion differences
+multi_props <- function(vals, props){
+  
+  for(i in props[1:length(props)]){
+  
+  d <- prop_diff(vals, i)
+  diffs <- c(diffs,d)
+  
+  
+  }
+  names(diffs) <- c("0.98", "0.95", "0.90", "0.75", "0.50", "0.25", "0.00")
+  return(diffs)
+}
