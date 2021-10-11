@@ -419,7 +419,7 @@ ggarrange(p7,p10,
 ######################################################################
 
                                     ##IAS SDMs##
-regional_model_path <- "F:/PhD/Chapter_3/Data/IAS_distributions/IAS_regional"
+regional_model_path <- "H:/PhD/Chapter_3/Data/IAS_distributions/IAS_regional"
 spp_list <- c("Digitonthophagus gazella", "Pheidole megacephala",
               "Vespula germanica", "Tetramorium bicarinatum", "Paratrechina longicornis")
 
@@ -515,7 +515,7 @@ for_inset <- ggplot()+
         axis.text = element_blank(),
         panel.border = element_blank(),
         axis.ticks = element_blank(),
-        legend.position = "top")
+        legend.position = "right")
 #to add rectangles for bbox of IAS sdm
 map_w_borders <- for_inset + 
                   geom_sf(data = PM_bin_sf_bb, fill = NA, color = "#5bb4f2") +
@@ -642,7 +642,7 @@ corrplot::corrplot(tm, type = "lower", method = "color",
 
 #Proportion difference (KBA vs no KBA) in number of top sensitive sites
 #Top two (i.e. >= 0.98 sensitivity)
-props <- c(0.98, 0.95, 0.90, 0.75, 0.50, 0.25, 0.00)
+props <- c(1, 0.98, 0.95, 0.90, 0.75, 0.50, 0.25, 0.00)
 diffs <- c()
 PM_prop <- multi_props(PM_vals, props)
 PM_KBA_prop <- multi_props(PM_KBA_vals, props)
@@ -656,8 +656,8 @@ DG_KBA_prop <- multi_props(DG_KBA_vals, props)
 TB_prop <- multi_props(TB_vals, props)
 TB_KBA_prop <- multi_props(TB_KBA_vals, props)
 
-PL_prop <- multi_props(VG_vals, props)
-PL_KBA_prop <- multi_props(VG_KBA_vals, props)
+PL_prop <- multi_props(PL_vals, props)
+PL_KBA_prop <- multi_props(PL_KBA_vals, props)
 
 Total <- as.data.frame(rbind(PM_prop, VG_prop, DG_prop, TB_prop, PL_prop,
            PM_KBA_prop, VG_KBA_prop, DG_KBA_prop, TB_KBA_prop, PL_KBA_prop))
@@ -674,12 +674,16 @@ Total <- Total %>%
                values_to = "DistributionCoverage") %>%
   mutate(SiteSensitivity = as.double(SiteSensitivity))
 cols <- c("#b409a7","#0db02f", "#5bb4f2","#040200","#9c5200")
-ggplot(Total, 
+df <- data.frame(xmin = c(1,0.98,0.95,0.9,0.75,0.5,0.25),
+                 xmax = c(0.98,0.95,0.9,0.75,0.5,0.25,0),
+                 ymin = rep(-Inf,7),
+                 ymax = rep(Inf,7))
+p <- ggplot(Total, 
        aes(x = SiteSensitivity, 
            y = DistributionCoverage, 
            colour = Species,
            group = interaction(Species,Type))) +
-  geom_line(aes(linetype = Type)) +
+  geom_line(stat = "identity", aes(linetype = Type)) +
   scale_colour_manual(values = cols) +
   ylab("Distribution Coverage (%)") +
   xlab("Site Sensitivity") +
@@ -690,11 +694,17 @@ ggplot(Total,
         panel.background = element_blank(),
         axis.text = element_text(size = 12), 
         axis.title.x = element_text(size = 14),
-        axis.title.y = element_text(size = 14)) +
+        axis.title.y = element_text(size = 14),
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 12, face = "bold")) +
   scale_x_continuous(expand = c(0,0),
                      limits = c(1,0),
                      trans = "reverse") +
   scale_y_continuous(expand = c(0,0))
+  p + 
+    geom_rect(data = df, aes(xmin = xmin, xmax = xmax, ymin=ymin, ymax=ymax),
+              fill = rev(leg$colors), alpha = 0.2, inherit.aes = F) +
+    font("legend.text", face = "italic")
   
 
 
