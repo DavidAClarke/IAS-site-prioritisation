@@ -74,11 +74,13 @@ mask_hist <- function(rank_raster, mask_layer) {
   b <- seq(0.0, 1.0, by = 0.05)
   h <- hist(vals, breaks = b, plot = F)
   up_lim <- max(h$counts)
+  up_lim <- round(up_lim + 50, -2)
   vals_df <- data.frame(data = vals)
   
   val_hist <- ggplot(vals_df, aes(x = vals)) + 
     geom_histogram(colour = "white",
-                   binwidth = 0.05) + 
+                   binwidth = 0.05,
+                   boundary = 0) + 
     scale_x_continuous(breaks = seq(0, 1, 0.25)) + 
     scale_y_continuous(expand = c(0,0),
                        limits = c(0,up_lim)) +
@@ -167,16 +169,16 @@ IAS_plot <- function(species){
     geom_sf(data = r_sf, aes(fill=layer), 
             color=NA, 
             show.legend = T) + 
-    scale_fill_gradientn(colours = brewer.pal('YlGnBu', n=9)) +
+    scale_fill_gradientn(colours = brewer.pal('YlGnBu', n=9),
+                         name = "Probability") +
     theme_bw() +
-    theme(axis.line = element_line(colour = "black"),
+    theme(axis.line = element_blank(),
           panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(),
           panel.background = element_blank(),
-          axis.text = element_text(size = 12), 
-          axis.title.x = element_text(size = 14),
-          axis.title.y = element_text(size = 14),
-          strip.text.x = element_text(size = 12))
+          axis.text = element_blank(),
+          panel.border = element_blank(),
+          axis.ticks = element_blank())
   return(r_plot)
 }
 
@@ -191,6 +193,19 @@ multi_props <- function(vals, props){
   
   
   }
-  names(diffs) <- c("0.98", "0.95", "0.90", "0.75", "0.50", "0.25", "0.00")
+  names(diffs) <- c("1.00", "0.98", "0.95", "0.90", "0.75", "0.50", "0.25", "0.00")
   return(diffs)
+}
+
+#Multi-panel figure
+Figure <- function(species, rank_raster, binary) {
+  
+  species <- gsub(" ", ".", species)
+  p <- IAS_plot(species)
+  hist <- mask_hist(rank_raster, binary)
+  priority <- Priority_plot(binary, rank_raster, sdm_col = "black", sdm_brd_col = NA)
+  p2 <- ggarrange(p, priority, nrow = 2, ncol = 1)
+  p3 <- ggarrange(p2, hist, nrow = 1, ncol = 2)
+  return(p3)
+  
 }
