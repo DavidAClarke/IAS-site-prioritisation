@@ -11,7 +11,7 @@ rank_plot <- function(rank_raster) {
             show.legend = T) + 
     scale_fill_gradientn(colours = leg$colors,
                          values = leg$values,
-                         name = "Site sensitivity",
+                         name = "Site\nsensitivity",
                          breaks = c(0.0, 0.2, 0.4, 0.6, 0.8,1)) +
     theme_bw() +
     theme(axis.line = element_blank(),
