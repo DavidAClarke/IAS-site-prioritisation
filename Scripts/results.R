@@ -603,6 +603,12 @@ TB_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, TB_bin_KBA)
 PL_vals <- get_msk_vals(CAZ_wgt_var_ras, PL_bin)
 PL_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, PL_bin_KBA)
 
+#Multi-panel figures
+PM_comb <- Figure("Pheidole megacephala", CAZ_wgt_var_ras, PM_bin)
+VG_comb <- Figure("Vespula germanica", CAZ_wgt_var_ras, PM_bin)
+DG_comb <- Figure("Digitonthophagus gazella", CAZ_wgt_var_ras, DG_bin)
+PL_comb <- Figure("Paratrechina longicornis", CAZ_wgt_var_ras, PL_bin)
+TB_comb <- Figure("Tetramorium bicarinatum", CAZ_wgt_var_ras, TB_bin)
 
 #Kolmogorov-smirnoff tests - KBA vs no KBA
 #a two-sample test of the null hypothesis that x and y were drawn from the same continuous distribution
@@ -632,13 +638,18 @@ TB_PL <- ks.test(TB_vals, PL_vals, alternative = "two.sided")
 v <- c(0,PM_VG$statistic,PM_DG$statistic,PM_TB$statistic, PM_PL$statistic,
        0,0,VG_DG$statistic,VG_PL$statistic,VG_TB$statistic,
        0,0,0,DG_TB$statistic,DG_PL$statistic,
-       0,0,0,0,TB_PL$statistic,)
+       0,0,0,0,TB_PL$statistic)
 tm <- matrix(v, nrow = 5, ncol = 4)
-rownames(tm) <- c("Pm", "Vg", "Dg", "Tb", "Pl")
+rownames(tm) <- c(":italic(Pheidole~~megacephala)", 
+                  ":italic(Vespula~~germanica)", 
+                  ":italic(Digitonthophagus~~gazella)", 
+                  ":italic(Tetramorium~~bicarinatum)", 
+                  ":italic(Paratrechina~~longicornis)")
 colnames(tm) <- c("Pm", "Vg", "Dg", "Tb")
 corrplot::corrplot(tm, type = "lower", method = "color", 
                    cl.pos = "n", col=brewer.pal(n=10, name="Spectral"), 
-                   tl.srt = 0, tl.col = "black", addCoef.col = "black")
+                   tl.srt = 0, tl.col = "black", tl.cex = 0.8, addCoef.col = "black",
+                   mar = c(0,0,0,0))
 
 #Proportion difference (KBA vs no KBA) in number of top sensitive sites
 #Top two (i.e. >= 0.98 sensitivity)
@@ -701,11 +712,37 @@ p <- ggplot(Total,
                      limits = c(1,0),
                      trans = "reverse") +
   scale_y_continuous(expand = c(0,0))
-  p + 
+p2 <-  p + 
     geom_rect(data = df, aes(xmin = xmin, xmax = xmax, ymin=ymin, ymax=ymax),
               fill = rev(leg$colors), alpha = 0.2, inherit.aes = F) +
     font("legend.text", face = "italic")
-  
+
+#For inset
+ins <- ggplot(Total_min, 
+         aes(x = SiteSensitivity, 
+             y = DistributionCoverage, 
+             colour = Species,
+             group = interaction(Species,Type))) +
+    geom_line(stat = "identity", aes(linetype = Type)) +
+    scale_colour_manual(values = cols) +
+    ylab("Distribution Coverage (%)") +
+    xlab("Site Sensitivity") +
+    theme_bw() +
+    theme(axis.line = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.background = element_rect(fill = alpha(leg$colors[7],0.2)),
+          axis.text = element_blank(), 
+          axis.title.x = element_blank(),
+          axis.title.y = element_blank(),
+          legend.text = element_blank(),
+          legend.title = element_blank(),
+          legend.position = "none",
+          axis.ticks = element_blank()) +
+    scale_x_continuous(expand = c(0,0),
+                       limits = c(1,0.98),
+                       trans = "reverse") +
+    scale_y_continuous(expand = c(0,0))
 
 
 #################################### Jaccards similarity #############################
