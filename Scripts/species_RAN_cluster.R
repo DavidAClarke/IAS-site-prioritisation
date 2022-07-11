@@ -37,7 +37,7 @@ variant_names <- c("species_RAN")
 Settings <- "[Settings]
 removal rule = 5
 warp factor = 100 
-edge removal = 1
+edge removal = 0
 add edge points = 0
 memory save mode = 1"
 fileConn <- file(paste0(zonation_path,"/","species_RAN.dat"))
