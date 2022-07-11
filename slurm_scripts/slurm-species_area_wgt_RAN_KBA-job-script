@@ -1,0 +1,19 @@
+#!/bin/bash
+#SBATCH --job-name=species_area_wgt_RAN_KBA_cluster
+#SBATCH --account=nc57
+#SBATCH --ntasks=1
+#SBATCH --mem=4G
+#SBATCH --partition=comp
+#SBATCH --time=01:00:00
+#SBATCH --mail-type=BEGIN,FAIL,END
+#SBATCH --mail-user=david.clarke1@monash.edu
+#SBATCH --output=species_area_wgt_RAN_KBA_cluster.txt
+cd nc57/Chapter_3/Scripts
+module load R/4.1.0-mkl
+export R_LIBS=~/R/libs
+module load udunits2/2.2.20-2
+module load gdal/3.0.2
+module load proj/6.2.1
+module load geos/3.7.2
+module load zonation/4.0.0
+R --vanilla < species_area_wgt_RAN_KBA_cluster.R
