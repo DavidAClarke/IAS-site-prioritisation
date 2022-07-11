@@ -525,7 +525,7 @@ lapply(spp_list[1:length(spp_list)], function(i) {
                               obs = clean_data@data.species, 
                               clean_data@PA)
   
-  # Add the weigth vector to the presences
+  # Add the weight vector to the presences
   pres <- subset(my_pres_PA_df, obs==1)
   pres$yweights <- 1
   
