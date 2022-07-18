@@ -11,7 +11,7 @@ library(biomod2)
 library(countrycode)
 library(CoordinateCleaner)
 library(usdm)
-library(rgdal)
+#library(rgdal)
 
 #Required initial data
 #bio <- getData("worldclim", var = "bio", res = 2.5, path = "E:/SpatialData/Raster/Worldclim")
@@ -32,26 +32,33 @@ Aus_raster <- crop(ref_raster, extent(Aus_Coast))
 
 ## Create directories and Set all required paths
 #Gloal models
-dir.create(file.path("SpatialData", "IAS_distributions", "IAS_global"))
+#dir.create(file.path("SpatialData", "IAS_distributions", "IAS_global"))
 global_model_path <- paste0("C:/Users/david/Documents/PhD/Chapter_3/SpatialData/IAS_distributions/IAS_global")
 
 #Regional models
-dir.create(file.path("SpatialData", "IAS_distributions", "IAS_regional"))
+#dir.create(file.path("SpatialData", "IAS_distributions", "IAS_regional"))
 regional_model_path <- paste0("C:/Users/david/Documents/PhD/Chapter_3/SpatialData/IAS_distributions/IAS_regional")
 
 #Maxent path
 maxent_jar_path <- "C:/Users/david/Documents/PhD/Chapter_3/maxent.jar" #could change. No spaces allowed
 
-#Insect species to model
-spp_list <- c("Digitonthophagus gazella","Icerya purchasi", "Pheidole megacephala",
+# #Insect species to model (these all worked)
+# spp_list <- c("Digitonthophagus gazella", "Pheidole megacephala",
+#               "Vespula germanica", "Tetramorium bicarinatum", "Paratrechina longicornis")
+
+#Additional species to model (some may not work)
+spp_list <- c("Apis mellifera", "Solenopsis geminata", "Monomorium floricola", "Monomorium destructor", 
+              "Linepithema humile", "Vespula vulgaris", "Polistes chinensis antennalis", 
+              "Megachile rotundata", "Bombus terrestris", "Wasmannia auropunctata", "Apis cerana", 
+              "Solenopsis invicta", "Heteronychus arator", "Digitonthophagus gazella", "Pheidole megacephala",
               "Vespula germanica", "Tetramorium bicarinatum", "Paratrechina longicornis")
-#Should also do some other taxa e.g. cane toad, some mammals, plants?
+#need to download Polistes separately
 
 #Download occurrence data
 #GBIF credentials (remove credentials when publishing scripts)
 user <- "davidclarke"
-pwd <- "!8208GBIF153"
-email <- "david.clarke1@monash.edu"
+pwd <- "GBIFN#8208!"
+email <- "david.clarke@latrobe.edu.au"
 
 #Match the names
 gbif_taxon_keys <- spp_list %>%
@@ -73,10 +80,14 @@ res <- occ_download(
 
 #Download data
 occ_path <- "C:/Users/david/Documents/PhD/Chapter_3/SpatialData/Vector/IAS_Occurrences"
-#occ_download_get("0325811-200613084148143", path = occ_path)
+#occ_download_get("0325811-200613084148143", path = occ_path) #initial species
+#occ_download_get("0376270-210914110416597", path = occ_path) #additional species
+occ_download_get("0381185-210914110416597", path = occ_path)
 
 #Occurrence data path
-data_path <- paste0(getwd(), "/", file.path("SpatialData", "Vector", "IAS_Occurrences", "0325811-200613084148143.csv"))
+#data_path <- paste0(getwd(), "/", file.path("SpatialData", "Vector", "IAS_Occurrences", "0325811-200613084148143.csv"))
+#data_path <- paste0(getwd(), "/", file.path("SpatialData", "Vector", "IAS_Occurrences", "0376270-210914110416597.csv"))#additional species
+data_path <- paste0(getwd(), "/", file.path("SpatialData", "Vector", "IAS_Occurrences", "0381185-210914110416597.csv"))
 
 #Add decimal point for use in fread()
 spp_list <- gsub(" ", ".", spp_list)
@@ -134,10 +145,12 @@ lapply(spp_list[1:length(spp_list)], function(i) {
   i <- gsub("\\.", "_", i)
   
   #Load shapefile
-  occ_shp <- readOGR(file.path(occ_path,paste0(i,"_data.shp")))
+  #occ_shp <- readOGR(file.path(occ_path,paste0(i,"_data.shp")))
+  occ_shp <- st_read(file.path(occ_path,paste0(i,"_data.shp")))
   
   #Removing those with uncertainty > radius_uncert and NAs
   occ_shp_cert <- subset(occ_shp, crdnUIM<= radius_uncert)
+  occ_shp_cert <- as_Spatial(occ_shp_cert)
   
   
   #flag problems
@@ -163,7 +176,7 @@ lapply(spp_list[1:length(spp_list)], function(i) {
   df2 <- df1[!duplicated(df1[,c('x','y')]),]
   df2 <- na.omit(df2) # PRESENCES
   
-  # Converting to a spatial object - OCURRENCES
+  # Converting to a spatial object - OCCURRENCES
   occ.sp <- SpatialPointsDataFrame(coords=cbind(df1$x, df1$y),
                                    proj4string = CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"),
                                    data=as.data.frame(cbind(df1$x, df1$y)))
@@ -189,6 +202,7 @@ lapply(spp_list[1:length(spp_list)], function(i) {
   
   #Keeping the NAs as well as those with "certain" data
   occ_shp_na <- occ_shp[is.na(occ_shp$crdnUIM),]
+  occ_shp_na <- as_Spatial(occ_shp_na)
   
   #flag problems
   flags <- clean_coordinates(x = occ_shp_na,
@@ -267,7 +281,8 @@ lapply(spp_list[1:length(spp_list)], function(i){
   i <- gsub("\\.", "_", i)
   
   #Load in presence shapefile
-  sp_pres <- readOGR(file.path(occ_path,paste0(i,"_pres_all.shp")))
+  #sp_pres <- readOGR(file.path(occ_path,paste0(i,"_pres_all.shp")))
+  sp_pres <- st_read(file.path(occ_path,paste0(i,"_pres_all.shp")))
   n_mod <- dim(sp_pres)[1]
   
   #Pseudoabsences
@@ -278,6 +293,7 @@ lapply(spp_list[1:length(spp_list)], function(i){
   mypres <- rep(1,dim(sp_pres)[1])
   
   #Presences coordinates
+  sp_pres <- as_Spatial(sp_pres)
   mycoord <- coordinates(sp_pres)
   
   #Clean data
@@ -406,11 +422,14 @@ lapply(spp_list[1:length(spp_list)], function(i) {
   
 })
   
-###Australian predictions
+                                            ###Australian predictions
 #worldclim - use already loaded "bio"
 Aus_bio_2.5 <- crop(bio, Aus_raster)
 
 #Elevation
+Aus_elev <- raster("C:/Users/david/Documents/PhD/Chapter_3/SpatialData/Raster/Elevation/AUS_msk_alt.gri")
+Aus_elev <- crop(Aus_elev, Aus_Coast)
+Aus_elev <- mask(Aus_elev, Aus_Coast)
 Aus_elev_2.5 <- resample(Aus_elev, Aus_bio_2.5[[1]], method = "bilinear") 
 
 #Vegetation
@@ -444,7 +463,7 @@ Aus_veg_2.5 <- resample(Aus_veg, Aus_bio_2.5[[1]], method = "ngb")
 Aus_veg_2.5 <- mask(Aus_veg_2.5, Aus_bio_2.5[[1]])
 
 #Human footprint
-impact <- raster(file.path("SpatialData", "Raster", "wildareas-v3-2009-human-footprint.tif"))
+impact <- raster("C:/Users/david/Documents/PhD/Chapter_3/SpatialData/Raster/wildareas-v3-2009-human-footprint.tif")
 Aus_Coast_moll <- st_transform(Aus_Coast, crs = "+proj=moll")
 aus_impact <- crop(impact, Aus_Coast_moll)
 aus_impact <- projectRaster(from = aus_impact, res = 0.008333333, crs = "+proj=longlat +datum=WGS84 +no_defs")
@@ -455,9 +474,9 @@ aus_impact_2.5 <- resample(aus_impact, Aus_bio_2.5[[1]])
 all_predictors <- stack(Aus_bio_2.5, Aus_elev_2.5, Aus_veg_2.5, aus_impact_2.5)
 
 #Reducing collinearity
-nocorrvar <- vifstep(all_predictors, th = 4)
-predictors <- as.character(nocorrvar@results$Variables)
-pred_au_sub <- raster::subset(all_predictors,c(predictors))
+reg_nocorrvar <- vifstep(all_predictors, th = 4)
+reg_predictors <- as.character(reg_nocorrvar@results$Variables)
+pred_au_sub <- raster::subset(all_predictors,c(reg_predictors))
 
 ###Set parameters for regional model
 name_model_folder <- "IAS_regional" 
@@ -479,7 +498,9 @@ lapply(spp_list[1:length(spp_list)], function(i) {
   i <- gsub("\\.", "_", i)
   
   #Load presences
-  sp_pres <- readOGR(file.path(occ_path,paste0(i,"_pres.shp"))) #try with pres_all.shp
+  #sp_pres <- readOGR(file.path(occ_path,paste0(i,"_pres.shp"))) #try with pres_all.shp
+  sp_pres <- st_read(file.path(occ_path,paste0(i,"_pres_all.shp"))) #try with pres_all.shp.
+  #used all for M. floricola and M. destructor
   
   #Remove decimal in species name
   i <- gsub("_", ".", i)
@@ -662,7 +683,7 @@ setwd(regional_model_path)
 col_n <- c()
 
 #lapply(spp_list[1:length(spp_list)], function(i) {
-  for(i in spp_list){
+for(i in spp_list){
   
   if (global=="no"){raster1 <- Aus_raster}
   else {raster1 <- ref_raster}
@@ -671,7 +692,8 @@ col_n <- c()
   i <- gsub("\\.", "_", i)
   
   # GBIF points
-  sp_pres <- readOGR(file.path(occ_path,paste0(i,dataset_type,".shp")))
+  #sp_pres <- readOGR(file.path(occ_path,paste0(i,dataset_type,".shp")))
+  sp_pres <- st_read(file.path(occ_path,paste0(i,dataset_type,".shp")))
   
   # rasterize
   points_mod_r <- rasterize(sp_pres,raster1,1,background=0)
