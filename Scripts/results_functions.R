@@ -1,4 +1,13 @@
 ############################ Functions ##################################
+#Get scenario variants
+scenario_variants <- function(project) {
+  
+  proj <- load_zproject(file.path("Zonation", project))
+  proj_var <- get_variant(proj, 1)
+  
+}
+
+
 #Create rank raster plots
 rank_plot <- function(rank_raster) {
   
@@ -13,6 +22,32 @@ rank_plot <- function(rank_raster) {
                          values = leg$values,
                          name = "Site\nsensitivity",
                          breaks = c(0.0, 0.2, 0.4, 0.6, 0.8,1)) +
+    theme_bw() +
+    theme(axis.line = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.background = element_blank(),
+          axis.text = element_blank(),
+          panel.border = element_blank(),
+          axis.ticks = element_blank())
+}
+
+rank_diff <- function(rank_one, rank_two){
+  
+  species_only_diff <- rank_one - rank_two
+  coolwarm_hcl <- colorspace::diverging_hcl(11,h = c(250, 10), c = 100, l = c(37, 88), power = c(0.7, 1.7))
+  species_only_diff_sf <- species_only_diff %>%
+    st_as_stars() %>%
+    st_as_sf()
+  
+  ggplot()+
+    geom_sf(data = species_only_diff_sf, aes(fill=layer), 
+            color=NA, 
+            show.legend = T) + 
+    scale_fill_gradientn(colours = rev(coolwarm_hcl),
+                         #values = leg$values,
+                         name = "Sensitivity\ndifference",
+                         breaks = c(-0.5, 0.0, 0.5)) +
     theme_bw() +
     theme(axis.line = element_blank(),
           panel.grid.major = element_blank(),
@@ -207,5 +242,79 @@ Figure <- function(species, rank_raster, binary) {
   p2 <- ggarrange(p, priority, nrow = 2, ncol = 1)
   p3 <- ggarrange(p2, hist, nrow = 1, ncol = 2)
   return(p3)
+  
+}
+
+#Biodiversity feature performance plots
+performance_plot <- function(project_variant, feature_groups, brewer_pal) {
+  
+  if(length(feature_groups) <= 8){
+    
+    groupnames(project_variant) <- feature_groups
+    lost.levels <- seq(0,1, by = 0.05)
+    results.caz <- results(project_variant)
+    perf <- performance(results.caz, lost.levels,melted = TRUE, groups = T)
+    perf <- na.omit(perf)
+    perf_wmean <- perf %>% dplyr::filter(str_detect(feature, "w.mean"))
+    perf_wmean$feature <- as.factor(perf_wmean$feature)
+    perf_min <- perf %>% dplyr::filter(str_detect(feature, "min."))
+    perf_min$feature <- as.factor(perf_min$feature)
+    feature.groups <- c("Amphibian", "Bird", "Fish", "Fungi", "Invertebrate", "Mammal", "Plant", "Reptile")
+    feat.cols <- RColorBrewer::brewer.pal(length(feature_groups), brewer_pal)
+    names(feat.cols) <- levels(perf_wmean$feature)
+    colScale <- scale_colour_manual(name = "Feature",
+                                    values = feat.cols,
+                                    labels = feature.groups)
+    ggplot(data = perf, mapping = aes(x = pr.lost, y = perf.levels, colour = feature)) +
+      geom_line(data = perf_wmean, size = 1) +
+      colScale +
+      theme_bw() +
+      theme(axis.line = element_line(colour = "black"),
+            panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank(),
+            panel.background = element_blank(),
+            axis.text = element_text(size = 12), 
+            axis.title.x = element_text(size = 14),
+            axis.title.y = element_text(size = 14),
+            strip.text.x = element_text(size = 12)) +
+      scale_y_continuous(expand = c(0,0)) +
+      scale_x_continuous(expand = c(0,0)) +
+      ylab("Distribution remaining") +
+      xlab("Proportion of landscape lost")
+  } else if(length(feature_groups) > 8) {
+    
+    groupnames(project_variant) <- feature_groups
+    lost.levels <- seq(0,1, by = 0.05)
+    results_area.caz <- results(project_variant)
+    perf_area <- performance(results_area.caz, lost.levels,melted = TRUE, groups = T)
+    perf_area <- na.omit(perf_area)
+    perf_area_wmean <- perf_area %>% dplyr::filter(str_detect(feature, "w.mean"))
+    perf_area_wmean$feature <- as.factor(perf_area_wmean$feature)
+    #perf_min <- perf %>% dplyr::filter(str_detect(feature, "min."))
+    #perf_min$feature <- as.factor(perf_min$feature)
+    feature_area.groups <- c("Amphibian", "Bird", "Community", "Ecosystem", "Fish", "Fungi", "Invertebrate", 
+                             "Mammal", "Plant", "Ramsar", "Reptile", "Upstream")
+    feat_area.cols <- RColorBrewer::brewer.pal(length(feature_groups), brewer_pal)
+    names(feat_area.cols) <- levels(perf_area_wmean$feature)
+    colScale <- scale_colour_manual(name = "Feature",
+                                    values = feat_area.cols,
+                                    labels = feature_area.groups)
+    ggplot(data = perf_area, mapping = aes(x = pr.lost, y = perf.levels, colour = feature)) +
+      geom_line(data = perf_area_wmean, size = 1) +
+      colScale +
+      theme_bw() +
+      theme(axis.line = element_line(colour = "black"),
+            panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank(),
+            panel.background = element_blank(),
+            axis.text = element_text(size = 12), 
+            axis.title.x = element_text(size = 14),
+            axis.title.y = element_text(size = 14),
+            strip.text.x = element_text(size = 12)) +
+      scale_y_continuous(expand = c(0,0)) +
+      scale_x_continuous(expand = c(0,0)) +
+      ylab("Distribution remaining") +
+      xlab("Proportion of landscape lost")
+  }
   
 }
