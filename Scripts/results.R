@@ -89,7 +89,7 @@ RAN_wgt_var_ras <- rank_raster(RAN_wgt_var)
 
 #species only - with weights and KBA mask
 #CAZ_wgt_KBA_var_ras <- rank_raster(CAZ_wgt_KBA_var)
-RAN_wgt_KBA_var_ras <- rank_raster(RAN_wgt_KBA_var)
+
 
 #species only - with weights and inverted KBA mask
 CAZ_wgt_KBA_inv_var_ras <- rank_raster(CAZ_wgt_KBA_inv_var)
@@ -127,10 +127,10 @@ leg <- zlegend("spectral")
 
 p1 <- rank_plot(CAZ_var_ras)
 p2 <- rank_plot(CAZ_wgt_var_ras)
-p3 <- rank_plot(CAZ_wgt_KBA_var_ras)
+p3 <- rank_plot(CAZ_wgt_KBA_inv_var_ras)
 p4 <- rank_plot(CAZ_area_var_ras)
 p5 <- rank_plot(CAZ_area_wgt_var_ras)
-p6 <- rank_plot(CAZ_area_wgt_KBA_var_ras)
+p6 <- rank_plot(CAZ_area_wgt_KBA_inv_var_ras)
 
 p11 <- rank_plot(RAN_var_ras)
 p12 <- rank_plot(RAN_wgt_var_ras)
@@ -168,6 +168,59 @@ ias_sum_one[ias_sum_one != 1] <- NA
 
 ################################ Priority sites - species + weights #############################
 
+
+PM_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, PM_spec_bin)
+PM_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, PM_KBA_bin)
+PM_RAN_vals <- get_msk_vals(RAN_wgt_var_ras, PM_RAN_bin)
+
+VG_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, VG_spec_bin)
+VG_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, VG_KBA_bin)
+VG_RAN_vals <- get_msk_vals(RAN_wgt_var_ras, VG_RAN_bin)
+
+DG_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, DG_spec_bin)
+DG_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, DG_KBA_bin)
+DG_RAN_vals <- get_msk_vals(RAN_wgt_var_ras, DG_RAN_bin)
+
+TB_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, TB_spec_bin)
+TB_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, TB_KBA_bin)
+TB_RAN_vals <- get_msk_vals(RAN_wgt_var_ras, TB_RAN_bin)
+
+PL_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, PL_spec_bin)
+PL_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, PL_KBA_bin)
+PL_RAN_vals <- get_msk_vals(RAN_wgt_var_ras, PL_RAN_bin)
+
+AM_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, AM_spec_bin)
+AM_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, AM_KBA_bin)
+AM_RAN_vals <- get_msk_vals(RAN_wgt_var_ras, AM_RAN_bin)
+
+MF_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, MF_spec_bin)
+MF_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, MF_KBA_bin)
+MF_RAN_vals <- get_msk_vals(RAN_wgt_var_ras, MF_RAN_bin)
+
+MD_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, MD_spec_bin)
+MD_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, MD_KBA_bin)
+MD_RAN_vals <- get_msk_vals(RAN_wgt_var_ras, MD_RAN_bin)
+
+LH_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, LH_spec_bin)
+LH_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, LH_KBA_bin)
+LH_RAN_vals <- get_msk_vals(RAN_wgt_var_ras, LH_RAN_bin)
+
+VV_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, VV_spec_bin)
+VV_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, VV_KBA_bin)
+VV_RAN_vals <- get_msk_vals(RAN_wgt_var_ras, VV_RAN_bin)
+
+# MR_vals <- get_msk_vals(CAZ_wgt_var_ras, MR_bin)
+# MR_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, MR_bin_KBA)
+# MR_RAN_vals <- get_msk_vals(RAN_wgt_var_ras, MR_bin_RAN)
+
+BT_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, BT_spec_bin)
+BT_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, BT_KBA_bin)
+BT_RAN_vals <- get_msk_vals(RAN_wgt_var_ras, BT_RAN_bin)
+
+HA_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, HA_spec_bin)
+HA_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, HA_KBA_bin)
+HA_RAN_vals <- get_msk_vals(RAN_wgt_var_ras, HA_RAN_bin)
+
 #Get cell values for Kolmogorov-smirnoff tests
 #Could use violin plots to make visual comparisons.
 #x axis = sensitivities, y = ias insects; 3 violins per sp?
@@ -176,67 +229,125 @@ ias_sum_one[ias_sum_one != 1] <- NA
 #could also lump all together instead of separate species to see combined results
 
 #Example
-#vals <- c(PM_vals, PM_KBA_vals, PM_RAN_vals)
-#nms <- rep("Phiedole megacephala", length(vals))
-#type <- c(rep("species", length(PM_vals)), rep("KBA", length(PM_KBA_vals)), rep("random", length(PM_RAN_vals)))
-##meds <- c(rep(median(PM_vals), length(PM_vals)), rep(median(PM_KBA_vals), length(PM_KBA_vals)), rep(median(PM_RAN_vals), length(PM_RAN_vals)))
+PM_vals <- c(PM_spec_vals, PM_KBA_vals)
+VG_vals <- c(VG_spec_vals, VG_KBA_vals)
+DG_vals <- c(DG_spec_vals, DG_KBA_vals)
+TB_vals <- c(TB_spec_vals, TB_KBA_vals)
+PL_vals <- c(PL_spec_vals, PL_KBA_vals)
+AM_vals <- c(AM_spec_vals, AM_KBA_vals)
+MF_vals <- c(MF_spec_vals, MF_KBA_vals)
+MD_vals <- c(MD_spec_vals, MD_KBA_vals)
+LH_vals <- c(LH_spec_vals, LH_KBA_vals)
+VV_vals <- c(VV_spec_vals, VV_KBA_vals)
+BT_vals <- c(BT_spec_vals, BT_KBA_vals)
+HA_vals <- c(HA_spec_vals, HA_KBA_vals)
+vals <- c(PM_vals, VG_vals,DG_vals,TB_vals,PL_vals,AM_vals,MF_vals,MD_vals,LH_vals,VV_vals,BT_vals, HA_vals)
+nms <- c(rep("Pheidole megacephala", length(PM_vals)),
+         rep("Vespula germanica", length(VG_vals)),
+         rep("Digitonthophagus gazella", length(DG_vals)),
+         rep("Tetramorium bicarinatum", length(TB_vals)),
+         rep("Paratrechina longicornis", length(PL_vals)),
+         rep("Apis mellifera", length(AM_vals)),
+         rep("Monomorium floricola", length(MF_vals)),
+         rep("Monomorium destructor", length(MD_vals)),
+         rep("Linepithema humile", length(LH_vals)),
+         rep("Vespula vulgaris", length(VV_vals)),
+         rep("Bombus terrestris", length(BT_vals)),
+         rep("Heteronychus arator", length(HA_vals)))
+type <- c(rep("species", length(PM_spec_vals)), 
+          rep("KBA", length(PM_KBA_vals)),
+          rep("species", length(VG_spec_vals)), 
+          rep("KBA", length(VG_KBA_vals)),
+          rep("species", length(DG_spec_vals)), 
+          rep("KBA", length(DG_KBA_vals)),
+          rep("species", length(TB_spec_vals)), 
+          rep("KBA", length(TB_KBA_vals)),
+          rep("species", length(PL_spec_vals)), 
+          rep("KBA", length(PL_KBA_vals)),
+          rep("species", length(AM_spec_vals)), 
+          rep("KBA", length(AM_KBA_vals)),
+          rep("species", length(MF_spec_vals)), 
+          rep("KBA", length(MF_KBA_vals)),
+          rep("species", length(MD_spec_vals)), 
+          rep("KBA", length(MD_KBA_vals)),
+          rep("species", length(LH_spec_vals)), 
+          rep("KBA", length(LH_KBA_vals)),
+          rep("species", length(VV_spec_vals)), 
+          rep("KBA", length(VV_KBA_vals)),
+          rep("species", length(BT_spec_vals)), 
+          rep("KBA", length(BT_KBA_vals)),
+          rep("species", length(HA_spec_vals)), 
+          rep("KBA", length(HA_KBA_vals)))
+meds <- c(rep(median(PM_spec_vals), length(PM_spec_vals)), rep(median(PM_KBA_vals), length(PM_KBA_vals)),
+          rep(median(VG_spec_vals), length(VG_spec_vals)), rep(median(VG_KBA_vals), length(VG_KBA_vals)),
+          rep(median(DG_spec_vals), length(DG_spec_vals)), rep(median(DG_KBA_vals), length(DG_KBA_vals)),
+          rep(median(TB_spec_vals), length(TB_spec_vals)), rep(median(TB_KBA_vals), length(TB_KBA_vals)),
+          rep(median(PL_spec_vals), length(PL_spec_vals)), rep(median(PL_KBA_vals), length(PL_KBA_vals)),
+          rep(median(AM_spec_vals), length(AM_spec_vals)), rep(median(AM_KBA_vals), length(AM_KBA_vals)),
+          rep(median(MF_spec_vals), length(MF_spec_vals)), rep(median(MF_KBA_vals), length(MF_KBA_vals)),
+          rep(median(MD_spec_vals), length(MD_spec_vals)), rep(median(MD_KBA_vals), length(MD_KBA_vals)),
+          rep(median(LH_spec_vals), length(LH_spec_vals)), rep(median(LH_KBA_vals), length(LH_KBA_vals)),
+          rep(median(VV_spec_vals), length(VV_spec_vals)), rep(median(VV_KBA_vals), length(VV_KBA_vals)),
+          rep(median(BT_spec_vals), length(BT_spec_vals)), rep(median(BT_KBA_vals), length(BT_KBA_vals)),
+          rep(median(HA_spec_vals), length(HA_spec_vals)), rep(median(HA_KBA_vals), length(HA_KBA_vals)))
+df <- data.frame(nms, type, vals, meds)
 
-#ggplot(df, aes(x = vals, y = nms, fill = type, group = interaction(type, meds))) +
-#geom_violin(draw_quantiles = 0.5, adjust = 0.1) #adjust changes the smoothness; lower is more faithful to the data
+df_1 <- df %>% filter(nms == "Pheidole megacephala" |
+                        nms == "Vespula germanica" |
+                        nms == "Digitonthophagus gazella" |
+                        nms == "Paratrechina longicornis" |
+                        nms == "Tetramorium bicarinatum" |
+                        nms == "Apis mellifera")
 
+df_2 <- df %>% filter(nms == "Monomorium floricola" |
+                        nms == "Monomorium destructor" |
+                        nms == "Linepithema humile" |
+                        nms == "Vespula vulgaris" |
+                        nms == "Bombus terrestris" |
+                        nms == "Heteronychus arator")
 
+val_plot_1 <- ggplot(df_1, aes(x = vals, y = nms, fill = type)) +
+  geom_violin(draw_quantiles = 0.5, 
+            adjust = 0.2, #adjust changes the smoothness; lower is more faithful to the data
+            scale = "width") +
+  theme_bw() +
+  theme(axis.line = element_line(colour = "black"),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        axis.text = element_text(size = 12), 
+        axis.title.x = element_text(size = 14),
+        axis.title.y = element_blank(),
+        strip.text.x = element_text(size = 12),
+        axis.text.y = element_text(face = "italic"),
+        legend.position = "top") +
+  scale_fill_manual(values = c("#66B2FF", "#FFB266"),
+                    labels = c("KBA mask", "species + weight"),
+                    name = "Scenarios") +
+  scale_y_discrete(limits = rev)
 
-PM_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, PM_spec_bin)
-PM_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, PM_bin_KBA)
-PM_RAN_vals <- get_msk_vals(RAN_wgt_var_ras, PM_bin_RAN)
+val_plot_2 <- ggplot(df_2, aes(x = vals, y = nms, fill = type)) +
+  geom_violin(draw_quantiles = 0.5, 
+              adjust = 0.2, #adjust changes the smoothness; lower is more faithful to the data
+              scale = "width") +
+  theme_bw() +
+  theme(axis.line = element_line(colour = "black"),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        axis.text = element_text(size = 12), 
+        axis.title.x = element_text(size = 14),
+        axis.title.y = element_blank(),
+        strip.text.x = element_text(size = 12),
+        axis.text.y = element_text(face = "italic"),
+        legend.position = "top") +
+  scale_fill_manual(values = c("#66B2FF", "#FFB266"),
+                    labels = c("KBA mask", "species + weight"),
+                    name = "Scenarios") +
+  scale_y_discrete(limits = rev)
 
-VG_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, VG_spec_bin)
-VG_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, VG_bin_KBA)
-VG_RAN_vals <- get_msk_vals(RAN_wgt_var_ras, VG_bin_RAN)
+ggarrange(val_plot_1, val_plot_2, ncol = 1, nrow = 2, common.legend = T)
 
-DG_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, DG_spec_bin)
-DG_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, DG_bin_KBA)
-DG_RAN_vals <- get_msk_vals(RAN_wgt_var_ras, DG_bin_RAN)
-
-TB_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, TB_spec_bin)
-TB_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, TB_bin_KBA)
-TB_RAN_vals <- get_msk_vals(RAN_wgt_var_ras, TB_bin_RAN)
-
-PL_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, PL_spec_bin)
-PL_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, PL_bin_KBA)
-PL_RAN_vals <- get_msk_vals(RAN_wgt_var_ras, PL_bin_RAN)
-
-AM_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, AM_spec_bin)
-AM_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, AM_bin_KBA)
-AM_RAN_vals <- get_msk_vals(RAN_wgt_var_ras, AM_bin_RAN)
-
-MF_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, MF_spec_bin)
-MF_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, MF_bin_KBA)
-MF_RAN_vals <- get_msk_vals(RAN_wgt_var_ras, MF_bin_RAN)
-
-MD_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, MD_spec_bin)
-MD_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, MD_bin_KBA)
-MD_RAN_vals <- get_msk_vals(RAN_wgt_var_ras, MD_bin_RAN)
-
-LH_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, LH_spec_bin)
-LH_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, LH_bin_KBA)
-LH_RAN_vals <- get_msk_vals(RAN_wgt_var_ras, LH_bin_RAN)
-
-VV_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, VV_spec_bin)
-VV_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, VV_bin_KBA)
-VV_RAN_vals <- get_msk_vals(RAN_wgt_var_ras, VV_bin_RAN)
-
-# MR_vals <- get_msk_vals(CAZ_wgt_var_ras, MR_bin)
-# MR_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, MR_bin_KBA)
-# MR_RAN_vals <- get_msk_vals(RAN_wgt_var_ras, MR_bin_RAN)
-
-BT_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, BT_spec_bin)
-BT_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, BT_bin_KBA)
-BT_RAN_vals <- get_msk_vals(RAN_wgt_var_ras, BT_bin_RAN)
-
-HA_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, HA_spec_bin)
-HA_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, HA_bin_KBA)
-HA_RAN_vals <- get_msk_vals(RAN_wgt_var_ras, HA_bin_RAN)
 
 #Multi-panel figures
 PM_spec_comb <- Figure("Pheidole megacephala", CAZ_wgt_var_ras, PM_spec_bin)
@@ -366,14 +477,16 @@ v <- c(0,PM_VG$statistic,PM_DG$statistic,PM_TB$statistic,PM_PL$statistic,PM_AM$s
        0,0,VG_DG$statistic,VG_TB$statistic,VG_PL$statistic,VG_AM$statistic,VG_MF$statistic,VG_MD$statistic,VG_LH$statistic,VG_VV$statistic,VG_BT$statistic,VG_HA$statistic,
        0,0,0,DG_TB$statistic,DG_PL$statistic,DG_AM$statistic,DG_MF$statistic,DG_MD$statistic,DG_LH$statistic,DG_VV$statistic,DG_BT$statistic,DG_HA$statistic,
        0,0,0,0,TB_PL$statistic,TB_AM$statistic,TB_MF$statistic,TB_MD$statistic,TB_LH$statistic,TB_VV$statistic,TB_BT$statistic,TB_HA$statistic,
-       0,0,0,0,0,AM_MF$statistic,AM_MD$statistic,AM_LH$statistic,AM_VV$statistic,AM_BT$statistic,AM_HA$statistic,
-       0,0,0,0,0,0,MF_MD$statistic,MF_LH$statistic,MF_VV$statistic,MF_BT$statistic,MF_HA$statistic,
-       0,0,0,0,0,0,0,MD_LH$statistic,MD_VV$statistic,MD_BT$statistic,MD_HA$statistic,
-       0,0,0,0,0,0,0,0,LH_VV$statistic,LH_BT$statistic,LH_HA$statistic,
-       0,0,0,0,0,0,0,0,0,VV_BT$statistic,VV_HA$statistic,
-       0,0,0,0,0,0,0,0,0,0,BT_HA$statistic)
+       0,0,0,0,0,PL_AM$statistic,PL_MF$statistic,PL_MD$statistic,PL_LH$statistic,PL_VV$statistic,PL_BT$statistic,PL_HA$statistic,
+       0,0,0,0,0,0,AM_MF$statistic,AM_MD$statistic,AM_LH$statistic,AM_VV$statistic,AM_BT$statistic,AM_HA$statistic,
+       0,0,0,0,0,0,0,MF_MD$statistic,MF_LH$statistic,MF_VV$statistic,MF_BT$statistic,MF_HA$statistic,
+       0,0,0,0,0,0,0,0,MD_LH$statistic,MD_VV$statistic,MD_BT$statistic,MD_HA$statistic,
+       0,0,0,0,0,0,0,0,0,LH_VV$statistic,LH_BT$statistic,LH_HA$statistic,
+       0,0,0,0,0,0,0,0,0,0,VV_BT$statistic,VV_HA$statistic,
+       0,0,0,0,0,0,0,0,0,0,0,BT_HA$statistic,
+       0,0,0,0,0,0,0,0,0,0,0,0)
        
-tm <- matrix(v, nrow = 12, ncol = 11)
+tm <- matrix(v, nrow = 12, ncol = 12)
 rownames(tm) <- c(":italic(Pheidole~~megacephala)", 
                   ":italic(Vespula~~germanica)", 
                   ":italic(Digitonthophagus~~gazella)", 
@@ -386,7 +499,7 @@ rownames(tm) <- c(":italic(Pheidole~~megacephala)",
                   ":italic(Vespula~~vulgaris)",
                   ":italic(Bombus~~terrestris)",
                   ":italic(Heteronychus~~arator)")
-colnames(tm) <- c("Pm", "Vg", "Dg", "Tb", "Pl", "Am", "Mf", "Md", "Lh", "Vv", "Bt", "Ha")
+colnames(tm) <- c("Pm", "Vg", "Dg", "Tb", "Pl", "Am", "Mf", "Md", "Lh", "Vv", "Bt", "HA")
 corrplot::corrplot(tm, type = "lower", method = "color", 
                    cl.pos = "n", col=brewer.pal(n=10, name="Spectral"), 
                    tl.srt = 0, tl.col = "black", tl.cex = 0.8, addCoef.col = "black",
@@ -403,15 +516,15 @@ PM_RAN_prop <- multi_props(PM_RAN_vals, props)
 
 VG_spec_prop <- multi_props(VG_spec_vals, props)
 VG_KBA_prop <- multi_props(VG_KBA_vals, props)
-VG_KBA_prop <- multi_props(VG_RAN_vals, props)
+VG_RAN_prop <- multi_props(VG_RAN_vals, props)
 
 DG_spec_prop <- multi_props(DG_spec_vals, props)
 DG_KBA_prop <- multi_props(DG_KBA_vals, props)
-DG_KBA_prop <- multi_props(DG_RAN_vals, props)
+DG_RAN_prop <- multi_props(DG_RAN_vals, props)
 
 TB_spec_prop <- multi_props(TB_spec_vals, props)
 TB_KBA_prop <- multi_props(TB_KBA_vals, props)
-TB_KBA_prop <- multi_props(TB_RAN_vals, props)
+TB_RAN_prop <- multi_props(TB_RAN_vals, props)
 
 PL_spec_prop <- multi_props(PL_spec_vals, props)
 PL_KBA_prop <- multi_props(PL_KBA_vals, props)
@@ -466,7 +579,7 @@ Total <- Total %>%
                names_to = "SiteSensitivity", 
                values_to = "DistributionCoverage") %>%
   mutate(SiteSensitivity = as.double(SiteSensitivity))
-cols <- c("#b409a7","#0db02f", "#5bb4f2","#040200","#9c5200")
+#cols <- c("#b409a7","#0db02f", "#5bb4f2","#040200","#9c5200")
 Total_min <- Total %>%
   dplyr::filter(SiteSensitivity == 1 | SiteSensitivity == 0.98)
 df <- data.frame(xmin = c(1,0.98,0.95,0.9,0.75,0.5,0.25),
@@ -479,7 +592,7 @@ p <- ggplot(Total,
            colour = Species,
            group = interaction(Species,Type))) +
   geom_line(stat = "identity", aes(linetype = Type)) +
-  scale_colour_manual(values = cols) +
+  scale_colour_manual(values = pnw_palette("Starfish", 12, "continuous")) + #prob change palette
   ylab("Distribution Coverage (%)") +
   xlab("Site Sensitivity") +
   theme_bw() +
@@ -507,8 +620,8 @@ ins <- ggplot(Total_min,
              y = DistributionCoverage, 
              colour = Species,
              group = interaction(Species,Type))) +
-    geom_line(stat = "identity", aes(linetype = Type)) +
-    scale_colour_manual(values = cols) +
+    geom_line(stat = "identity", aes(linetype = Type), size = 0.8) +
+    scale_colour_manual(values = pnw_palette("Starfish", 12, "continuous")) +
     ylab("Distribution Coverage (%)") +
     xlab("Site Sensitivity") +
     theme_bw() +
