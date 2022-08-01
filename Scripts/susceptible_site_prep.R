@@ -4,15 +4,15 @@ spp_list <- c("Apis mellifera",  "Monomorium floricola", "Monomorium destructor"
               "Linepithema humile", "Vespula vulgaris", "Bombus terrestris", "Heteronychus arator", 
               "Digitonthophagus gazella", "Pheidole megacephala", "Vespula germanica", 
               "Tetramorium bicarinatum", "Paratrechina longicornis")
-not_run <- c("Solenopsis geminata","Polistes chinensis antennalis","Wasmannia auropunctata", "Apis cerana",
-             "Solenopsis invicta","Megachile rotundata")
+# not_run <- c("Solenopsis geminata","Polistes chinensis antennalis","Wasmannia auropunctata", "Apis cerana",
+#              "Solenopsis invicta","Megachile rotundata")
 
 #Plots of predicted distributions (ensemble committee averaging)
-lapply(spp_list[1:length(spp_list)], FUN = function(i){
-  
-  IAS_plot(i)
-  
-})
+# lapply(spp_list[1:length(spp_list)], FUN = function(i){
+#   
+#   IAS_plot(i)
+#   
+# })
 
 #Inspect the distribution of priorities within the IAS predicted distribution
 #Use binary versions of ensemble committee averaging model
@@ -27,10 +27,10 @@ PM_bin2[PM_bin2 != 0] <- 1
 # Re-class zeros as NA
 PM_bin[PM_bin == 0] <- NA
 PM_spec_bin <- resample(PM_bin, CAZ_wgt_var_ras) #get equal extent
-PM_KBA_bin <- resample(PM_bin, CAZ_wgt_KBA_var_ras) #get equal extent
+PM_KBA_bin <- resample(PM_bin, CAZ_wgt_KBA_inv_var_ras) #get equal extent
 PM_RAN_bin <- resample(PM_bin, RAN_wgt_var_ras) #get equal extent
 PM_area_bin <- resample(PM_bin, CAZ_area_wgt_var_ras) #get equal extent
-PM_area_KBA_bin <- resample(PM_bin, CAZ_area_wgt_KBA_var_ras) #get equal extent
+PM_area_KBA_bin <- resample(PM_bin, CAZ_area_wgt_KBA_inv_var_ras) #get equal extent
 PM_area_RAN_bin <- resample(PM_bin, RAN_area_wgt_var_ras) #get equal extent
 # PM_bin_p <- rasterToPolygons(PM_bin, dissolve = T)
 # PM_bin_sf <- st_as_sf(PM_bin_p)
@@ -43,12 +43,12 @@ VG_bin2 <- VG_bin
 VG_bin2[VG_bin2 != 0] <- 1
 
 # Re-class zeros as NA
-VG_bin[PM_bin == 0] <- NA
+VG_bin[VG_bin == 0] <- NA
 VG_spec_bin <- resample(VG_bin, CAZ_wgt_var_ras) #get equal extent
-VG_KBA_bin <- resample(VG_bin, CAZ_wgt_KBA_var_ras) #get equal extent
+VG_KBA_bin <- resample(VG_bin, CAZ_wgt_KBA_inv_var_ras) #get equal extent
 VG_RAN_bin <- resample(VG_bin, RAN_wgt_var_ras) #get equal extent
 VG_area_bin <- resample(VG_bin, CAZ_area_wgt_var_ras) #get equal extent
-VG_area_KBA_bin <- resample(VG_bin, CAZ_area_wgt_KBA_var_ras) #get equal extent
+VG_area_KBA_bin <- resample(VG_bin, CAZ_area_wgt_KBA_inv_var_ras) #get equal extent
 VG_area_RAN_bin <- resample(VG_bin, RAN_area_wgt_var_ras) #get equal extent
 # VG_bin_p <- rasterToPolygons(VG_bin, dissolve = T)
 # VG_bin_sf <- st_as_sf(VG_bin_p)
@@ -62,10 +62,10 @@ DG_bin2[DG_bin2 != 0] <- 1
 # Re-class zeros as NA
 DG_bin[DG_bin == 0] <- NA
 DG_spec_bin <- resample(DG_bin, CAZ_wgt_var_ras) #get equal extent
-DG_KBA_bin <- resample(DG_bin, CAZ_wgt_KBA_var_ras) #get equal extent
+DG_KBA_bin <- resample(DG_bin, CAZ_wgt_KBA_inv_var_ras) #get equal extent
 DG_RAN_bin <- resample(DG_bin, RAN_wgt_var_ras) #get equal extent
 DG_area_bin <- resample(DG_bin, CAZ_area_wgt_var_ras) #get equal extent
-DG_area_KBA_bin <- resample(DG_bin, CAZ_area_wgt_KBA_var_ras) #get equal extent
+DG_area_KBA_bin <- resample(DG_bin, CAZ_area_wgt_KBA_inv_var_ras) #get equal extent
 DG_area_RAN_bin <- resample(DG_bin, RAN_area_wgt_var_ras) #get equal extent
 # DG_bin_p <- rasterToPolygons(DG_bin, dissolve = T)
 # DG_bin_sf <- st_as_sf(DG_bin_p)
@@ -79,10 +79,10 @@ TB_bin2[TB_bin2 != 0] <- 1
 # Re-class zeros as NA
 TB_bin[TB_bin == 0] <- NA
 TB_spec_bin <- resample(TB_bin, CAZ_wgt_var_ras) #get equal extent
-TB_KBA_bin <- resample(TB_bin, CAZ_wgt_KBA_var_ras) #get equal extent
+TB_KBA_bin <- resample(TB_bin, CAZ_wgt_KBA_inv_var_ras) #get equal extent
 TB_RAN_bin <- resample(TB_bin, RAN_wgt_var_ras) #get equal extent
 TB_area_bin <- resample(TB_bin, CAZ_area_wgt_var_ras) #get equal extent
-TB_area_KBA_bin <- resample(TB_bin, CAZ_area_wgt_KBA_var_ras) #get equal extent
+TB_area_KBA_bin <- resample(TB_bin, CAZ_area_wgt_KBA_inv_var_ras) #get equal extent
 TB_area_RAN_bin <- resample(TB_bin, RAN_area_wgt_var_ras) #get equal extent
 # TB_bin_p <- rasterToPolygons(TB_bin, dissolve = T)
 # TB_bin_sf <- st_as_sf(TB_bin_p)
@@ -96,10 +96,10 @@ PL_bin2[PL_bin2 != 0] <- 1
 # Re-class zeros as NA
 PL_bin[PL_bin == 0] <- NA
 PL_spec_bin <- resample(PL_bin, CAZ_wgt_var_ras) #get equal extent
-PL_KBA_bin <- resample(PL_bin, CAZ_wgt_KBA_var_ras) #get equal extent
+PL_KBA_bin <- resample(PL_bin, CAZ_wgt_KBA_inv_var_ras) #get equal extent
 PL_RAN_bin <- resample(PL_bin, RAN_wgt_var_ras) #get equal extent
 PL_area_bin <- resample(PL_bin, CAZ_area_wgt_var_ras) #get equal extent
-PL_area_KBA_bin <- resample(PL_bin, CAZ_area_wgt_KBA_var_ras) #get equal extent
+PL_area_KBA_bin <- resample(PL_bin, CAZ_area_wgt_KBA_inv_var_ras) #get equal extent
 PL_area_RAN_bin <- resample(PL_bin, RAN_area_wgt_var_ras) #get equal extent
 # PL_bin_p <- rasterToPolygons(PL_bin, dissolve = T)
 # PL_bin_sf <- st_as_sf(PL_bin_p)
@@ -113,10 +113,10 @@ AM_bin2[AM_bin2 != 0] <- 1
 # Re-class zeros as NA
 AM_bin[AM_bin == 0] <- NA
 AM_spec_bin <- resample(AM_bin, CAZ_wgt_var_ras) #get equal extent
-AM_KBA_bin <- resample(AM_bin, CAZ_wgt_KBA_var_ras) #get equal extent
+AM_KBA_bin <- resample(AM_bin, CAZ_wgt_KBA_inv_var_ras) #get equal extent
 AM_RAN_bin <- resample(AM_bin, RAN_wgt_var_ras) #get equal extent
 AM_area_bin <- resample(AM_bin, CAZ_area_wgt_var_ras) #get equal extent
-AM_area_KBA_bin <- resample(AM_bin, CAZ_area_wgt_KBA_var_ras) #get equal extent
+AM_area_KBA_bin <- resample(AM_bin, CAZ_area_wgt_KBA_inv_var_ras) #get equal extent
 AM_area_RAN_bin <- resample(AM_bin, RAN_area_wgt_var_ras) #get equal extent
 # AM_bin_p <- rasterToPolygons(AM_bin, dissolve = T)
 # AM_bin_sf <- st_as_sf(AM_bin_p)
@@ -128,12 +128,12 @@ MF_bin2 <- MF_bin
 MF_bin2[MF_bin2 != 0] <- 1
 
 # Re-class zeros as NA
-MF_bin[PL_bin == 0] <- NA
+MF_bin[MF_bin == 0] <- NA
 MF_spec_bin <- resample(MF_bin, CAZ_wgt_var_ras) #get equal extent
-MF_KBA_bin <- resample(MF_bin, CAZ_wgt_KBA_var_ras) #get equal extent
+MF_KBA_bin <- resample(MF_bin, CAZ_wgt_KBA_inv_var_ras) #get equal extent
 MF_RAN_bin <- resample(MF_bin, RAN_wgt_var_ras) #get equal extent
 MF_area_bin <- resample(MF_bin, CAZ_area_wgt_var_ras) #get equal extent
-MF_area_KBA_bin <- resample(MF_bin, CAZ_area_wgt_KBA_var_ras) #get equal extent
+MF_area_KBA_bin <- resample(MF_bin, CAZ_area_wgt_KBA_inv_var_ras) #get equal extent
 MF_area_RAN_bin <- resample(MF_bin, RAN_area_wgt_var_ras) #get equal extent
 # MF_bin_p <- rasterToPolygons(MF_bin, dissolve = T)
 # MF_bin_sf <- st_as_sf(MF_bin_p)
@@ -145,12 +145,12 @@ MD_bin2 <- MD_bin
 MD_bin2[MD_bin2 != 0] <- 1
 
 # Re-class zeros as NA
-MD_bin[PL_bin == 0] <- NA
+MD_bin[MD_bin == 0] <- NA
 MD_spec_bin <- resample(MD_bin, CAZ_wgt_var_ras) #get equal extent
-MD_KBA_bin <- resample(MD_bin, CAZ_wgt_KBA_var_ras) #get equal extent
+MD_KBA_bin <- resample(MD_bin, CAZ_wgt_KBA_inv_var_ras) #get equal extent
 MD_RAN_bin <- resample(MD_bin, RAN_wgt_var_ras) #get equal extent
 MD_area_bin <- resample(MD_bin, CAZ_area_wgt_var_ras) #get equal extent
-MD_area_KBA_bin <- resample(MD_bin, CAZ_area_wgt_KBA_var_ras) #get equal extent
+MD_area_KBA_bin <- resample(MD_bin, CAZ_area_wgt_KBA_inv_var_ras) #get equal extent
 MD_area_RAN_bin <- resample(MD_bin, RAN_area_wgt_var_ras) #get equal extent
 # MD_bin_p <- rasterToPolygons(MD_bin, dissolve = T)
 # MD_bin_sf <- st_as_sf(MD_bin_p)
@@ -164,10 +164,10 @@ LH_bin2[LH_bin2 != 0] <- 1
 # Re-class zeros as NA
 LH_bin[LH_bin == 0] <- NA
 LH_spec_bin <- resample(LH_bin, CAZ_wgt_var_ras) #get equal extent
-LH_KBA_bin <- resample(LH_bin, CAZ_wgt_KBA_var_ras) #get equal extent
+LH_KBA_bin <- resample(LH_bin, CAZ_wgt_KBA_inv_var_ras) #get equal extent
 LH_RAN_bin <- resample(LH_bin, RAN_wgt_var_ras) #get equal extent
 LH_area_bin <- resample(LH_bin, CAZ_area_wgt_var_ras) #get equal extent
-LH_area_KBA_bin <- resample(LH_bin, CAZ_area_wgt_KBA_var_ras) #get equal extent
+LH_area_KBA_bin <- resample(LH_bin, CAZ_area_wgt_KBA_inv_var_ras) #get equal extent
 LH_area_RAN_bin <- resample(LH_bin, RAN_area_wgt_var_ras) #get equal extent
 # LH_bin_p <- rasterToPolygons(LH_bin, dissolve = T)
 # LH_bin_sf <- st_as_sf(LH_bin_p)
@@ -179,12 +179,12 @@ VV_bin2 <- VV_bin
 VV_bin2[VV_bin2 != 0] <- 1
 
 # Re-class zeros as NA
-VV_bin[PL_bin == 0] <- NA
+VV_bin[VV_bin == 0] <- NA
 VV_spec_bin <- resample(VV_bin, CAZ_wgt_var_ras) #get equal extent
-VV_KBA_bin <- resample(VV_bin, CAZ_wgt_KBA_var_ras) #get equal extent
+VV_KBA_bin <- resample(VV_bin, CAZ_wgt_KBA_inv_var_ras) #get equal extent
 VV_RAN_bin <- resample(VV_bin, RAN_wgt_var_ras) #get equal extent
 VV_area_bin <- resample(VV_bin, CAZ_area_wgt_var_ras) #get equal extent
-VV_area_KBA_bin <- resample(VV_bin, CAZ_area_wgt_KBA_var_ras) #get equal extent
+VV_area_KBA_bin <- resample(VV_bin, CAZ_area_wgt_KBA_inv_var_ras) #get equal extent
 VV_area_RAN_bin <- resample(VV_bin, RAN_area_wgt_var_ras) #get equal extent
 # VV_bin_p <- rasterToPolygons(VV_bin, dissolve = T)
 # VV_bin_sf <- st_as_sf(VV_bin_p)
@@ -210,10 +210,10 @@ BT_bin2[BT_bin2 != 0] <- 1
 # Re-class zeros as NA
 BT_bin[BT_bin == 0] <- NA
 BT_spec_bin <- resample(BT_bin, CAZ_wgt_var_ras) #get equal extent
-BT_KBA_bin <- resample(BT_bin, CAZ_wgt_KBA_var_ras) #get equal extent
+BT_KBA_bin <- resample(BT_bin, CAZ_wgt_KBA_inv_var_ras) #get equal extent
 BT_RAN_bin <- resample(BT_bin, RAN_wgt_var_ras) #get equal extent
 BT_area_bin <- resample(BT_bin, CAZ_area_wgt_var_ras) #get equal extent
-BT_area_KBA_bin <- resample(BT_bin, CAZ_area_wgt_KBA_var_ras) #get equal extent
+BT_area_KBA_bin <- resample(BT_bin, CAZ_area_wgt_KBA_inv_var_ras) #get equal extent
 BT_area_RAN_bin <- resample(BT_bin, RAN_area_wgt_var_ras) #get equal extent
 # BT_bin_p <- rasterToPolygons(BT_bin, dissolve = T)
 # BT_bin_sf <- st_as_sf(BT_bin_p)
@@ -227,10 +227,10 @@ HA_bin2[HA_bin2 != 0] <- 1
 # Re-class zeros as NA
 HA_bin[HA_bin == 0] <- NA
 HA_spec_bin <- resample(HA_bin, CAZ_wgt_var_ras) #get equal extent
-HA_KBA_bin <- resample(HA_bin, CAZ_wgt_KBA_var_ras) #get equal extent
+HA_KBA_bin <- resample(HA_bin, CAZ_wgt_KBA_inv_var_ras) #get equal extent
 HA_RAN_bin <- resample(HA_bin, RAN_wgt_var_ras) #get equal extent
 HA_area_bin <- resample(HA_bin, CAZ_area_wgt_var_ras) #get equal extent
-HA_area_KBA_bin <- resample(HA_bin, CAZ_area_wgt_KBA_var_ras) #get equal extent
+HA_area_KBA_bin <- resample(HA_bin, CAZ_area_wgt_KBA_inv_var_ras) #get equal extent
 HA_area_RAN_bin <- resample(HA_bin, RAN_area_wgt_var_ras) #get equal extent
 # HA_bin_p <- rasterToPolygons(HA_bin, dissolve = T)
 # HA_bin_sf <- st_as_sf(HA_bin_p)
