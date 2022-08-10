@@ -158,6 +158,7 @@ ggarrange(p7,p10,
           ncol = 1, nrow = 2)
 ######################################################################
 #Susceptible sites
+regional_model_path <- "G:/Chapter_3/SpatialData/IAS_distributions/IAS_regional" #external hard drive
 source("Scripts/susceptible_site_prep.R")
 
 #Overlap among all IAS (turn into function?)
@@ -367,19 +368,19 @@ HA_spec_comb <- Figure("Heteronychus arator", CAZ_wgt_var_ras, HA_spec_bin)
 #Kolmogorov-smirnoff tests - KBA vs no KBA
 #a two-sample test of the null hypothesis that x and y were drawn from the same continuous distribution
 #presence of ties a result of rounding
-ks.test(PM_KBA_vals, PM_spec_vals, alternative = "two.sided")
-ks.test(VG_KBA_vals, VG_spec_vals, alternative = "two.sided")
-ks.test(DG_KBA_vals, DG_spec_vals, alternative = "two.sided")
-ks.test(TB_KBA_vals, TB_spec_vals, alternative = "two.sided")
-ks.test(PL_KBA_vals, PL_spec_vals, alternative = "two.sided")
-ks.test(AM_KBA_vals, AM_spec_vals, alternative = "two.sided")
-ks.test(MF_KBA_vals, MF_spec_vals, alternative = "two.sided")
-ks.test(MD_KBA_vals, MD_spec_vals, alternative = "two.sided")
-ks.test(LH_KBA_vals, LH_spec_vals, alternative = "two.sided")
-ks.test(VV_KBA_vals, VV_spec_vals, alternative = "two.sided")
+PM_KBA <- ks.test(PM_KBA_vals, PM_spec_vals, alternative = "two.sided")
+VG_KBA <- ks.test(VG_KBA_vals, VG_spec_vals, alternative = "two.sided")
+DG_KBA <- ks.test(DG_KBA_vals, DG_spec_vals, alternative = "two.sided")
+TB_KBA <- ks.test(TB_KBA_vals, TB_spec_vals, alternative = "two.sided")
+PL_KBA <- ks.test(PL_KBA_vals, PL_spec_vals, alternative = "two.sided")
+AM_KBA <- ks.test(AM_KBA_vals, AM_spec_vals, alternative = "two.sided")
+MF_KBA <- ks.test(MF_KBA_vals, MF_spec_vals, alternative = "two.sided")
+MD_KBA <- ks.test(MD_KBA_vals, MD_spec_vals, alternative = "two.sided")
+LH_KBA <- ks.test(LH_KBA_vals, LH_spec_vals, alternative = "two.sided")
+VV_KBA <- ks.test(VV_KBA_vals, VV_spec_vals, alternative = "two.sided")
 #ks.test(MR_KBA_vals, MR_vals, alternative = "two.sided")
-ks.test(BT_KBA_vals, BT_spec_vals, alternative = "two.sided")
-ks.test(HA_KBA_vals, HA_spec_vals, alternative = "two.sided")
+BT_KBA <- ks.test(BT_KBA_vals, BT_spec_vals, alternative = "two.sided")
+HA_KBA <- ks.test(HA_KBA_vals, HA_spec_vals, alternative = "two.sided")
 
 
 #Difference between species + weight IAS
@@ -591,7 +592,8 @@ p <- ggplot(Total,
            y = DistributionCoverage, 
            colour = Species,
            group = interaction(Species,Type))) +
-  geom_line(stat = "identity", aes(linetype = Type)) +
+  geom_line(stat = "identity", aes(linetype = Type), size = 0.8) +
+  scale_linetype_manual(values = c("solid", "dotted", "longdash")) +
   scale_colour_manual(values = pnw_palette("Starfish", 12, "continuous")) + #prob change palette
   ylab("Distribution Coverage (%)") +
   xlab("Site Sensitivity") +
@@ -621,6 +623,7 @@ ins <- ggplot(Total_min,
              colour = Species,
              group = interaction(Species,Type))) +
     geom_line(stat = "identity", aes(linetype = Type), size = 0.8) +
+    scale_linetype_manual(values = c("solid", "dotted", "longdash")) +
     scale_colour_manual(values = pnw_palette("Starfish", 12, "continuous")) +
     ylab("Distribution Coverage (%)") +
     xlab("Site Sensitivity") +
@@ -649,52 +652,52 @@ PM_area_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, PM_area_KBA_bin)
 PM_area_RAN_vals <- get_msk_vals(RAN_area_wgt_var_ras, PM_area_RAN_bin)
 
 VG_area_vals <- get_msk_vals(CAZ_area_wgt_var_ras, VG_area_bin)
-VG_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, VG_area_KBA_bin)
-VG_RAN_vals <- get_msk_vals(RAN_area_wgt_var_ras, VG_area_RAN_bin)
+VG_area_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, VG_area_KBA_bin)
+VG_area_RAN_vals <- get_msk_vals(RAN_area_wgt_var_ras, VG_area_RAN_bin)
 
 DG_area_vals <- get_msk_vals(CAZ_area_wgt_var_ras, DG_area_bin)
-DG_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, DG_area_KBA_bin)
-DG_RAN_vals <- get_msk_vals(RAN_area_wgt_var_ras, DG_area_RAN_bin)
+DG_area_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, DG_area_KBA_bin)
+DG_area_RAN_vals <- get_msk_vals(RAN_area_wgt_var_ras, DG_area_RAN_bin)
 
 TB_area_vals <- get_msk_vals(CAZ_area_wgt_var_ras, TB_area_bin)
-TB_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, TB_area_KBA_bin)
-TB_RAN_vals <- get_msk_vals(RAN_area_wgt_var_ras, TB_area_RAN_bin)
+TB_area_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, TB_area_KBA_bin)
+TB_area_RAN_vals <- get_msk_vals(RAN_area_wgt_var_ras, TB_area_RAN_bin)
 
 PL_area_vals <- get_msk_vals(CAZ_area_wgt_var_ras, PL_area_bin)
-PL_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, PL_area_KBA_bin)
-PL_RAN_vals <- get_msk_vals(RAN_area_wgt_var_ras, PL_area_RAN_bin)
+PL_area_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, PL_area_KBA_bin)
+PL_area_RAN_vals <- get_msk_vals(RAN_area_wgt_var_ras, PL_area_RAN_bin)
 
 AM_area_vals <- get_msk_vals(CAZ_area_wgt_var_ras, AM_area_bin)
-AM_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, AM_area_KBA_bin)
-AM_RAN_vals <- get_msk_vals(RAN_area_wgt_var_ras, AM_area_RAN_bin)
+AM_area_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, AM_area_KBA_bin)
+AM_area_RAN_vals <- get_msk_vals(RAN_area_wgt_var_ras, AM_area_RAN_bin)
 
 MF_area_vals <- get_msk_vals(CAZ_area_wgt_var_ras, MF_area_bin)
-MF_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, MF_area_KBA_bin)
-MF_RAN_vals <- get_msk_vals(RAN_area_wgt_var_ras, MF_area_RAN_bin)
+MF_area_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, MF_area_KBA_bin)
+MF_area_RAN_vals <- get_msk_vals(RAN_area_wgt_var_ras, MF_area_RAN_bin)
 
 MD_area_vals <- get_msk_vals(CAZ_area_wgt_var_ras, MD_area_bin)
-MD_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, MD_area_KBA_bin)
-MD_RAN_vals <- get_msk_vals(RAN_area_wgt_var_ras, MD_area_RAN_bin)
+MD_area_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, MD_area_KBA_bin)
+MD_area_RAN_vals <- get_msk_vals(RAN_area_wgt_var_ras, MD_area_RAN_bin)
 
 LH_area_vals <- get_msk_vals(CAZ_area_wgt_var_ras, LH_area_bin)
-LH_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, LH_area_KBA_bin)
-LH_RAN_vals <- get_msk_vals(RAN_area_wgt_var_ras, LH_area_RAN_bin)
+LH_area_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, LH_area_KBA_bin)
+LH_area_RAN_vals <- get_msk_vals(RAN_area_wgt_var_ras, LH_area_RAN_bin)
 
 VV_area_vals <- get_msk_vals(CAZ_area_wgt_var_ras, VV_area_bin)
-VV_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, VV_area_KBA_bin)
-VV_RAN_vals <- get_msk_vals(RAN_area_wgt_var_ras, VV_area_RAN_bin)
+VV_area_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, VV_area_KBA_bin)
+VV_area_RAN_vals <- get_msk_vals(RAN_area_wgt_var_ras, VV_area_RAN_bin)
 
 # MR_vals <- get_msk_vals(CAZ_area_wgt_var_ras, MR_bin)
 # MR_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, MR_bin_KBA)
 # MR_RAN_vals <- get_msk_vals(RAN_area_wgt_var_ras, MR_bin_RAN)
 
 BT_area_vals <- get_msk_vals(CAZ_area_wgt_var_ras, BT_area_bin)
-BT_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, BT_area_KBA_bin)
-BT_RAN_vals <- get_msk_vals(RAN_area_wgt_var_ras, BT_area_RAN_bin)
+BT_area_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, BT_area_KBA_bin)
+BT_area_RAN_vals <- get_msk_vals(RAN_area_wgt_var_ras, BT_area_RAN_bin)
 
 HA_area_vals <- get_msk_vals(CAZ_area_wgt_var_ras, HA_area_bin)
-HA_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, HA_area_KBA_bin)
-HA_RAN_vals <- get_msk_vals(RAN_area_wgt_var_ras, HA_area_RAN_bin)
+HA_area_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, HA_area_KBA_bin)
+HA_area_RAN_vals <- get_msk_vals(RAN_area_wgt_var_ras, HA_area_RAN_bin)
 
 #Multi-panel figures
 PM_area_comb <- Figure("Pheidole megacephala", CAZ_area_wgt_var_ras, PM_area_bin)
@@ -714,125 +717,126 @@ HA_area_comb <- Figure("Heteronychus arator", CAZ_area_wgt_var_ras, HA_area_bin)
 #Kolmogorov-smirnoff tests - KBA vs no KBA
 #a two-sample test of the null hypothesis that x and y were drawn from the same continuous distribution
 #presence of ties a result of rounding
-ks.test(PM_KBA_vals, PM_vals, alternative = "two.sided")
-ks.test(VG_KBA_vals, VG_vals, alternative = "two.sided")
-ks.test(DG_KBA_vals, DG_vals, alternative = "two.sided")
-ks.test(TB_KBA_vals, TB_vals, alternative = "two.sided")
-ks.test(PL_KBA_vals, PL_vals, alternative = "two.sided")
-ks.test(AM_KBA_vals, AM_vals, alternative = "two.sided")
-ks.test(MF_KBA_vals, MF_vals, alternative = "two.sided")
-ks.test(MD_KBA_vals, MD_vals, alternative = "two.sided")
-ks.test(LH_KBA_vals, LH_vals, alternative = "two.sided")
-ks.test(VV_KBA_vals, VV_vals, alternative = "two.sided")
+PM_KBA_area <- ks.test(PM_area_KBA_vals, PM_area_vals, alternative = "two.sided")
+VG_KBA_area <-ks.test(VG_area_KBA_vals, VG_area_vals, alternative = "two.sided")
+DG_KBA_area <-ks.test(DG_area_KBA_vals, DG_area_vals, alternative = "two.sided")
+TB_KBA_area <-ks.test(TB_area_KBA_vals, TB_area_vals, alternative = "two.sided")
+PL_KBA_area <-ks.test(PL_area_KBA_vals, PL_area_vals, alternative = "two.sided")
+AM_KBA_area <-ks.test(AM_area_KBA_vals, AM_area_vals, alternative = "two.sided")
+MF_KBA_area <-ks.test(MF_area_KBA_vals, MF_area_vals, alternative = "two.sided")
+MD_KBA_area <-ks.test(MD_area_KBA_vals, MD_area_vals, alternative = "two.sided")
+LH_KBA_area <-ks.test(LH_area_KBA_vals, LH_area_vals, alternative = "two.sided")
+VV_KBA_area <-ks.test(VV_area_KBA_vals, VV_area_vals, alternative = "two.sided")
 #ks.test(MR_KBA_vals, MR_vals, alternative = "two.sided")
-ks.test(BT_KBA_vals, BT_vals, alternative = "two.sided")
-ks.test(HA_KBA_vals, HA_vals, alternative = "two.sided")
+BT_KBA_area <-ks.test(BT_area_KBA_vals, BT_area_vals, alternative = "two.sided")
+HA_KBA_area <-ks.test(HA_area_KBA_vals, HA_area_vals, alternative = "two.sided")
 
 
 #Difference between species + area + weight IAS
-PM_VG <- ks.test(PM_vals, VG_vals, alternative = "two.sided")
-PM_DG <- ks.test(PM_vals, DG_vals, alternative = "two.sided")
-PM_TB <- ks.test(PM_vals, TB_vals, alternative = "two.sided")
-PM_PL <- ks.test(PM_vals, PL_vals, alternative = "two.sided")
-PM_AM <- ks.test(PM_vals, AM_vals, alternative = "two.sided")
-PM_MF <- ks.test(PM_vals, MF_vals, alternative = "two.sided")
-PM_MD <- ks.test(PM_vals, MD_vals, alternative = "two.sided")
-PM_LH <- ks.test(PM_vals, LH_vals, alternative = "two.sided")
-PM_VV <- ks.test(PM_vals, VV_vals, alternative = "two.sided")
+PM_VG_area <- ks.test(PM_area_vals, VG_area_vals, alternative = "two.sided")
+PM_DG_area <- ks.test(PM_area_vals, DG_area_vals, alternative = "two.sided")
+PM_TB_area <- ks.test(PM_area_vals, TB_area_vals, alternative = "two.sided")
+PM_PL_area <- ks.test(PM_area_vals, PL_area_vals, alternative = "two.sided")
+PM_AM_area <- ks.test(PM_area_vals, AM_area_vals, alternative = "two.sided")
+PM_MF_area <- ks.test(PM_area_vals, MF_area_vals, alternative = "two.sided")
+PM_MD_area <- ks.test(PM_area_vals, MD_area_vals, alternative = "two.sided")
+PM_LH_area <- ks.test(PM_area_vals, LH_area_vals, alternative = "two.sided")
+PM_VV_area <- ks.test(PM_area_vals, VV_area_vals, alternative = "two.sided")
 #PM_MR <- ks.test(PM_vals, MR_vals, alternative = "two.sided")
-PM_BT <- ks.test(PM_vals, BT_vals, alternative = "two.sided")
-PM_HA <- ks.test(PM_vals, HA_vals, alternative = "two.sided")
+PM_BT_area <- ks.test(PM_area_vals, BT_area_vals, alternative = "two.sided")
+PM_HA_area <- ks.test(PM_area_vals, HA_area_vals, alternative = "two.sided")
 
-VG_DG <- ks.test(VG_vals, DG_vals, alternative = "two.sided")
-VG_TB <- ks.test(VG_vals, TB_vals, alternative = "two.sided")
-VG_PL <- ks.test(VG_vals, PL_vals, alternative = "two.sided")
-VG_AM <- ks.test(VG_vals, AM_vals, alternative = "two.sided")
-VG_MF <- ks.test(VG_vals, MF_vals, alternative = "two.sided")
-VG_MD <- ks.test(VG_vals, MD_vals, alternative = "two.sided")
-VG_LH <- ks.test(VG_vals, LH_vals, alternative = "two.sided")
-VG_VV <- ks.test(VG_vals, VV_vals, alternative = "two.sided")
+VG_DG_area <- ks.test(VG_area_vals, DG_area_vals, alternative = "two.sided")
+VG_TB_area <- ks.test(VG_area_vals, TB_area_vals, alternative = "two.sided")
+VG_PL_area <- ks.test(VG_area_vals, PL_area_vals, alternative = "two.sided")
+VG_AM_area <- ks.test(VG_area_vals, AM_area_vals, alternative = "two.sided")
+VG_MF_area <- ks.test(VG_area_vals, MF_area_vals, alternative = "two.sided")
+VG_MD_area <- ks.test(VG_area_vals, MD_area_vals, alternative = "two.sided")
+VG_LH_area <- ks.test(VG_area_vals, LH_area_vals, alternative = "two.sided")
+VG_VV_area <- ks.test(VG_area_vals, VV_area_vals, alternative = "two.sided")
 #VG_MR <- ks.test(VG_vals, MR_vals, alternative = "two.sided")
-VG_BT <- ks.test(VG_vals, BT_vals, alternative = "two.sided")
-VG_HA <- ks.test(VG_vals, HA_vals, alternative = "two.sided")
+VG_BT_area <- ks.test(VG_area_vals, BT_area_vals, alternative = "two.sided")
+VG_HA_area <- ks.test(VG_area_vals, HA_area_vals, alternative = "two.sided")
 
-DG_TB <- ks.test(DG_vals, TB_vals, alternative = "two.sided")
-DG_PL <- ks.test(DG_vals, PL_vals, alternative = "two.sided")
-DG_AM <- ks.test(DG_vals, AM_vals, alternative = "two.sided")
-DG_MF <- ks.test(DG_vals, MF_vals, alternative = "two.sided")
-DG_MD <- ks.test(DG_vals, MD_vals, alternative = "two.sided")
-DG_LH <- ks.test(DG_vals, LH_vals, alternative = "two.sided")
-DG_VV <- ks.test(DG_vals, VV_vals, alternative = "two.sided")
+DG_TB_area <- ks.test(DG_area_vals, TB_area_vals, alternative = "two.sided")
+DG_PL_area <- ks.test(DG_area_vals, PL_area_vals, alternative = "two.sided")
+DG_AM_area <- ks.test(DG_area_vals, AM_area_vals, alternative = "two.sided")
+DG_MF_area <- ks.test(DG_area_vals, MF_area_vals, alternative = "two.sided")
+DG_MD_area <- ks.test(DG_area_vals, MD_area_vals, alternative = "two.sided")
+DG_LH_area <- ks.test(DG_area_vals, LH_area_vals, alternative = "two.sided")
+DG_VV_area <- ks.test(DG_area_vals, VV_area_vals, alternative = "two.sided")
 #DG_MR <- ks.test(DG_vals, MR_vals, alternative = "two.sided")
-DG_BT <- ks.test(DG_vals, BT_vals, alternative = "two.sided")
-DG_HA <- ks.test(DG_vals, HA_vals, alternative = "two.sided")
+DG_BT_area <- ks.test(DG_area_vals, BT_area_vals, alternative = "two.sided")
+DG_HA_area <- ks.test(DG_area_vals, HA_area_vals, alternative = "two.sided")
 
-TB_PL <- ks.test(TB_vals, PL_vals, alternative = "two.sided")
-TB_AM <- ks.test(TB_vals, AM_vals, alternative = "two.sided")
-TB_MF <- ks.test(TB_vals, MF_vals, alternative = "two.sided")
-TB_MD <- ks.test(TB_vals, MD_vals, alternative = "two.sided")
-TB_LH <- ks.test(TB_vals, LH_vals, alternative = "two.sided")
-TB_VV <- ks.test(TB_vals, VV_vals, alternative = "two.sided")
+TB_PL_area <- ks.test(TB_area_vals, PL_area_vals, alternative = "two.sided")
+TB_AM_area <- ks.test(TB_area_vals, AM_area_vals, alternative = "two.sided")
+TB_MF_area <- ks.test(TB_area_vals, MF_area_vals, alternative = "two.sided")
+TB_MD_area <- ks.test(TB_area_vals, MD_area_vals, alternative = "two.sided")
+TB_LH_area <- ks.test(TB_area_vals, LH_area_vals, alternative = "two.sided")
+TB_VV_area <- ks.test(TB_area_vals, VV_area_vals, alternative = "two.sided")
 #TB_MR <- ks.test(TB_vals, MR_vals, alternative = "two.sided")
-TB_BT <- ks.test(TB_vals, BT_vals, alternative = "two.sided")
-TB_HA <- ks.test(TB_vals, HA_vals, alternative = "two.sided")
+TB_BT_area <- ks.test(TB_area_vals, BT_area_vals, alternative = "two.sided")
+TB_HA_area <- ks.test(TB_area_vals, HA_area_vals, alternative = "two.sided")
 
-PL_AM <- ks.test(PL_vals, AM_vals, alternative = "two.sided")
-PL_MF <- ks.test(PL_vals, MF_vals, alternative = "two.sided")
-PL_MD <- ks.test(PL_vals, MD_vals, alternative = "two.sided")
-PL_LH <- ks.test(PL_vals, LH_vals, alternative = "two.sided")
-PL_VV <- ks.test(PL_vals, VV_vals, alternative = "two.sided")
+PL_AM_area <- ks.test(PL_area_vals, AM_area_vals, alternative = "two.sided")
+PL_MF_area <- ks.test(PL_area_vals, MF_area_vals, alternative = "two.sided")
+PL_MD_area <- ks.test(PL_area_vals, MD_area_vals, alternative = "two.sided")
+PL_LH_area <- ks.test(PL_area_vals, LH_area_vals, alternative = "two.sided")
+PL_VV_area <- ks.test(PL_area_vals, VV_area_vals, alternative = "two.sided")
 #PL_MR <- ks.test(PL_vals, MR_vals, alternative = "two.sided")
-PL_BT <- ks.test(PL_vals, BT_vals, alternative = "two.sided")
-PL_HA <- ks.test(PL_vals, HA_vals, alternative = "two.sided")
+PL_BT_area <- ks.test(PL_area_vals, BT_area_vals, alternative = "two.sided")
+PL_HA_area <- ks.test(PL_area_vals, HA_area_vals, alternative = "two.sided")
 
-AM_MF <- ks.test(AM_vals, MF_vals, alternative = "two.sided")
-AM_MD <- ks.test(AM_vals, MD_vals, alternative = "two.sided")
-AM_LH <- ks.test(AM_vals, LH_vals, alternative = "two.sided")
-AM_VV <- ks.test(AM_vals, VV_vals, alternative = "two.sided")
+AM_MF_area <- ks.test(AM_area_vals, MF_area_vals, alternative = "two.sided")
+AM_MD_area <- ks.test(AM_area_vals, MD_area_vals, alternative = "two.sided")
+AM_LH_area <- ks.test(AM_area_vals, LH_area_vals, alternative = "two.sided")
+AM_VV_area <- ks.test(AM_area_vals, VV_area_vals, alternative = "two.sided")
 #AM_MR <- ks.test(AM_vals, MR_vals, alternative = "two.sided")
-AM_BT <- ks.test(AM_vals, BT_vals, alternative = "two.sided")
-AM_HA <- ks.test(AM_vals, HA_vals, alternative = "two.sided")
+AM_BT_area <- ks.test(AM_area_vals, BT_area_vals, alternative = "two.sided")
+AM_HA_area <- ks.test(AM_area_vals, HA_area_vals, alternative = "two.sided")
 
-MF_MD <- ks.test(MF_vals, MD_vals, alternative = "two.sided")
-MF_LH <- ks.test(MF_vals, LH_vals, alternative = "two.sided")
-MF_VV <- ks.test(MF_vals, VV_vals, alternative = "two.sided")
+MF_MD_area <- ks.test(MF_area_vals, MD_area_vals, alternative = "two.sided")
+MF_LH_area <- ks.test(MF_area_vals, LH_area_vals, alternative = "two.sided")
+MF_VV_area <- ks.test(MF_area_vals, VV_area_vals, alternative = "two.sided")
 #MF_MR <- ks.test(MF_vals, MR_vals, alternative = "two.sided")
-MF_BT <- ks.test(MF_vals, BT_vals, alternative = "two.sided")
-MF_HA <- ks.test(MF_vals, HA_vals, alternative = "two.sided")
+MF_BT_area <- ks.test(MF_area_vals, BT_area_vals, alternative = "two.sided")
+MF_HA_area <- ks.test(MF_area_vals, HA_area_vals, alternative = "two.sided")
 
-MD_LH <- ks.test(MD_vals, LH_vals, alternative = "two.sided")
-MD_VV <- ks.test(MD_vals, VV_vals, alternative = "two.sided")
+MD_LH_area <- ks.test(MD_area_vals, LH_area_vals, alternative = "two.sided")
+MD_VV_area <- ks.test(MD_area_vals, VV_area_vals, alternative = "two.sided")
 #MD_MR <- ks.test(MD_vals, MR_vals, alternative = "two.sided")
-MD_BT <- ks.test(MD_vals, BT_vals, alternative = "two.sided")
-MD_HA <- ks.test(MD_vals, HA_vals, alternative = "two.sided")
+MD_BT_area <- ks.test(MD_area_vals, BT_area_vals, alternative = "two.sided")
+MD_HA_area <- ks.test(MD_area_vals, HA_area_vals, alternative = "two.sided")
 
-LH_VV <- ks.test(LH_vals, VV_vals, alternative = "two.sided")
+LH_VV_area <- ks.test(LH_area_vals, VV_area_vals, alternative = "two.sided")
 #LH_MR <- ks.test(LH_vals, MR_vals, alternative = "two.sided")
-LH_BT <- ks.test(LH_vals, BT_vals, alternative = "two.sided")
-LH_HA <- ks.test(LH_vals, HA_vals, alternative = "two.sided")
+LH_BT_area <- ks.test(LH_area_vals, BT_area_vals, alternative = "two.sided")
+LH_HA_area <- ks.test(LH_area_vals, HA_area_vals, alternative = "two.sided")
 
 #VV_MR <- ks.test(VV_vals, MR_vals, alternative = "two.sided")
-VV_BT <- ks.test(VV_vals, BT_vals, alternative = "two.sided")
-VV_HA <- ks.test(VV_vals, HA_vals, alternative = "two.sided")
+VV_BT_area <- ks.test(VV_area_vals, BT_area_vals, alternative = "two.sided")
+VV_HA_area <- ks.test(VV_area_vals, HA_area_vals, alternative = "two.sided")
 
 #MR_BT <- ks.test(MR_vals, BT_vals, alternative = "two.sided")
 #MR_HA <- ks.test(MR_vals, HA_vals, alternative = "two.sided")
 
-BT_HA <- ks.test(BT_vals, HA_vals, alternative = "two.sided")
+BT_HA_area <- ks.test(BT_area_vals, HA_area_vals, alternative = "two.sided")
 
-v <- c(0,PM_VG$statistic,PM_DG$statistic,PM_TB$statistic,PM_PL$statistic,PM_AM$statistic,PM_MF$statistic,PM_MD$statistic,PM_LH$statistic,PM_VV$statistic,PM_BT$statistic,PM_HA$statistic,
-       0,0,VG_DG$statistic,VG_TB$statistic,VG_PL$statistic,VG_AM$statistic,VG_MF$statistic,VG_MD$statistic,VG_LH$statistic,VG_VV$statistic,VG_BT$statistic,VG_HA$statistic,
-       0,0,0,DG_TB$statistic,DG_PL$statistic,DG_AM$statistic,DG_MF$statistic,DG_MD$statistic,DG_LH$statistic,DG_VV$statistic,DG_BT$statistic,DG_HA$statistic,
-       0,0,0,0,TB_PL$statistic,TB_AM$statistic,TB_MF$statistic,TB_MD$statistic,TB_LH$statistic,TB_VV$statistic,TB_BT$statistic,TB_HA$statistic,
-       0,0,0,0,0,PL_AM$statistic,PL_MF$statistic,PL_MD$statistic,PL_LH$statistic,PL_VV$statistic,PL_BT$statistic,PL_HA$statistic,
-       0,0,0,0,0,0,AM_MF$statistic,AM_MD$statistic,AM_LH$statistic,AM_VV$statistic,AM_BT$statistic,AM_HA$statistic,
-       0,0,0,0,0,0,0,MF_MD$statistic,MF_LH$statistic,MF_VV$statistic,MF_BT$statistic,MF_HA$statistic,
-       0,0,0,0,0,0,0,0,MD_LH$statistic,MD_VV$statistic,MD_BT$statistic,MD_HA$statistic,
-       0,0,0,0,0,0,0,0,0,LH_VV$statistic,LH_BT$statistic,LH_HA$statistic,
-       0,0,0,0,0,0,0,0,0,0,VV_BT$statistic,VV_HA$statistic,
-       0,0,0,0,0,0,0,0,0,0,0,BT_HA$statistic)
+v <- c(0,PM_VG_area$statistic,PM_DG_area$statistic,PM_TB_area$statistic,PM_PL_area$statistic,PM_AM_area$statistic,PM_MF_area$statistic,PM_MD_area$statistic,PM_LH_area$statistic,PM_VV_area$statistic,PM_BT_area$statistic,PM_HA_area$statistic,
+       0,0,VG_DG_area$statistic,VG_TB_area$statistic,VG_PL_area$statistic,VG_AM_area$statistic,VG_MF_area$statistic,VG_MD_area$statistic,VG_LH_area$statistic,VG_VV_area$statistic,VG_BT_area$statistic,VG_HA_area$statistic,
+       0,0,0,DG_TB_area$statistic,DG_PL_area$statistic,DG_AM_area$statistic,DG_MF_area$statistic,DG_MD_area$statistic,DG_LH_area$statistic,DG_VV_area$statistic,DG_BT_area$statistic,DG_HA_area$statistic,
+       0,0,0,0,TB_PL_area$statistic,TB_AM_area$statistic,TB_MF_area$statistic,TB_MD_area$statistic,TB_LH_area$statistic,TB_VV_area$statistic,TB_BT_area$statistic,TB_HA_area$statistic,
+       0,0,0,0,0,PL_AM_area$statistic,PL_MF_area$statistic,PL_MD_area$statistic,PL_LH_area$statistic,PL_VV_area$statistic,PL_BT_area$statistic,PL_HA_area$statistic,
+       0,0,0,0,0,0,AM_MF_area$statistic,AM_MD_area$statistic,AM_LH_area$statistic,AM_VV_area$statistic,AM_BT_area$statistic,AM_HA_area$statistic,
+       0,0,0,0,0,0,0,MF_MD_area$statistic,MF_LH_area$statistic,MF_VV_area$statistic,MF_BT_area$statistic,MF_HA_area$statistic,
+       0,0,0,0,0,0,0,0,MD_LH_area$statistic,MD_VV_area$statistic,MD_BT_area$statistic,MD_HA_area$statistic,
+       0,0,0,0,0,0,0,0,0,LH_VV_area$statistic,LH_BT_area$statistic,LH_HA_area$statistic,
+       0,0,0,0,0,0,0,0,0,0,VV_BT_area$statistic,VV_HA_area$statistic,
+       0,0,0,0,0,0,0,0,0,0,0,BT_HA_area$statistic,
+       0,0,0,0,0,0,0,0,0,0,0,0)
 
-tm <- matrix(v, nrow = 12, ncol = 11)
+tm <- matrix(v, nrow = 12, ncol = 12)
 rownames(tm) <- c(":italic(Pheidole~~megacephala)", 
                   ":italic(Vespula~~germanica)", 
                   ":italic(Digitonthophagus~~gazella)", 
@@ -845,72 +849,93 @@ rownames(tm) <- c(":italic(Pheidole~~megacephala)",
                   ":italic(Vespula~~vulgaris)",
                   ":italic(Bombus~~terrestris)",
                   ":italic(Heteronychus~~arator)")
-colnames(tm) <- c("Pm", "Vg", "Dg", "Tb", "Pl", "Am", "Mf", "Md", "Lh", "Vv", "Bt")
+colnames(tm) <- c("Pm", "Vg", "Dg", "Tb", "Pl", "Am", "Mf", "Md", "Lh", "Vv", "Bt", "Ha")
 corrplot::corrplot(tm, type = "lower", method = "color", 
                    cl.pos = "n", col=brewer.pal(n=10, name="Spectral"), 
                    tl.srt = 0, tl.col = "black", tl.cex = 0.8, addCoef.col = "black",
                    mar = c(0,0,0,0))
+
+# #Alternative
+# rv <- rev(v)
+# tmr <- matrix(rv, nrow = 12, ncol = 12)
+# rownames(tmr) <- rev(c(":italic(Pheidole~~megacephala)", 
+#                   ":italic(Vespula~~germanica)", 
+#                   ":italic(Digitonthophagus~~gazella)", 
+#                   ":italic(Tetramorium~~bicarinatum)", 
+#                   ":italic(Paratrechina~~longicornis)",
+#                   ":italic(Apis~~mellifera)",
+#                   ":italic(Monomorium~~floricola)",
+#                   ":italic(Monomorium~~destructor)",
+#                   ":italic(Linepithema~~humile)",
+#                   ":italic(Vespula~~vulgaris)",
+#                   ":italic(Bombus~~terrestris)",
+#                   ":italic(Heteronychus~~arator)"))
+# colnames(tm) <- rev(c("Pm", "Vg", "Dg", "Tb", "Pl", "Am", "Mf", "Md", "Lh", "Vv", "Bt", "Ha"))
+# corrplot::corrplot(tm, type = "upper", method = "color", 
+#                    cl.pos = "n", col=brewer.pal(n=10, name="Spectral"), 
+#                    tl.srt = 0, tl.col = "black", tl.cex = 0.8, addCoef.col = "black",
+#                    mar = c(0,0,0,0))
 
 #Proportion difference (KBA vs no KBA) in number of top sensitive sites
 #Top two (i.e. >= 0.98 sensitivity)
 props <- c(1, 0.98, 0.95, 0.90, 0.75, 0.50, 0.25, 0.00)
 diffs <- c()
 
-PM_prop <- multi_props(PM_vals, props)
-PM_KBA_prop <- multi_props(PM_KBA_vals, props)
-PM_RAN_prop <- multi_props(PM_RAN_vals, props)
+PM_area_prop <- multi_props(PM_area_vals, props)
+PM_area_KBA_prop <- multi_props(PM_KBA_vals, props)
+PM_area_RAN_prop <- multi_props(PM_area_RAN_vals, props)
 
-VG_prop <- multi_props(VG_vals, props)
-VG_KBA_prop <- multi_props(VG_KBA_vals, props)
-VG_RAN_prop <- multi_props(VG_RAN_vals, props)
+VG_area_prop <- multi_props(VG_area_vals, props)
+VG_area_KBA_prop <- multi_props(VG_area_KBA_vals, props)
+VG_area_RAN_prop <- multi_props(VG_area_RAN_vals, props)
 
-DG_prop <- multi_props(DG_vals, props)
-DG_KBA_prop <- multi_props(DG_KBA_vals, props)
-DG_RAN_prop <- multi_props(DG_RAN_vals, props)
+DG_area_prop <- multi_props(DG_area_vals, props)
+DG_area_KBA_prop <- multi_props(DG_area_KBA_vals, props)
+DG_area_RAN_prop <- multi_props(DG_area_RAN_vals, props)
 
-TB_prop <- multi_props(TB_vals, props)
-TB_KBA_prop <- multi_props(TB_KBA_vals, props)
-TB_RAN_prop <- multi_props(TB_RAN_vals, props)
+TB_area_prop <- multi_props(TB_area_vals, props)
+TB_area_KBA_prop <- multi_props(TB_area_KBA_vals, props)
+TB_area_RAN_prop <- multi_props(TB_area_RAN_vals, props)
 
-PL_prop <- multi_props(PL_vals, props)
-PL_KBA_prop <- multi_props(PL_KBA_vals, props)
-PL_RAN_prop <- multi_props(PL_RAN_vals, props)
+PL_area_prop <- multi_props(PL_area_vals, props)
+PL_area_KBA_prop <- multi_props(PL_area_KBA_vals, props)
+PL_area_RAN_prop <- multi_props(PL_area_RAN_vals, props)
 
-AM_prop <- multi_props(AM_vals, props)
-AM_KBA_prop <- multi_props(AM_KBA_vals, props)
-AM_RAN_prop <- multi_props(AM_RAN_vals, props)
+AM_area_prop <- multi_props(AM_area_vals, props)
+AM_area_KBA_prop <- multi_props(AM_area_KBA_vals, props)
+AM_area_RAN_prop <- multi_props(AM_area_RAN_vals, props)
 
-MF_prop <- multi_props(MF_vals, props)
-MF_KBA_prop <- multi_props(MF_KBA_vals, props)
-MF_RAN_prop <- multi_props(MF_RAN_vals, props)
+MF_area_prop <- multi_props(MF_area_vals, props)
+MF_area_KBA_prop <- multi_props(MF_area_KBA_vals, props)
+MF_area_RAN_prop <- multi_props(MF_area_RAN_vals, props)
 
-MD_prop <- multi_props(MD_vals, props)
-MD_KBA_prop <- multi_props(MD_KBA_vals, props)
-MD_RAN_prop <- multi_props(MD_RAN_vals, props)
+MD_area_prop <- multi_props(MD_area_vals, props)
+MD_area_KBA_prop <- multi_props(MD_area_KBA_vals, props)
+MD_area_RAN_prop <- multi_props(MD_area_RAN_vals, props)
 
-LH_prop <- multi_props(LH_vals, props)
-LH_KBA_prop <- multi_props(LH_KBA_vals, props)
-LH_RAN_prop <- multi_props(LH_RAN_vals, props)
+LH_area_prop <- multi_props(LH_area_vals, props)
+LH_area_KBA_prop <- multi_props(LH_area_KBA_vals, props)
+LH_area_RAN_prop <- multi_props(LH_area_RAN_vals, props)
 
-VV_prop <- multi_props(VV_vals, props)
-VV_KBA_prop <- multi_props(VV_KBA_vals, props)
-VV_RAN_prop <- multi_props(VV_RAN_vals, props)
+VV_area_prop <- multi_props(VV_area_vals, props)
+VV_area_KBA_prop <- multi_props(VV_area_KBA_vals, props)
+VV_area_RAN_prop <- multi_props(VV_area_RAN_vals, props)
 
 # MR_prop <- multi_props(MR_vals, props)
 # MR_KBA_prop <- multi_props(MR_KBA_vals, props)
 # MR_RAN_prop <- multi_props(MR_RAN_vals, props)
 
-BT_prop <- multi_props(BT_vals, props)
-BT_KBA_prop <- multi_props(BT_KBA_vals, props)
-BT_RAN_prop <- multi_props(BT_RAN_vals, props)
+BT_area_prop <- multi_props(BT_area_vals, props)
+BT_area_KBA_prop <- multi_props(BT_area_KBA_vals, props)
+BT_area_RAN_prop <- multi_props(BT_area_RAN_vals, props)
 
-HA_prop <- multi_props(HA_vals, props)
-HA_KBA_prop <- multi_props(HA_KBA_vals, props)
-HA_RAN_prop <- multi_props(HA_RAN_vals, props)
+HA_area_prop <- multi_props(HA_area_vals, props)
+HA_area_KBA_prop <- multi_props(HA_area_KBA_vals, props)
+HA_area_RAN_prop <- multi_props(HA_area_RAN_vals, props)
 
-Total <- as.data.frame(rbind(PM_prop,VG_prop,DG_prop,TB_prop,PL_prop,AM_prop,MF_prop,MD_prop,LH_prop,VV_prop,BT_prop,HA_prop,
-                             PM_KBA_prop, VG_KBA_prop, DG_KBA_prop, TB_KBA_prop, PL_KBA_prop,AM_KBA_prop,MF_KBA_prop,MD_KBA_prop,LH_KBA_prop,VV_KBA_prop,BT_KBA_prop,HA_KBA_prop,
-                             PM_RAN_prop, VG_RAN_prop, DG_RAN_prop, TB_RAN_prop, PL_RAN_prop,AM_RAN_prop,MF_RAN_prop,MD_RAN_prop,LH_RAN_prop,VV_RAN_prop,BT_RAN_prop,HA_RAN_prop))
+Total <- as.data.frame(rbind(PM_area_prop,VG_area_prop,DG_area_prop,TB_area_prop,PL_area_prop,AM_area_prop,MF_area_prop,MD_area_prop,LH_area_prop,VV_area_prop,BT_area_prop,HA_area_prop,
+                             PM_area_KBA_prop, VG_area_KBA_prop, DG_area_KBA_prop, TB_area_KBA_prop, PL_area_KBA_prop,AM_area_KBA_prop,MF_area_KBA_prop,MD_area_KBA_prop,LH_area_KBA_prop,VV_area_KBA_prop,BT_area_KBA_prop,HA_area_KBA_prop,
+                             PM_area_RAN_prop, VG_area_RAN_prop, DG_area_RAN_prop, TB_area_RAN_prop, PL_area_RAN_prop,AM_area_RAN_prop,MF_area_RAN_prop,MD_area_RAN_prop,LH_area_RAN_prop,VV_area_RAN_prop,BT_area_RAN_prop,HA_area_RAN_prop))
 Type <- c(rep("Unmasked", 12), rep("Masked", 12), rep("Random", 12))
 Species <- rep(c("P. megacephala", "V. germanica", "D. gazella",
                  "T. bicarinatum", "P. longicornis", "A. mellifera",
@@ -925,7 +950,7 @@ Total <- Total %>%
                names_to = "SiteSensitivity", 
                values_to = "DistributionCoverage") %>%
   mutate(SiteSensitivity = as.double(SiteSensitivity))
-cols <- c("#b409a7","#0db02f", "#5bb4f2","#040200","#9c5200")
+#cols <- c("#b409a7","#0db02f", "#5bb4f2","#040200","#9c5200")
 Total_min <- Total %>%
   dplyr::filter(SiteSensitivity == 1 | SiteSensitivity == 0.98)
 df <- data.frame(xmin = c(1,0.98,0.95,0.9,0.75,0.5,0.25),
@@ -937,9 +962,9 @@ p <- ggplot(Total,
                 y = DistributionCoverage, 
                 colour = Species,
                 group = interaction(Species,Type))) +
-  geom_line(stat = "identity", aes(linetype = Type)) +
+  geom_line(stat = "identity", aes(linetype = Type), size = 0.8) +
   scale_linetype_manual(values = c("solid", "dotted", "longdash")) +
-  scale_colour_manual(values = pnw_palette("Cascades", 12)) +
+  scale_colour_manual(values = pnw_palette("Starfish", 12, "continuous")) +
   ylab("Distribution Coverage (%)") +
   xlab("Site Sensitivity") +
   theme_bw() +
@@ -967,10 +992,10 @@ ins <- ggplot(Total_min,
                   y = DistributionCoverage, 
                   colour = Species,
                   group = interaction(Species,Type))) +
-  geom_line(stat = "identity", aes(linetype = Type, size = Type)) +
+  geom_line(stat = "identity", aes(linetype = Type),size = 0.8) +
   scale_linetype_manual(values = c("solid", "dotted", "longdash")) +
-  scale_size_manual(values = c(1,1,1)) +
-  scale_colour_manual(values = pnw_palette("Cascades", 12)) +
+  #scale_size_manual(values = c(1,1,1)) +
+  scale_colour_manual(values = pnw_palette("Starfish", 12)) +
   ylab("Distribution Coverage (%)") +
   xlab("Site Sensitivity") +
   theme_bw() +
@@ -990,4 +1015,42 @@ ins <- ggplot(Total_min,
                      trans = "reverse") +
   scale_y_continuous(expand = c(0,0))
 
+#An accompanying figure could be showing numerical difference between non-kba and kba
+#Take differences, e.g. Here negative values means higher distribution coverage for KBAs
+pm_diff <- PM_area_prop - PM_area_KBA_prop
+vg_diff <- VG_area_prop - VG_area_KBA_prop
 
+#Then just follow through like before but using these values
+Total_diff <- data.frame(rbind(pm_diff, vg_diff))
+species_diff <- c("Pheidole megacephala", "Vespula germanica")
+Total_diff <- cbind(species_diff, Total_diff)
+Total_diff <- Total_diff %>%
+  as_tibble() %>%
+  mutate(species = factor(species)) %>%
+  pivot_longer(cols = !species, 
+               names_to = "SiteSensitivity", 
+               values_to = "ScenarioDifference") %>%
+  mutate(SiteSensitivity = as.double(SiteSensitivity))
+
+ggplot(Total_diff, 
+       aes(x = SiteSensitivity, 
+           y = ScenarioDifference, 
+           colour = species_diff)) +
+  geom_line(stat = "identity") +
+  scale_x_continuous(expand = c(0,0),
+                     limits = c(1,0),
+                     trans = "reverse") +
+  theme_bw() +
+  theme(axis.line = element_line(colour = "black"),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        axis.text = element_text(size = 12), 
+        axis.title.x = element_text(size = 14),
+        axis.title.y = element_text(size = 14),
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 12, face = "bold")) +
+  geom_hline(yintercept = 0) +
+  geom_rect(data = df, aes(xmin = xmin, xmax = xmax, ymin=ymin, ymax=ymax),
+            fill = rev(leg$colors), alpha = 0.2, inherit.aes = F) +
+  font("legend.text", face = "italic")
