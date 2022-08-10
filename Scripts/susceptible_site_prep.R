@@ -1,5 +1,4 @@
 ##IAS SDMs##
-regional_model_path <- "G:/Chapter_3/SpatialData/IAS_distributions/IAS_regional" #external hard drive
 spp_list <- c("Apis mellifera",  "Monomorium floricola", "Monomorium destructor", 
               "Linepithema humile", "Vespula vulgaris", "Bombus terrestris", "Heteronychus arator", 
               "Digitonthophagus gazella", "Pheidole megacephala", "Vespula germanica", 
