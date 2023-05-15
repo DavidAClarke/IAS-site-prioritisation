@@ -1,0 +1,26 @@
+{
+    "id": "71B84EED",
+    "path": "~/PhD/Chapter_3/IAS_site_prioritisation/R/priority_site_results.R",
+    "project_path": "R/priority_site_results.R",
+    "type": "r_source",
+    "hash": "1391664222",
+    "contents": "",
+    "dirty": false,
+    "created": 1684137492517.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "1039,17",
+        "scrollLine": "1031"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1684138198,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1684138198276,
+    "read_only": false,
+    "read_only_alternatives": []
+}
