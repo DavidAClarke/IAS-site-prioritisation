@@ -1030,6 +1030,10 @@ ggplot(Total_diff_area,
 
 
 #Multi-IAS priority sites----
+
+CAZ_wgt_var_ras <- rast("C:/Users/david/Documents/PhD/Chapter_3/SpatialData/CAZ_wgt_var_ras.tif")
+ias_sum_sp <- rast("C:/Users/david/Documents/PhD/Chapter_3/SpatialData/ias_richness_sp.tif")
+
 #Need an empty new raster
 ext <- extent(ias_sum_sp_ar)
 crs <- "+proj=longlat +datum=WGS84 +no_defs"
