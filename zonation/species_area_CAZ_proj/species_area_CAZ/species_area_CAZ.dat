@@ -1,0 +1,8 @@
+[Settings]
+removal rule = 1
+warp factor = 1
+edge removal = 1
+add edge points = 0
+memory save mode = 1
+use groups = 1
+groups file = species_area_groups.txt

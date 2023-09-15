@@ -1,0 +1,1 @@
+call zig4.exe -r species_RAN/species_RAN.dat species_RAN/species_RAN.spp species_RAN/species_RAN_out/species_RAN.txt 0 0 1 0 --grid-output-formats=compressed-tif --image-output-formats=png --use-threads=4
