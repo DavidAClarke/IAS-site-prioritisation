@@ -2,7 +2,7 @@
 
 #################################################################################
 ##Summary information for all species used (n = 5113)
-species_info <- read.csv(file.path("Zonation", "maxent_spp_list.csv"))
+species_info <- read.csv(file.path("zonation", "maxent_spp_list.csv"))
 sum_info <- species_info %>%
   mutate(redlistCategory = factor(redlistCategory, 
                                   levels = c("Data Deficient", "Least Concern",
@@ -81,10 +81,12 @@ IAS_threatend_species_stack <- ggplot(IAS_threats_stack, aes(x = classGroup, y =
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
         panel.background = element_blank(),
-        axis.text = element_text(size = 12), 
-        axis.title.x = element_text(size = 14),
-        axis.title.y = element_text(size = 14),
-        strip.text.x = element_text(size = 12)) +
+        axis.text = element_text(size = 14), 
+        axis.title.x = element_text(size = 16),
+        axis.title.y = element_text(size = 16),
+        strip.text.x = element_text(size = 14),
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 16)) +
   scale_y_continuous(expand = c(0,0)) +
   ylab("Proportion of species") +
   xlab("Group")
