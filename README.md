@@ -4,7 +4,7 @@ Using spatial conservation prioritisation techniques to identify areas most sens
 ## Note:
 This code was originally written a couple of years agao. As such, I am in the process of updating all the code, where relevant. This is especially the case regarding spatial analyses and the move from `sp` and `raster` to `sf` and `terra`.
 
-Also, given the amount and spatial extent of the data used, these analyses cannot be replicated in a short period of time. Additionally, some of the data used in the analyses will not be provided. This includes the IUCN Red List data, including assessment and spatial information, and the Key Biodiversity Area (KBA) shapefile. If you wish to access this data, you will need to make a request from the data sources. 
+Also, given the amount and spatial extent of the data used, these analyses cannot be fully replicated in a short period of time. Additionally, some of the data used in the analyses will not be provided. This includes the IUCN Red List data, including assessment and spatial information, and the Key Biodiversity Area (KBA) shapefile. If you wish to access this data, you will need to make a request from the data sources. 
 
 ### Required R packages
 Many R packages are required to carry out all analyses. However, the R package `bossMaps` is no longer available via CRAN. As such, the archived version will need to be installed, e.g., 
