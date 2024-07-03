@@ -1,8 +1,5 @@
 ################################################################################
 ## Script name: 00_main_menu.R
-## Author: David Clarke
-## Copyright (c) David Clarke, 2024
-## Email: david_anthony_clarke@hotmail.com
 ################################################################################
 
 ## Load libraries
@@ -14,7 +11,7 @@ lapply(pkgs, require, character.only = T)
 
 
 ## File paths
-shared_data <- here("C:/Users/dcla0021/Documents/postdoc/projects/shared_data/")
+shared_data <- here("C:/Users/name/Documents/postdoc/projects/shared_data/")
 
 ## User defined functions
 source("R/01_functions.R")
