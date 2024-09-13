@@ -10,9 +10,11 @@ Also, given the amount and spatial extent of the data used, these analyses canno
 Many R packages are required to carry out all analyses. However, the `zonator` package requires `rgdal` to work. As such, one needs to install `rgdal` which be achieved with the following:
 
 `url <- "https://download.r-forge.r-project.org/bin/windows/contrib/4.4/rgdal_1.6-7.zip"`
+
 `install.packages(url, type="source", repos=NULL)`
 
 Addtionally, the R package `bossMaps` is no longer available via CRAN. As such, the archived version will need to be installed, e.g., 
 
 `packageurl <- "[https://cran.r-project.org/src/contrib/Archive/bossMaps/bossMaps_0.1.0.tar.gz](https://cran.r-project.org/src/contrib/Archive/bossMaps/bossMaps_0.1.0.tar.gz)"` 
+
 `install.packages(packageurl, repos=NULL, type="source")`
