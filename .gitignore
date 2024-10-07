@@ -1,3 +1,4 @@
 
 slurm_scripts/slurm-rangeoffsettest-job-script
 slurm_scripts/slurm-dtw-job-script
+.Rproj.user
