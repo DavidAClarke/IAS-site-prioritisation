@@ -3,9 +3,9 @@
 pkgs <- c("tidyverse", "here")
 lapply(pkgs, require, character.only = T)
 
-zonation_path <- here("zonation")
-species_path <- here("species_lowres")
-species_area_path <- here("species_area_lowres")
+zonation_path <- here(dirname(here()), "data", "zonation")
+species_path <- here(dirname(here()), "data","species_lowres")
+species_area_path <- here(dirname(here()), "data","species_area_lowres")
 
 # dir.create(here(zonation_path, "species_scenarios"))
 # dir.create(here(zonation_path, "species_area_scenarios"))
