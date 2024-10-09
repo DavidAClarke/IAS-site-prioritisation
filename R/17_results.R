@@ -450,18 +450,18 @@ species_weight_df <- df %>%
 #                AM_spec_vals,MF_spec_vals,MD_spec_vals,LH_spec_vals,VV_spec_vals, 
 #                BT_spec_vals,HA_spec_vals)
 
-spec_names <- c(rep("Pm", length(PM_spec_vals)),
-                rep("Vg", length(VG_spec_vals)),
-                rep("Dg", length(DG_spec_vals)),
-                rep("Tb", length(TB_spec_vals)),
-                rep("Pl", length(PL_spec_vals)),
-                rep("Am", length(AM_spec_vals)),
-                rep("Mf", length(MF_spec_vals)),
-                rep("Md", length(MD_spec_vals)),
-                rep("Lh", length(LH_spec_vals)),
-                rep("Vv", length(VV_spec_vals)),
-                rep("Bt", length(BT_spec_vals)),
-                rep("Ha", length(HA_spec_vals)))
+# spec_names <- c(rep("Pm", length(PM_spec_vals)),
+#                 rep("Vg", length(VG_spec_vals)),
+#                 rep("Dg", length(DG_spec_vals)),
+#                 rep("Tb", length(TB_spec_vals)),
+#                 rep("Pl", length(PL_spec_vals)),
+#                 rep("Am", length(AM_spec_vals)),
+#                 rep("Mf", length(MF_spec_vals)),
+#                 rep("Md", length(MD_spec_vals)),
+#                 rep("Lh", length(LH_spec_vals)),
+#                 rep("Vv", length(VV_spec_vals)),
+#                 rep("Bt", length(BT_spec_vals)),
+#                 rep("Ha", length(HA_spec_vals)))
 
 # vals <- data.frame(spec_names, spec_vals)
 # kruskal.test(spec_vals ~ spec_names, data = vals)

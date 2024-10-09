@@ -39,10 +39,10 @@ top_eighty <- calculate_jaccards(stack(full_rank_stack), x.min = 0.2, x.max = 1.
 total <- calculate_jaccards(stack(full_rank_stack), x.min = 0.0, x.max = 1.0, 
                             y.min = 0.0,y.max = 1.0,all_names)
 
-write.csv(top_two, file = here(dirname(here()), "zonation", "jaccard_two.csv"), na = "-", row.names = T)
-write.csv(top_five, file = here(dirname(here()), "zonation", "jaccard_five.csv"), na = "-", row.names = T)
-write.csv(top_ten, file = here(dirname(here()), "zonation", "jaccard_ten.csv"), na = "-", row.names = T)
-write.csv(top_twentyfive, here(dirname(here()), "zonation", "jaccard_twentyfive.csv"), na = "-", row.names = T)
-write.csv(top_fifty, file = here(dirname(here()), "zonation", "jaccard_fifty.csv"), na = "-", row.names = T)
-write.csv(top_eighty, file = here(dirname(here()), "zonation", "jaccard_eighty.csv"), na = "-", row.names = T)
-write.csv(total, file = here(dirname(here()), "zonation", "jaccard_total.csv"), na = "-", row.names = T)
+write.csv(top_two, file = here(dirname(here()), "data", "zonation", "jaccard_two.csv"), na = "-", row.names = T)
+write.csv(top_five, file = here(dirname(here()),"data", "zonation", "jaccard_five.csv"), na = "-", row.names = T)
+write.csv(top_ten, file = here(dirname(here()),"data", "zonation", "jaccard_ten.csv"), na = "-", row.names = T)
+write.csv(top_twentyfive, here(dirname(here()),"data", "zonation", "jaccard_twentyfive.csv"), na = "-", row.names = T)
+write.csv(top_fifty, file = here(dirname(here()),"data", "zonation", "jaccard_fifty.csv"), na = "-", row.names = T)
+write.csv(top_eighty, file = here(dirname(here()),"data", "zonation", "jaccard_eighty.csv"), na = "-", row.names = T)
+write.csv(total, file = here(dirname(here()), "data","zonation", "jaccard_total.csv"), na = "-", row.names = T)
