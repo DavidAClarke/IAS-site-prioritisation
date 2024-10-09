@@ -1,4 +1,6 @@
 ##IAS SDMs##
+regional_model_path <- here(dirname(here()), "IAS_regional")
+
 spp_list <- c("Apis mellifera",  "Monomorium floricola",
               "Monomorium destructor","Linepithema humile", "Vespula vulgaris",
               "Bombus terrestris", "Heteronychus arator",

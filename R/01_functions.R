@@ -276,6 +276,8 @@ IAS_plot <- function(species){
 #Get proportion differences
 multi_props <- function(vals, props){
   
+  diffs <- c()
+  
   for(i in props[1:length(props)]){
     
     d <- prop_diff(vals, i)

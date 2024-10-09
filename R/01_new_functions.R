@@ -124,10 +124,10 @@ jaccard <- function(x, y, x.min=0.0, x.max=1.0, y.min=0.0, y.max=1.0,
   
   if (!disable.checks) {
     # Check the input values
-    x.min.value <- round(cellStats(x, stat="min"), limit.tolerance)
-    x.max.value <- round(cellStats(x, stat="max"), limit.tolerance)
-    y.min.value <- round(cellStats(y, stat="min"), limit.tolerance)
-    y.max.value <- round(cellStats(y, stat="max"), limit.tolerance)
+    x.min.value <- round(raster::cellStats(x, stat="min"), limit.tolerance)
+    x.max.value <- round(raster::cellStats(x, stat="max"), limit.tolerance)
+    y.min.value <- round(raster::cellStats(y, stat="min"), limit.tolerance)
+    y.max.value <- round(raster::cellStats(y, stat="max"), limit.tolerance)
     
     if (x.min < x.min.value) {
       stop(paste0("Minimum threshold value for x ("), x.min, ") smaller than
@@ -171,8 +171,8 @@ jaccard <- function(x, y, x.min=0.0, x.max=1.0, y.min=0.0, y.max=1.0,
   y.bin <- (y >= y.min & y <=y.max)
   
   if (warn.uneven) {
-    x.size <- cellStats(x.bin, "sum")
-    y.size <- cellStats(y.bin, "sum")
+    x.size <- raster::cellStats(x.bin, "sum")
+    y.size <- raster::cellStats(y.bin, "sum")
     # Sort from smaller to larger
     sizes <- sort(c(x.size, y.size))
     if (sizes[2] / sizes[1] > 20) {
@@ -189,14 +189,14 @@ jaccard <- function(x, y, x.min=0.0, x.max=1.0, y.min=0.0, y.max=1.0,
   # Union is all the area covered by the both rasters
   union <- combination >= 1
   
-  return(cellStats(intersection, "sum") / cellStats(union, "sum"))
+  return(raster::cellStats(intersection, "sum") / raster::cellStats(union, "sum"))
 }
 ## Susceptible site prep
 susc_site_prep <- function(species_name, ras_stack){
   
   sp <- gsub(" ", ".", species_name)
 
-  bin <- rast(raster(here(regional_model_path, 
+  bin <- rast(raster::raster(here(regional_model_path, 
                              sp, 
                              "proj_regional", 
                              "individual_projections", 
@@ -220,4 +220,37 @@ susc_site_prep <- function(species_name, ras_stack){
   
   return(list(bin_list, bin2))
 
+}
+
+## Get site sensitivity values----
+get_msk_vals <- function(rank_raster, mask_file) {
+  
+  temp_r <- mask(rank_raster, mask_file)
+  temp_r_values <- na.omit(values(temp_r))
+  
+}
+
+## Proportion difference (KBA vs no KBA) in number of top sensitive sites----
+#vals = output from get_msk_vals, sens = site sensitivity value
+prop_diff <- function(vals, sens) {
+  
+  vals_bin <- vals
+  vals_bin <- ifelse(vals_bin >= sens, 1,0)
+  sum(vals_bin)/length(vals_bin)*100
+  
+}
+
+## Get proportion differences----
+multi_props <- function(vals, props){
+  
+  for(i in props[1:length(props)]){
+    
+    d <- prop_diff(vals, i)
+    diffs <- c(diffs,d)
+    
+    
+  }
+  names(diffs) <- c("1.00", "0.98", "0.95", "0.90", "0.75", "0.50", "0.25", 
+                    "0.00")
+  return(diffs)
 }

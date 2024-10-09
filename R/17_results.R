@@ -172,11 +172,11 @@ vals_list <- list()
 for(i in 1:length(susceptible_site_prep)){
   for(j in 1:nlyr(full_rank_stack)){
     for(k in 1:nlyr(full_rank_stack)){
-    if(j == k){
+      if(j == k){
       
-      vals <- get_msk_vals(full_rank_stack[[j]], 
+        vals <- get_msk_vals(full_rank_stack[[j]], 
                            susceptible_site_prep[[i]][[1]][[k]])
-      vals_list[[j]] <- vals
+        vals_list[[j]] <- vals
       
     }
    }
@@ -250,6 +250,7 @@ names(species_list) <- spp_list #spp_list is from susceptible_site_prep.R
 vals <- c()
 nms <- c()
 type <- c()
+code <- c()
 
 for(i in 1:length(species_list)){
   
@@ -258,6 +259,10 @@ for(i in 1:length(species_list)){
   
   spn <- rep(spp_list[i], length(spv))
   nms <- c(nms, spn)
+  
+  cc <- paste0(substr(unlist(str_split(spp_list[i], " ")), start = 1, stop = 1), collapse = "")
+  spc <- rep(cc, length(spv))
+  code <- c(code, spc)
   
   for(j in 1:length(species_list[[i]])){
     
@@ -268,7 +273,7 @@ for(i in 1:length(species_list)){
   
 }
 
-df <- data.frame(nms, type, vals)
+df <- data.frame(nms, code, type, vals)
 
 # #Example
 # PM_vals <- c(PM_spec_vals, PM_KBA_vals)
@@ -419,27 +424,31 @@ VV_spec_comb <- Figure("Vespula vulgaris", CAZ_wgt_var_ras, VV_spec_bin)
 BT_spec_comb <- Figure("Bombus terrestris", CAZ_wgt_var_ras, BT_spec_bin)
 HA_spec_comb <- Figure("Heteronychus arator", CAZ_wgt_var_ras, HA_spec_bin)
 
-#Kolmogorov-smirnoff tests - KBA vs no KBA
-#a two-sample test of the null hypothesis that x and y were drawn from the same continuous distribution
-#presence of ties a result of rounding
-PM_KBA <- wilcox.test(PM_KBA_vals, PM_spec_vals, alternative = "two.sided")
-VG_KBA <- wilcox.test(VG_KBA_vals, VG_spec_vals, alternative = "two.sided")
-DG_KBA <- wilcox.test(DG_KBA_vals, DG_spec_vals, alternative = "two.sided")
-TB_KBA <- wilcox.test(TB_KBA_vals, TB_spec_vals, alternative = "two.sided")
-PL_KBA <- wilcox.test(PL_KBA_vals, PL_spec_vals, alternative = "two.sided")
-AM_KBA <- wilcox.test(AM_KBA_vals, AM_spec_vals, alternative = "two.sided")
-MF_KBA <- wilcox.test(MF_KBA_vals, MF_spec_vals, alternative = "two.sided")
-MD_KBA <- wilcox.test(MD_KBA_vals, MD_spec_vals, alternative = "two.sided")
-LH_KBA <- wilcox.test(LH_KBA_vals, LH_spec_vals, alternative = "two.sided")
-VV_KBA <- wilcox.test(VV_KBA_vals, VV_spec_vals, alternative = "two.sided")
-#ks.test(MR_KBA_vals, MR_vals, alternative = "two.sided")
-BT_KBA <- wilcox.test(BT_KBA_vals, BT_spec_vals, alternative = "two.sided")
-HA_KBA <- wilcox.test(HA_KBA_vals, HA_spec_vals, alternative = "two.sided")
+# #Kolmogorov-smirnoff tests - KBA vs no KBA
+# #a two-sample test of the null hypothesis that x and y were drawn from the same continuous distribution
+# #presence of ties a result of rounding
+# PM_KBA <- wilcox.test(PM_KBA_vals, PM_spec_vals, alternative = "two.sided")
+# VG_KBA <- wilcox.test(VG_KBA_vals, VG_spec_vals, alternative = "two.sided")
+# DG_KBA <- wilcox.test(DG_KBA_vals, DG_spec_vals, alternative = "two.sided")
+# TB_KBA <- wilcox.test(TB_KBA_vals, TB_spec_vals, alternative = "two.sided")
+# PL_KBA <- wilcox.test(PL_KBA_vals, PL_spec_vals, alternative = "two.sided")
+# AM_KBA <- wilcox.test(AM_KBA_vals, AM_spec_vals, alternative = "two.sided")
+# MF_KBA <- wilcox.test(MF_KBA_vals, MF_spec_vals, alternative = "two.sided")
+# MD_KBA <- wilcox.test(MD_KBA_vals, MD_spec_vals, alternative = "two.sided")
+# LH_KBA <- wilcox.test(LH_KBA_vals, LH_spec_vals, alternative = "two.sided")
+# VV_KBA <- wilcox.test(VV_KBA_vals, VV_spec_vals, alternative = "two.sided")
+# #ks.test(MR_KBA_vals, MR_vals, alternative = "two.sided")
+# BT_KBA <- wilcox.test(BT_KBA_vals, BT_spec_vals, alternative = "two.sided")
+# HA_KBA <- wilcox.test(HA_KBA_vals, HA_spec_vals, alternative = "two.sided")
 
 #Difference between species + weight IAS
-spec_vals <- c(PM_spec_vals,VG_spec_vals,DG_spec_vals,TB_spec_vals,PL_spec_vals,
-               AM_spec_vals,MF_spec_vals,MD_spec_vals,LH_spec_vals,VV_spec_vals, 
-               BT_spec_vals,HA_spec_vals)
+species_weight_df <- df %>%
+  filter(type == "species_weight")
+
+
+# spec_vals <- c(PM_spec_vals,VG_spec_vals,DG_spec_vals,TB_spec_vals,PL_spec_vals,
+#                AM_spec_vals,MF_spec_vals,MD_spec_vals,LH_spec_vals,VV_spec_vals, 
+#                BT_spec_vals,HA_spec_vals)
 
 spec_names <- c(rep("Pm", length(PM_spec_vals)),
                 rep("Vg", length(VG_spec_vals)),
@@ -454,9 +463,9 @@ spec_names <- c(rep("Pm", length(PM_spec_vals)),
                 rep("Bt", length(BT_spec_vals)),
                 rep("Ha", length(HA_spec_vals)))
 
-vals <- data.frame(spec_names, spec_vals)
-kruskal.test(spec_vals ~ spec_names, data = vals)
-FSA::dunnTest(spec_vals ~ spec_names, data = vals, method = "bonferroni")
+# vals <- data.frame(spec_names, spec_vals)
+# kruskal.test(spec_vals ~ spec_names, data = vals)
+# FSA::dunnTest(spec_vals ~ spec_names, data = vals, method = "bonferroni")
 
 ggstatsplot::ggbetweenstats(data = vals, 
                             y = spec_vals, 
@@ -596,59 +605,78 @@ ggstatsplot::ggbetweenstats(data = vals,
 #Proportion difference (KBA vs no KBA vs Random) in number of top sensitive sites
 #Top two (i.e. >= 0.98 sensitivity)
 props <- c(1, 0.98, 0.95, 0.90, 0.75, 0.50, 0.25, 0.00)
-diffs <- c()
+types <- unique(type)
+sp_props <- c()
+sp_name <- c()
+tyt <- c()
 
-PM_spec_prop <- multi_props(PM_spec_vals, props)
-PM_KBA_prop <- multi_props(PM_KBA_vals, props)
-PM_RAN_prop <- multi_props(PM_RAN_vals, props)
+for(ss in spp_list){
+    for(tt in types){
+      
+      st <- df %>% filter(nms == ss) %>% filter(type == tt)
+      mp <- multi_props(st$vals, props)
+      sp_props <- c(sp_props,mp)
+      sp <- rep(ss, length(mp))
+      sp_name <- c(sp_name, sp)
+      ty <- rep(tt, length(mp))
+      tyt <- c(tyt, ty)
+    
+  }
+}
 
-VG_spec_prop <- multi_props(VG_spec_vals, props)
-VG_KBA_prop <- multi_props(VG_KBA_vals, props)
-VG_RAN_prop <- multi_props(VG_RAN_vals, props)
+props_df <- data.frame(sp_name, tyt, sp_props)
 
-DG_spec_prop <- multi_props(DG_spec_vals, props)
-DG_KBA_prop <- multi_props(DG_KBA_vals, props)
-DG_RAN_prop <- multi_props(DG_RAN_vals, props)
-
-TB_spec_prop <- multi_props(TB_spec_vals, props)
-TB_KBA_prop <- multi_props(TB_KBA_vals, props)
-TB_RAN_prop <- multi_props(TB_RAN_vals, props)
-
-PL_spec_prop <- multi_props(PL_spec_vals, props)
-PL_KBA_prop <- multi_props(PL_KBA_vals, props)
-PL_RAN_prop <- multi_props(PL_RAN_vals, props)
-
-AM_spec_prop <- multi_props(AM_spec_vals, props)
-AM_KBA_prop <- multi_props(AM_KBA_vals, props)
-AM_RAN_prop <- multi_props(AM_RAN_vals, props)
-
-MF_spec_prop <- multi_props(MF_spec_vals, props)
-MF_KBA_prop <- multi_props(MF_KBA_vals, props)
-MF_RAN_prop <- multi_props(MF_RAN_vals, props)
-
-MD_spec_prop <- multi_props(MD_spec_vals, props)
-MD_KBA_prop <- multi_props(MD_KBA_vals, props)
-MD_RAN_prop <- multi_props(MD_RAN_vals, props)
-
-LH_spec_prop <- multi_props(LH_spec_vals, props)
-LH_KBA_prop <- multi_props(LH_KBA_vals, props)
-LH_RAN_prop <- multi_props(LH_RAN_vals, props)
-
-VV_spec_prop <- multi_props(VV_spec_vals, props)
-VV_KBA_prop <- multi_props(VV_KBA_vals, props)
-VV_RAN_prop <- multi_props(VV_RAN_vals, props)
-
-# MR_prop <- multi_props(MR_vals, props)
-# MR_KBA_prop <- multi_props(MR_KBA_vals, props)
-# MR_RAN_prop <- multi_props(MR_RAN_vals, props)
-
-BT_spec_prop <- multi_props(BT_spec_vals, props)
-BT_KBA_prop <- multi_props(BT_KBA_vals, props)
-BT_RAN_prop <- multi_props(BT_RAN_vals, props)
-
-HA_spec_prop <- multi_props(HA_spec_vals, props)
-HA_KBA_prop <- multi_props(HA_KBA_vals, props)
-HA_RAN_prop <- multi_props(HA_RAN_vals, props)
+# PM_spec_prop <- multi_props(PM_spec_vals, props)
+# PM_KBA_prop <- multi_props(PM_KBA_vals, props)
+# PM_RAN_prop <- multi_props(PM_RAN_vals, props)
+# 
+# VG_spec_prop <- multi_props(VG_spec_vals, props)
+# VG_KBA_prop <- multi_props(VG_KBA_vals, props)
+# VG_RAN_prop <- multi_props(VG_RAN_vals, props)
+# 
+# DG_spec_prop <- multi_props(DG_spec_vals, props)
+# DG_KBA_prop <- multi_props(DG_KBA_vals, props)
+# DG_RAN_prop <- multi_props(DG_RAN_vals, props)
+# 
+# TB_spec_prop <- multi_props(TB_spec_vals, props)
+# TB_KBA_prop <- multi_props(TB_KBA_vals, props)
+# TB_RAN_prop <- multi_props(TB_RAN_vals, props)
+# 
+# PL_spec_prop <- multi_props(PL_spec_vals, props)
+# PL_KBA_prop <- multi_props(PL_KBA_vals, props)
+# PL_RAN_prop <- multi_props(PL_RAN_vals, props)
+# 
+# AM_spec_prop <- multi_props(AM_spec_vals, props)
+# AM_KBA_prop <- multi_props(AM_KBA_vals, props)
+# AM_RAN_prop <- multi_props(AM_RAN_vals, props)
+# 
+# MF_spec_prop <- multi_props(MF_spec_vals, props)
+# MF_KBA_prop <- multi_props(MF_KBA_vals, props)
+# MF_RAN_prop <- multi_props(MF_RAN_vals, props)
+# 
+# MD_spec_prop <- multi_props(MD_spec_vals, props)
+# MD_KBA_prop <- multi_props(MD_KBA_vals, props)
+# MD_RAN_prop <- multi_props(MD_RAN_vals, props)
+# 
+# LH_spec_prop <- multi_props(LH_spec_vals, props)
+# LH_KBA_prop <- multi_props(LH_KBA_vals, props)
+# LH_RAN_prop <- multi_props(LH_RAN_vals, props)
+# 
+# VV_spec_prop <- multi_props(VV_spec_vals, props)
+# VV_KBA_prop <- multi_props(VV_KBA_vals, props)
+# VV_RAN_prop <- multi_props(VV_RAN_vals, props)
+# 
+# # MR_prop <- multi_props(MR_vals, props)
+# # MR_KBA_prop <- multi_props(MR_KBA_vals, props)
+# # MR_RAN_prop <- multi_props(MR_RAN_vals, props)
+# 
+# BT_spec_prop <- multi_props(BT_spec_vals, props)
+# BT_KBA_prop <- multi_props(BT_KBA_vals, props)
+# BT_RAN_prop <- multi_props(BT_RAN_vals, props)
+# 
+# HA_spec_prop <- multi_props(HA_spec_vals, props)
+# HA_KBA_prop <- multi_props(HA_KBA_vals, props)
+# HA_RAN_prop <- multi_props(HA_RAN_vals, props)
 
 Total <- as.data.frame(rbind(PM_spec_prop,VG_spec_prop,DG_spec_prop,
                              TB_spec_prop,PL_spec_prop,AM_spec_prop,

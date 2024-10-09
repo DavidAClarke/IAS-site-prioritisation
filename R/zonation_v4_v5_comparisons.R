@@ -39,12 +39,12 @@ for(sp in species_scenarios){
   r <- rast(here(species_path, sp, "output", "rankmap.tif"))
   names(r) <- sp
   species_rank_stack <- c(species_rank_stack, r)
-  species_fig_list[[ind]] <- rank_plot(r)
-  ggsave(plot = species_fig_list[[ind]], 
-         filename = paste0(sp, "_rankmap.pdf"),
-         device = cairo_pdf,
-         dpi = 300,
-         path = here(dirname(here()), "figures")) #dirname() lets you go one folder up
+  # species_fig_list[[ind]] <- rank_plot(r)
+  # ggsave(plot = species_fig_list[[ind]], 
+  #        filename = paste0(sp, "_rankmap.pdf"),
+  #        device = cairo_pdf,
+  #        dpi = 300,
+  #        path = here(dirname(here()), "figures")) #dirname() lets you go one folder up
   
 }
 
@@ -59,12 +59,12 @@ for(sp in species_area_scenarios){
   r <- rast(here(species_area_path, sp, "output", "rankmap.tif"))
   names(r) <- sp
   species_area_rank_stack <- c(species_area_rank_stack, r)
-  species_area_fig_list[[ind]] <- rank_plot(r)
-  ggsave(plot = species_area_fig_list[[ind]], 
-         filename = paste0(sp, "_rankmap.pdf"),
-         device = cairo_pdf,
-         dpi = 300,
-         path = here(dirname(here()), "figures")) #dirname() lets you go one folder up
+  # species_area_fig_list[[ind]] <- rank_plot(r)
+  # ggsave(plot = species_area_fig_list[[ind]], 
+  #        filename = paste0(sp, "_rankmap.pdf"),
+  #        device = cairo_pdf,
+  #        dpi = 300,
+  #        path = here(dirname(here()), "figures")) #dirname() lets you go one folder up
   
 }
 
