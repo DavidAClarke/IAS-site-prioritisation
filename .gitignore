@@ -1,4 +1,11 @@
+# History files
+.Rhistory
+.Rapp.history
 
-slurm_scripts/slurm-rangeoffsettest-job-script
-slurm_scripts/slurm-dtw-job-script
-.Rproj.user
+# User-specific files
+.Ruserdata
+
+# RStudio files
+.Rproj.user/
+
+
