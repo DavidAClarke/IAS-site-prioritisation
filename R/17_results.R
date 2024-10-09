@@ -154,7 +154,8 @@ ggarrange(p7,p10,
 ################################################################################
 #Susceptible sites
 #external hard drive
-regional_model_path <- "G:/Chapter_3/SpatialData/IAS_distributions/IAS_regional" 
+#regional_model_path <- "G:/Chapter_3/SpatialData/IAS_distributions/IAS_regional" 
+regional_model_path <- here(dirname(here()), "IAS_regional")
 source("R/15_susceptible_site_prep.R")
 
 #Overlap among all IAS (turn into function?)
@@ -165,58 +166,78 @@ ias_sum_one <- ias_sum
 ias_sum_one[ias_sum_one != 1] <- NA
 
 ####################### Priority sites - species + weights #####################
+species_list <- list()
+vals_list <- list()
 
-PM_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, PM_spec_bin)
-PM_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, PM_KBA_bin)
-PM_RAN_vals <- get_msk_vals(RAN_var_ras, PM_RAN_bin)
+for(i in 1:length(susceptible_site_prep)){
+  for(j in 1:nlyr(full_rank_stack)){
+    for(k in 1:nlyr(full_rank_stack)){
+    if(j == k){
+      
+      vals <- get_msk_vals(full_rank_stack[[j]], 
+                           susceptible_site_prep[[i]][[1]][[k]])
+      vals_list[[j]] <- vals
+      
+    }
+   }
+  }
+  species_list[[i]] <- vals_list
+}
 
-VG_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, VG_spec_bin)
-VG_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, VG_KBA_bin)
-VG_RAN_vals <- get_msk_vals(RAN_var_ras, VG_RAN_bin)
+names(species_list) <- spp_list #spp_list is from susceptible_site_prep.R
 
-DG_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, DG_spec_bin)
-DG_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, DG_KBA_bin)
-DG_RAN_vals <- get_msk_vals(RAN_var_ras, DG_RAN_bin)
 
-TB_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, TB_spec_bin)
-TB_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, TB_KBA_bin)
-TB_RAN_vals <- get_msk_vals(RAN_var_ras, TB_RAN_bin)
-
-PL_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, PL_spec_bin)
-PL_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, PL_KBA_bin)
-PL_RAN_vals <- get_msk_vals(RAN_var_ras, PL_RAN_bin)
-
-AM_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, AM_spec_bin)
-AM_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, AM_KBA_bin)
-AM_RAN_vals <- get_msk_vals(RAN_var_ras, AM_RAN_bin)
-
-MF_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, MF_spec_bin)
-MF_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, MF_KBA_bin)
-MF_RAN_vals <- get_msk_vals(RAN_var_ras, MF_RAN_bin)
-
-MD_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, MD_spec_bin)
-MD_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, MD_KBA_bin)
-MD_RAN_vals <- get_msk_vals(RAN_var_ras, MD_RAN_bin)
-
-LH_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, LH_spec_bin)
-LH_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, LH_KBA_bin)
-LH_RAN_vals <- get_msk_vals(RAN_var_ras, LH_RAN_bin)
-
-VV_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, VV_spec_bin)
-VV_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, VV_KBA_bin)
-VV_RAN_vals <- get_msk_vals(RAN_var_ras, VV_RAN_bin)
-
-# MR_vals <- get_msk_vals(CAZ_wgt_var_ras, MR_bin)
-# MR_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, MR_bin_KBA)
-# MR_RAN_vals <- get_msk_vals(RAN_var_ras, MR_bin_RAN)
-
-BT_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, BT_spec_bin)
-BT_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, BT_KBA_bin)
-BT_RAN_vals <- get_msk_vals(RAN_var_ras, BT_RAN_bin)
-
-HA_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, HA_spec_bin)
-HA_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, HA_KBA_bin)
-HA_RAN_vals <- get_msk_vals(RAN_var_ras, HA_RAN_bin)
+# PM_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, PM_spec_bin)
+# PM_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, PM_KBA_bin)
+# PM_RAN_vals <- get_msk_vals(RAN_var_ras, PM_RAN_bin)
+# 
+# VG_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, VG_spec_bin)
+# VG_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, VG_KBA_bin)
+# VG_RAN_vals <- get_msk_vals(RAN_var_ras, VG_RAN_bin)
+# 
+# DG_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, DG_spec_bin)
+# DG_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, DG_KBA_bin)
+# DG_RAN_vals <- get_msk_vals(RAN_var_ras, DG_RAN_bin)
+# 
+# TB_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, TB_spec_bin)
+# TB_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, TB_KBA_bin)
+# TB_RAN_vals <- get_msk_vals(RAN_var_ras, TB_RAN_bin)
+# 
+# PL_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, PL_spec_bin)
+# PL_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, PL_KBA_bin)
+# PL_RAN_vals <- get_msk_vals(RAN_var_ras, PL_RAN_bin)
+# 
+# AM_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, AM_spec_bin)
+# AM_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, AM_KBA_bin)
+# AM_RAN_vals <- get_msk_vals(RAN_var_ras, AM_RAN_bin)
+# 
+# MF_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, MF_spec_bin)
+# MF_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, MF_KBA_bin)
+# MF_RAN_vals <- get_msk_vals(RAN_var_ras, MF_RAN_bin)
+# 
+# MD_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, MD_spec_bin)
+# MD_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, MD_KBA_bin)
+# MD_RAN_vals <- get_msk_vals(RAN_var_ras, MD_RAN_bin)
+# 
+# LH_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, LH_spec_bin)
+# LH_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, LH_KBA_bin)
+# LH_RAN_vals <- get_msk_vals(RAN_var_ras, LH_RAN_bin)
+# 
+# VV_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, VV_spec_bin)
+# VV_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, VV_KBA_bin)
+# VV_RAN_vals <- get_msk_vals(RAN_var_ras, VV_RAN_bin)
+# 
+# # MR_vals <- get_msk_vals(CAZ_wgt_var_ras, MR_bin)
+# # MR_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, MR_bin_KBA)
+# # MR_RAN_vals <- get_msk_vals(RAN_var_ras, MR_bin_RAN)
+# 
+# BT_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, BT_spec_bin)
+# BT_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, BT_KBA_bin)
+# BT_RAN_vals <- get_msk_vals(RAN_var_ras, BT_RAN_bin)
+# 
+# HA_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, HA_spec_bin)
+# HA_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, HA_KBA_bin)
+# HA_RAN_vals <- get_msk_vals(RAN_var_ras, HA_RAN_bin)
 
 #Get cell values for Kolmogorov-smirnoff tests
 #Could use violin plots to make visual comparisons.
@@ -225,82 +246,106 @@ HA_RAN_vals <- get_msk_vals(RAN_var_ras, HA_RAN_bin)
 #simply use geom_violin() instead of geom_boxplot()
 #could also lump all together instead of separate species to see combined results
 
-#Example
-PM_vals <- c(PM_spec_vals, PM_KBA_vals)
-VG_vals <- c(VG_spec_vals, VG_KBA_vals)
-DG_vals <- c(DG_spec_vals, DG_KBA_vals)
-TB_vals <- c(TB_spec_vals, TB_KBA_vals)
-PL_vals <- c(PL_spec_vals, PL_KBA_vals)
-AM_vals <- c(AM_spec_vals, AM_KBA_vals)
-MF_vals <- c(MF_spec_vals, MF_KBA_vals)
-MD_vals <- c(MD_spec_vals, MD_KBA_vals)
-LH_vals <- c(LH_spec_vals, LH_KBA_vals)
-VV_vals <- c(VV_spec_vals, VV_KBA_vals)
-BT_vals <- c(BT_spec_vals, BT_KBA_vals)
-HA_vals <- c(HA_spec_vals, HA_KBA_vals)
-vals <- c(PM_vals, VG_vals,DG_vals,TB_vals,PL_vals,AM_vals,MF_vals,MD_vals,
-          LH_vals,VV_vals,BT_vals, HA_vals)
-nms <- c(rep("Pheidole megacephala", length(PM_vals)),
-         rep("Vespula germanica", length(VG_vals)),
-         rep("Digitonthophagus gazella", length(DG_vals)),
-         rep("Tetramorium bicarinatum", length(TB_vals)),
-         rep("Paratrechina longicornis", length(PL_vals)),
-         rep("Apis mellifera", length(AM_vals)),
-         rep("Monomorium floricola", length(MF_vals)),
-         rep("Monomorium destructor", length(MD_vals)),
-         rep("Linepithema humile", length(LH_vals)),
-         rep("Vespula vulgaris", length(VV_vals)),
-         rep("Bombus terrestris", length(BT_vals)),
-         rep("Heteronychus arator", length(HA_vals)))
-type <- c(rep("species", length(PM_spec_vals)), 
-          rep("KBA", length(PM_KBA_vals)),
-          rep("species", length(VG_spec_vals)), 
-          rep("KBA", length(VG_KBA_vals)),
-          rep("species", length(DG_spec_vals)), 
-          rep("KBA", length(DG_KBA_vals)),
-          rep("species", length(TB_spec_vals)), 
-          rep("KBA", length(TB_KBA_vals)),
-          rep("species", length(PL_spec_vals)), 
-          rep("KBA", length(PL_KBA_vals)),
-          rep("species", length(AM_spec_vals)), 
-          rep("KBA", length(AM_KBA_vals)),
-          rep("species", length(MF_spec_vals)), 
-          rep("KBA", length(MF_KBA_vals)),
-          rep("species", length(MD_spec_vals)), 
-          rep("KBA", length(MD_KBA_vals)),
-          rep("species", length(LH_spec_vals)), 
-          rep("KBA", length(LH_KBA_vals)),
-          rep("species", length(VV_spec_vals)), 
-          rep("KBA", length(VV_KBA_vals)),
-          rep("species", length(BT_spec_vals)), 
-          rep("KBA", length(BT_KBA_vals)),
-          rep("species", length(HA_spec_vals)), 
-          rep("KBA", length(HA_KBA_vals)))
-meds <- c(rep(median(PM_spec_vals), length(PM_spec_vals)), 
-          rep(median(PM_KBA_vals), length(PM_KBA_vals)),
-          rep(median(VG_spec_vals), length(VG_spec_vals)), 
-          rep(median(VG_KBA_vals), length(VG_KBA_vals)),
-          rep(median(DG_spec_vals), length(DG_spec_vals)), 
-          rep(median(DG_KBA_vals), length(DG_KBA_vals)),
-          rep(median(TB_spec_vals), length(TB_spec_vals)), 
-          rep(median(TB_KBA_vals), length(TB_KBA_vals)),
-          rep(median(PL_spec_vals), length(PL_spec_vals)), 
-          rep(median(PL_KBA_vals), length(PL_KBA_vals)),
-          rep(median(AM_spec_vals), length(AM_spec_vals)), 
-          rep(median(AM_KBA_vals), length(AM_KBA_vals)),
-          rep(median(MF_spec_vals), length(MF_spec_vals)), 
-          rep(median(MF_KBA_vals), length(MF_KBA_vals)),
-          rep(median(MD_spec_vals), length(MD_spec_vals)), 
-          rep(median(MD_KBA_vals), length(MD_KBA_vals)),
-          rep(median(LH_spec_vals), length(LH_spec_vals)), 
-          rep(median(LH_KBA_vals), length(LH_KBA_vals)),
-          rep(median(VV_spec_vals), length(VV_spec_vals)), 
-          rep(median(VV_KBA_vals), length(VV_KBA_vals)),
-          rep(median(BT_spec_vals), length(BT_spec_vals)), 
-          rep(median(BT_KBA_vals), length(BT_KBA_vals)),
-          rep(median(HA_spec_vals), length(HA_spec_vals)), 
-          rep(median(HA_KBA_vals), length(HA_KBA_vals)))
-df <- data.frame(nms, type, vals, meds)
+#AM_vals <- c(species_list[[1]][[2]], species_list[[1]][[8]])
+vals <- c()
+nms <- c()
+type <- c()
+
+for(i in 1:length(species_list)){
+  
+  spv <- unlist(species_list[[i]][1:length(species_list[[i]])])
+  vals <- c(vals, spv)
+  
+  spn <- rep(spp_list[i], length(spv))
+  nms <- c(nms, spn)
+  
+  for(j in 1:length(species_list[[i]])){
+    
+    spt <- rep(names(full_rank_stack)[j], length(species_list[[i]][[j]]))
+    type <- c(type, spt)
+    
+  }
+  
+}
+
+df <- data.frame(nms, type, vals)
+
+# #Example
+# PM_vals <- c(PM_spec_vals, PM_KBA_vals)
+# VG_vals <- c(VG_spec_vals, VG_KBA_vals)
+# DG_vals <- c(DG_spec_vals, DG_KBA_vals)
+# TB_vals <- c(TB_spec_vals, TB_KBA_vals)
+# PL_vals <- c(PL_spec_vals, PL_KBA_vals)
+# AM_vals <- c(AM_spec_vals, AM_KBA_vals)
+# MF_vals <- c(MF_spec_vals, MF_KBA_vals)
+# MD_vals <- c(MD_spec_vals, MD_KBA_vals)
+# LH_vals <- c(LH_spec_vals, LH_KBA_vals)
+# VV_vals <- c(VV_spec_vals, VV_KBA_vals)
+# BT_vals <- c(BT_spec_vals, BT_KBA_vals)
+# HA_vals <- c(HA_spec_vals, HA_KBA_vals)
+# vals <- c(PM_vals, VG_vals,DG_vals,TB_vals,PL_vals,AM_vals,MF_vals,MD_vals,
+#           LH_vals,VV_vals,BT_vals, HA_vals)
+# nms <- c(rep("Pheidole megacephala", length(PM_vals)),
+#          rep("Vespula germanica", length(VG_vals)),
+#          rep("Digitonthophagus gazella", length(DG_vals)),
+#          rep("Tetramorium bicarinatum", length(TB_vals)),
+#          rep("Paratrechina longicornis", length(PL_vals)),
+#          rep("Apis mellifera", length(AM_vals)),
+#          rep("Monomorium floricola", length(MF_vals)),
+#          rep("Monomorium destructor", length(MD_vals)),
+#          rep("Linepithema humile", length(LH_vals)),
+#          rep("Vespula vulgaris", length(VV_vals)),
+#          rep("Bombus terrestris", length(BT_vals)),
+#          rep("Heteronychus arator", length(HA_vals)))
+# type <- c(rep("species", length(PM_spec_vals)), 
+#           rep("KBA", length(PM_KBA_vals)),
+#           rep("species", length(VG_spec_vals)), 
+#           rep("KBA", length(VG_KBA_vals)),
+#           rep("species", length(DG_spec_vals)), 
+#           rep("KBA", length(DG_KBA_vals)),
+#           rep("species", length(TB_spec_vals)), 
+#           rep("KBA", length(TB_KBA_vals)),
+#           rep("species", length(PL_spec_vals)), 
+#           rep("KBA", length(PL_KBA_vals)),
+#           rep("species", length(AM_spec_vals)), 
+#           rep("KBA", length(AM_KBA_vals)),
+#           rep("species", length(MF_spec_vals)), 
+#           rep("KBA", length(MF_KBA_vals)),
+#           rep("species", length(MD_spec_vals)), 
+#           rep("KBA", length(MD_KBA_vals)),
+#           rep("species", length(LH_spec_vals)), 
+#           rep("KBA", length(LH_KBA_vals)),
+#           rep("species", length(VV_spec_vals)), 
+#           rep("KBA", length(VV_KBA_vals)),
+#           rep("species", length(BT_spec_vals)), 
+#           rep("KBA", length(BT_KBA_vals)),
+#           rep("species", length(HA_spec_vals)), 
+#           rep("KBA", length(HA_KBA_vals)))
+# meds <- c(rep(median(PM_spec_vals), length(PM_spec_vals)), 
+#           rep(median(PM_KBA_vals), length(PM_KBA_vals)),
+#           rep(median(VG_spec_vals), length(VG_spec_vals)), 
+#           rep(median(VG_KBA_vals), length(VG_KBA_vals)),
+#           rep(median(DG_spec_vals), length(DG_spec_vals)), 
+#           rep(median(DG_KBA_vals), length(DG_KBA_vals)),
+#           rep(median(TB_spec_vals), length(TB_spec_vals)), 
+#           rep(median(TB_KBA_vals), length(TB_KBA_vals)),
+#           rep(median(PL_spec_vals), length(PL_spec_vals)), 
+#           rep(median(PL_KBA_vals), length(PL_KBA_vals)),
+#           rep(median(AM_spec_vals), length(AM_spec_vals)), 
+#           rep(median(AM_KBA_vals), length(AM_KBA_vals)),
+#           rep(median(MF_spec_vals), length(MF_spec_vals)), 
+#           rep(median(MF_KBA_vals), length(MF_KBA_vals)),
+#           rep(median(MD_spec_vals), length(MD_spec_vals)), 
+#           rep(median(MD_KBA_vals), length(MD_KBA_vals)),
+#           rep(median(LH_spec_vals), length(LH_spec_vals)), 
+#           rep(median(LH_KBA_vals), length(LH_KBA_vals)),
+#           rep(median(VV_spec_vals), length(VV_spec_vals)), 
+#           rep(median(VV_KBA_vals), length(VV_KBA_vals)),
+#           rep(median(BT_spec_vals), length(BT_spec_vals)), 
+#           rep(median(BT_KBA_vals), length(BT_KBA_vals)),
+#           rep(median(HA_spec_vals), length(HA_spec_vals)), 
+#           rep(median(HA_KBA_vals), length(HA_KBA_vals)))
+# df <- data.frame(nms, type, vals, meds)
 
 df_1 <- df %>% filter(nms == "Pheidole megacephala" |
                         nms == "Vespula germanica" |

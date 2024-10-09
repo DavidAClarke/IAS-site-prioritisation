@@ -1,10 +1,10 @@
 ##IAS SDMs##
-# spp_list <- c("Apis mellifera",  "Monomorium floricola", 
-#               "Monomorium destructor","Linepithema humile", "Vespula vulgaris", 
-#               "Bombus terrestris", "Heteronychus arator",
-#               "Digitonthophagus gazella", "Pheidole megacephala", 
-#               "Vespula germanica","Tetramorium bicarinatum", 
-#               "Paratrechina longicornis")
+spp_list <- c("Apis mellifera",  "Monomorium floricola",
+              "Monomorium destructor","Linepithema humile", "Vespula vulgaris",
+              "Bombus terrestris", "Heteronychus arator",
+              "Digitonthophagus gazella", "Pheidole megacephala",
+              "Vespula germanica","Tetramorium bicarinatum",
+              "Paratrechina longicornis")
 # not_run <- c("Solenopsis geminata","Polistes chinensis antennalis",
 #              "Wasmannia auropunctata", "Apis cerana",
 #              "Solenopsis invicta","Megachile rotundata")
@@ -21,25 +21,31 @@
 
 
 ##CAZ with weights##
+susceptible_site_prep <- lapply(spp_list[1:length(spp_list)], function(i){
+  
+  susc_site_prep(i, full_rank_stack)
+  
+})
+
 #Pheidole megacephala
-PM_bin <- raster(file.path(regional_model_path, 
+PM_bin <- rast(raster(here(regional_model_path, 
                            "Pheidole.megacephala", 
                            "proj_regional", 
                            "individual_projections", 
                            paste0("Pheidole.megacephala",
-                                  "_EMcaByTSS_mergedAlgo_mergedRun_mergedData_TSSbin.gri")))
+                                  "_EMcaByTSS_mergedAlgo_mergedRun_mergedData_TSSbin.gri"))))
 PM_bin2 <- PM_bin
 PM_bin2[PM_bin2 != 0] <- 1
 
 # Re-class zeros as NA
 PM_bin[PM_bin == 0] <- NA
 #get equal extent
-PM_spec_bin <- resample(PM_bin, CAZ_wgt_var_ras, method = "ngb") 
-PM_KBA_bin <- resample(PM_bin, CAZ_wgt_KBA_inv_var_ras, method = "ngb") 
-PM_RAN_bin <- resample(PM_bin, RAN_var_ras, method = "ngb") 
-PM_area_bin <- resample(PM_bin, CAZ_area_wgt_var_ras, method = "ngb") 
-PM_area_KBA_bin <- resample(PM_bin, CAZ_area_wgt_KBA_inv_var_ras, method = "ngb") 
-PM_area_RAN_bin <- resample(PM_bin, RAN_area_var_ras, method = "ngb")
+PM_spec_bin <- resample(PM_bin, full_rank_stack[[2]], method = "near") 
+PM_KBA_bin <- resample(PM_bin, full_rank_stack[[8]], method = "near") 
+PM_RAN_bin <- resample(PM_bin, full_rank_stack[[13]], method = "near") 
+PM_area_bin <- resample(PM_bin, full_rank_stack[[15]], method = "near") 
+PM_area_KBA_bin <- resample(PM_bin, full_rank_stack[[20]], method = "near") 
+PM_area_RAN_bin <- resample(PM_bin, full_rank_stack[[25]], method = "near")
 
 #Vespula germanica
 VG_bin <- raster(file.path(regional_model_path, 
