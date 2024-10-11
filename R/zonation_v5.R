@@ -1,5 +1,7 @@
 ## Zonation 5 files
 
+rm(list = ls())
+
 pkgs <- c("tidyverse", "here")
 lapply(pkgs, require, character.only = T)
 
@@ -12,7 +14,7 @@ species_area_path <- here(dirname(here()), "data","species_area_lowres")
 
 ###############################################################################
 ## Species only scenarios
-spp_list <- read.csv(here(zonation_path, "maxent_spp_list_upd.csv")) %>%
+spp_list <- read.csv(here(dirname(here()), "data", "maxent_spp_list_upd.csv")) %>%
     filter(acceptedName != "Endospermum myrmecophilum" & 
            acceptedName != "Ozimops petersi") #files are corrupted
 
@@ -71,7 +73,7 @@ for(i in 1:ncol(weight_df)){
 }
 ###############################################################################
 ## Species area scenarios
-spp_list <- read.csv(here(zonation_path, "spp_area_list_upd.csv")) %>%
+spp_list <- read.csv(here(dirname(here()), "data", "spp_area_list_upd.csv")) %>%
   filter(acceptedName != "Morelia spilota") #files are corrupted
 
 weight_df <- data.frame(equal = rep(1, nrow(spp_list)), spp_list[,11:15])

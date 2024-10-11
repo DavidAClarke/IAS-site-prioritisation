@@ -3,8 +3,8 @@
 ################################################################################
 
 ## Load data
-spp_list <- read.csv(here("zonation", "maxent_spp_list.csv"))
-spp_area_list <- read.csv(here("zonation", "spp_area_list.csv"))
+spp_list <- read.csv(here(dirname(here()), "data", "maxent_spp_list.csv"))
+spp_area_list <- read.csv(here(dirname(here()), "data", "spp_area_list.csv"))
 
 spp_wght_fun <- function(df, scheme = 1, wv = c(1,2,4,6,8,2)){
   
@@ -120,5 +120,5 @@ spp_list <- spp_wght_fun(spp_list, scheme = 4, wv = c(1,2,3,4,5,2))
 spp_area_list <- spp_area_wght_fun(spp_area_list, scheme = 4, wv = c(1,2,3,4,5,2))
 
 ## Write to disk
-write.csv(spp_list, here("zonation", "maxent_spp_list_upd.csv"))
-write.csv(spp_area_list, here("zonation", "spp_area_list_upd.csv"))
+write.csv(spp_list, here(dirname(here()), "data", "maxent_spp_list_upd.csv"))
+write.csv(spp_area_list, here(dirname(here()), "data", "spp_area_list_upd.csv"))

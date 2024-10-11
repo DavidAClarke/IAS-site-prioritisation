@@ -30,7 +30,7 @@ species_area_scenarios <- c("species_area_equal", "species_area_weight", "specie
                        "species_area_scheme_2_KBA", "species_area_scheme_3_KBA", "species_area_scheme_4_KBA",
                        "species_area_random")
 
-species_fig_list <- list()
+# species_fig_list <- list()
 species_rank_stack <- rast()
 
 for(sp in species_scenarios){
@@ -39,18 +39,18 @@ for(sp in species_scenarios){
   r <- rast(here(species_path, sp, "output", "rankmap.tif"))
   names(r) <- sp
   species_rank_stack <- c(species_rank_stack, r)
-  species_fig_list[[ind]] <- rank_plot(r)
-  ggsave(plot = species_fig_list[[ind]],
-         filename = paste0(sp, "_rankmap.pdf"),
-         device = cairo_pdf,
-         dpi = 300,
-         path = here(dirname(here()), "figures")) #dirname() lets you go one folder up
+  # species_fig_list[[ind]] <- rank_plot(r)
+  # ggsave(plot = species_fig_list[[ind]],
+  #        filename = paste0(sp, "_rankmap.pdf"),
+  #        device = cairo_pdf,
+  #        dpi = 300,
+  #        path = here(dirname(here()), "figures")) #dirname() lets you go one folder up
   
 }
 
 #rm(species_fig_list)
 
-species_area_fig_list <- list()
+# species_area_fig_list <- list()
 species_area_rank_stack <- rast()
 
 for(sp in species_area_scenarios){
@@ -59,12 +59,12 @@ for(sp in species_area_scenarios){
   r <- rast(here(species_area_path, sp, "output", "rankmap.tif"))
   names(r) <- sp
   species_area_rank_stack <- c(species_area_rank_stack, r)
-  species_area_fig_list[[ind]] <- rank_plot(r)
-  ggsave(plot = species_area_fig_list[[ind]],
-         filename = paste0(sp, "_rankmap.pdf"),
-         device = cairo_pdf,
-         dpi = 300,
-         path = here(dirname(here()), "figures")) #dirname() lets you go one folder up
+  # species_area_fig_list[[ind]] <- rank_plot(r)
+  # ggsave(plot = species_area_fig_list[[ind]],
+  #        filename = paste0(sp, "_rankmap.pdf"),
+  #        device = cairo_pdf,
+  #        dpi = 300,
+  #        path = here(dirname(here()), "figures")) #dirname() lets you go one folder up
   
 }
 
