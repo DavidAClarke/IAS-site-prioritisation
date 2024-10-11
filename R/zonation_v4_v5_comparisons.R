@@ -71,3 +71,6 @@ for(sp in species_area_scenarios){
 full_rank_stack <- c(species_rank_stack, species_area_rank_stack)
 
 priority_cors <- ras_cor(full_rank_stack)
+colnames(priority_cors) <- names(full_rank_stack)
+rownames(priority_cors) <- names(full_rank_stack)
+write.csv(priority_cors, file = here(dirname(here()), "data", "priority_cors.csv"))
