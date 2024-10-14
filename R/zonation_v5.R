@@ -160,4 +160,6 @@ if(file.exists(my_file)){
   
 }
 
-# The shell() function can be used to run a .bat file
+# The shell() function can be used to run a .bat file. Maybe use the translate argument (see help)
+# Translate = T changes "/" to "\".
+# shell(here(zonation_path, "species_area_scenarios", "species_area_scenarios.bat"), translate = F)
