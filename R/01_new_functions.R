@@ -117,7 +117,48 @@ ras_cor <- function(ras_stack){
 
 }
 
-## Calculate Jaccards
+## Structural similarity index----
+ssim <- function(ras_stack){
+  
+  ssim_mat <- matrix(nrow = nlyr(ras_stack), ncol = nlyr(ras_stack))
+  sim_mat <- matrix(nrow = nlyr(ras_stack), ncol = nlyr(ras_stack))
+  siv_mat <- matrix(nrow = nlyr(ras_stack), ncol = nlyr(ras_stack))
+  sip_mat <- matrix(nrow = nlyr(ras_stack), ncol = nlyr(ras_stack))
+  
+  ssim_list <- list()
+  
+  my_combs <- combn(nlyr(ras_stack), 2)
+  
+  for(k in 1:ncol(my_combs)){
+    
+    my_ssim <- ssim_raster(ras_stack[[my_combs[1,k]]], ras_stack[[my_combs[2,k]]], global = F)
+    ssim_list[[k]] <- my_ssim
+    varnames(ssim_list[[k]]) <- paste(names(ras_stack[[my_combs[1,k]]]),"-",
+                                      names(ras_stack[[my_combs[2,k]]]))
+    
+    for(i in 1:nlyr(ras_stack)){
+      for(j in 1:nlyr(ras_stack)){
+        if(i != j){
+        
+        ssim_mat[j,i] <- as.numeric(global(my_ssim[[1]], "mean", na.rm = T))
+        sim_mat[j,i] <- as.numeric(global(my_ssim[[2]], "mean", na.rm = T))
+        siv_mat[j,i] <- as.numeric(global(my_ssim[[3]], "mean", na.rm = T))
+        sip_mat[j,i] <- as.numeric(global(my_ssim[[4]], "mean", na.rm = T))
+        
+     }
+    }
+   }
+  }
+  
+ diag(ssim_mat) <- diag(sim_mat) <- diag(siv_mat) <- diag(sip_mat) <- 1
+  
+ my_list <- list(ssim_list = ssim_list, ssim_mat = ssim_mat, 
+                 sim_mat = sim_mat, siv_mat = siv_mat, sip_mat = sip_mat)
+ return(my_list)
+  
+}
+
+## Calculate Jaccards----
 jaccard <- function(x, y, x.min=0.0, x.max=1.0, y.min=0.0, y.max=1.0,
                     warn.uneven=FALSE, limit.tolerance=4,
                     disable.checks=FALSE) {
