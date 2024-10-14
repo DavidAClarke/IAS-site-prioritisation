@@ -128,3 +128,36 @@ for(i in 1:ncol(weight_df)){
   close(fileConn)
   
 }
+
+#################################### NEEDS TESTING #############################
+## Create bat files (testing; create loop)
+z5_path <- "C:/Program Files/Zonation5/z5.exe"
+settings_file <- here(zonation_path, "species_area_scenarios", 
+                      "species_area_equal_KBA", "species_area_equal_KBA.z5")
+output_dir <- here(zonation_path, "species_area_scenarios", 
+                   "species_area_equal_KBA", "output")
+z5_options <- "-wg -h -b --mode==CAZMAX"
+run1 <- paste(z5_path, z5_options, settings_file, ouput_dir)
+run2 <- paste(z5_path, z5_options, settings_file, ouput_dir)
+fileConn <- file(here(zonation_path, "species_area_scenarios", "species_area_scenarios.bat"))
+writeLines(c(run1,run2), fileConn)
+close(fileConn)
+
+## Look at this approach. Perhaps suitable for loop?
+# https://sparkbyexamples.com/r-programming/r-write-lines-to-text-file/#:~:text=R%20base%20function%20writeLines(),cat()%20methods%20explained%20below.
+# Example 5 - Using cat
+cat("I Love R Programming",file="/Users/admin/textFile.txt",sep="\n")
+cat("I live in USA",file="/Users/admin/textFile.txt",append=TRUE) #note append=T
+
+# specify file
+my_file <- "/Users/admin/textFile.txt"
+if(file.exists(my_file)){
+  a = T
+  cat(run2, file = my_file, append = a)
+} else {
+  a = F
+  cat(run2, file = my_file, append = a)
+  
+}
+
+# The shell() function can be used to run a .bat file
