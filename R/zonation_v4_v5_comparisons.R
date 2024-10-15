@@ -78,3 +78,9 @@ write.csv(priority_cors, file = here(dirname(here()), "data", "priority_cors.csv
 ## Structural similarity among sensitive sites
 # High similarity between KBA and non-KBA equivalents because only highest sensitive fraction differs
 ssims <- ssim(full_rank_stack)
+for(i in 1:length(ssims)){
+  
+  write.csv(ssims[[i]], file = here(dirname(here()), "data", "ssim", paste0(names(ssims)[i], ".csv")))
+  
+}
+
