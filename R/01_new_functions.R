@@ -125,35 +125,44 @@ ssim <- function(ras_stack){
   siv_mat <- matrix(nrow = nlyr(ras_stack), ncol = nlyr(ras_stack))
   sip_mat <- matrix(nrow = nlyr(ras_stack), ncol = nlyr(ras_stack))
   
-  ssim_list <- list()
-  
   my_combs <- combn(nlyr(ras_stack), 2)
   
   for(k in 1:ncol(my_combs)){
     
     my_ssim <- ssim_raster(ras_stack[[my_combs[1,k]]], ras_stack[[my_combs[2,k]]], global = F)
-    ssim_list[[k]] <- my_ssim
-    varnames(ssim_list[[k]]) <- paste(names(ras_stack[[my_combs[1,k]]]),"-",
+    
+    varnames(my_ssim) <- paste0(names(ras_stack[[my_combs[1,k]]]),"-",
                                       names(ras_stack[[my_combs[2,k]]]))
     
-    for(i in 1:nlyr(ras_stack)){
-      for(j in 1:nlyr(ras_stack)){
-        if(i != j){
-        
-        ssim_mat[j,i] <- as.numeric(global(my_ssim[[1]], "mean", na.rm = T))
-        sim_mat[j,i] <- as.numeric(global(my_ssim[[2]], "mean", na.rm = T))
-        siv_mat[j,i] <- as.numeric(global(my_ssim[[3]], "mean", na.rm = T))
-        sip_mat[j,i] <- as.numeric(global(my_ssim[[4]], "mean", na.rm = T))
-        
-     }
+    my_path <- here(dirname(here()), "data", "ssim")
+    
+    if(file.exists(my_path)){
+      
+      writeRaster(my_ssim, filename = here(my_path, paste0(varnames(my_ssim), ".tif")))
+      
+    } else {
+      
+      dir.create(my_path)
+      writeRaster(my_ssim, filename = here(my_path, paste0(varnames(my_ssim), ".tif")))
+      
     }
-   }
+    
+    ssim_mat[my_combs[2,k],my_combs[1,k]] <- as.numeric(global(my_ssim[[1]], "mean", na.rm = T))
+    sim_mat[my_combs[2,k],my_combs[1,k]] <- as.numeric(global(my_ssim[[2]], "mean", na.rm = T))
+    siv_mat[my_combs[2,k],my_combs[1,k]] <- as.numeric(global(my_ssim[[3]], "mean", na.rm = T))
+    sip_mat[my_combs[2,k],my_combs[1,k]] <- as.numeric(global(my_ssim[[4]], "mean", na.rm = T))
+        
   }
   
  diag(ssim_mat) <- diag(sim_mat) <- diag(siv_mat) <- diag(sip_mat) <- 1
+ rownames(ssim_mat) <- rownames(sim_mat) <- rownames(siv_mat) <- rownames(sip_mat) <- names(ras_stack)
+ colnames(ssim_mat) <- colnames(sim_mat) <- colnames(siv_mat) <- colnames(sip_mat) <- names(ras_stack)
   
- my_list <- list(ssim_list = ssim_list, ssim_mat = ssim_mat, 
-                 sim_mat = sim_mat, siv_mat = siv_mat, sip_mat = sip_mat)
+ my_list <- list(ssim_mat = ssim_mat, 
+                 sim_mat = sim_mat, 
+                 siv_mat = siv_mat, 
+                 sip_mat = sip_mat)
+ 
  return(my_list)
   
 }
