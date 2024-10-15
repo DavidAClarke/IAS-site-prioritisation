@@ -74,3 +74,7 @@ priority_cors <- ras_cor(full_rank_stack)
 colnames(priority_cors) <- names(full_rank_stack)
 rownames(priority_cors) <- names(full_rank_stack)
 write.csv(priority_cors, file = here(dirname(here()), "data", "priority_cors.csv"))
+
+## Structural similarity among sensitive sites
+# High similarity between KBA and non-KBA equivalents because only highest sensitive fraction differs
+ssims <- ssim(full_rank_stack)
