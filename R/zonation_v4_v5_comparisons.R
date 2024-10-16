@@ -102,8 +102,8 @@ g2 <- ggplot(ssim_df, aes(Var1, Var2, fill= Freq)) +
 # I could have sim on one tri and jaccard on the other tri
 library(ComplexHeatmap)
   
-col1 <- circlize::colorRamp2(c(0, 1), c("navy", "orange"))
-col2 <- circlize::colorRamp2(c(0, 1), c("#643b9f", "lightblue"))
+col1 <- circlize::colorRamp2(c(0, 1), c("orange", "navy"))
+col2 <- circlize::colorRamp2(c(0, 1), c("lightblue","#643b9f"))
 
 ht1 <- Heatmap(ssim_mat, 
                rect_gp = gpar(type = "none"), 
