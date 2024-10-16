@@ -1,6 +1,6 @@
 ### Testing script
 
-pkgs <- c("tidyverse", "sf", "terra", "stars", "here")
+pkgs <- c("tidyverse", "sf", "terra", "stars", "here", "SSIMmap")
 lapply(pkgs, require, character.only = T)
 
 source("R/01_new_functions.R")
@@ -84,3 +84,49 @@ for(i in 1:length(ssims)){
   
 }
 
+ssim_mat <- read.csv(here(dirname(here()), "data", "ssim", "ssim_mat.csv"), row.names = 1)
+ssim_mat <- as.matrix(ssim_mat)
+ssim_mat[upper.tri(ssim_mat)] <- t(ssim_mat)[upper.tri(ssim_mat)] #or make upper tri jaccard
+
+ssim_df <- as.data.frame(as.table(ssim_mat)) %>%
+  drop_na(Freq)
+g1 <- ggplot(ssim_df, aes(Var1, Var2, fill= Freq)) + 
+  geom_tile() +
+  scale_fill_distiller(palette = "RdPu")
+
+g2 <- ggplot(ssim_df, aes(Var1, Var2, fill= Freq)) + 
+  geom_tile()
+  coord_flip() 
+
+############################### Alternative ####################################
+# I could have sim on one tri and jaccard on the other tri
+library(ComplexHeatmap)
+  
+col1 = colorRamp2(c(0, 1), c("navy", "orange"))
+col2 = colorRamp2(c(0, 1), c("purple", "lightblue"))
+
+ht1 <- Heatmap(ssim_mat, 
+               rect_gp = gpar(type = "none"), 
+               col = col1,
+               cluster_rows = FALSE, 
+               cluster_columns = FALSE,
+               show_row_names = F,
+               cell_fun = function(j, i, x, y, w, h, fill) {
+                  if(i >= j) {
+                    grid.rect(x, y, w, h, gp = gpar(fill = fill, col = fill))
+                  }
+                })
+
+ht2 <- Heatmap(ssim_mat, 
+               rect_gp = gpar(type = "none"), 
+               col = col2,
+               cluster_rows = FALSE, 
+               cluster_columns = FALSE,
+               show_column_names = F,
+               cell_fun = function(j, i, x, y, w, h, fill) {
+                if(i <= j) {
+                  grid.rect(x, y, w, h, gp = gpar(fill = fill, col = fill))
+                }
+              })
+
+draw(ht1 + ht2, ht_gap = unit(-200, "mm"))
