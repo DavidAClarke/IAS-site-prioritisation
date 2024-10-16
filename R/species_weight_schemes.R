@@ -58,17 +58,29 @@ spp_area_wght_fun <- function(df, scheme = 1, wv = c(1,2,4,6,8,2)){
       
       mutate({{nm}} := case_when(threatStatus == "Least Concern" &
                                    !classGroup %in% areas ~ wv[1],
+                                 threatStatus == "Least Concern" &
+                                   classGroup %in% areas ~ wv[1] + 10 ,
                                  threatStatus == "Near Threatened" &
                                    !classGroup %in% areas ~ wv[2],
+                                 threatStatus == "Near Threatened" &
+                                   classGroup %in% areas ~ wv[2] + 10 ,
                                  threatStatus == "Vulnerable" &
                                    !classGroup %in% areas ~ wv[3],
+                                 threatStatus == "Vulnerable" &
+                                   classGroup %in% areas ~ wv[3] + 10 ,
                                  threatStatus == "Endangered" &
                                    !classGroup %in% areas ~ wv[4],
+                                 threatStatus == "Endangered" &
+                                   classGroup %in% areas ~ wv[4] + 10 ,
                                  threatStatus == "Critically Endangered" &
                                    !classGroup %in% areas ~ wv[5],
+                                 threatStatus == "Critically Endangered" &
+                                   classGroup %in% areas ~ wv[5] + 10 ,
                                  threatStatus == "Data Deficient" &
                                    !classGroup %in% areas ~ wv[6],
-             .default = weight)) #%>%
+                                 threatStatus == "Data Deficient" &
+                                   classGroup %in% areas ~ wv[6] + 10 ,
+                                .default = weight)) #%>%
       
       #mutate({{nm}} := case_when(classGroup %in% areas ~ get(!!weight)))
   }
@@ -78,17 +90,29 @@ spp_area_wght_fun <- function(df, scheme = 1, wv = c(1,2,4,6,8,2)){
       
       mutate({{nm}} := case_when(threatStatus == "Least Concern" &
                                    !classGroup %in% areas ~ wv[1],
+                                 threatStatus == "Least Concern" &
+                                   classGroup %in% areas ~ wv[1] + 10 ,
                                  threatStatus == "Near Threatened" &
                                    !classGroup %in% areas ~ wv[2],
+                                 threatStatus == "Near Threatened" &
+                                   classGroup %in% areas ~ wv[2] + 10 ,
                                  threatStatus == "Vulnerable" &
                                    !classGroup %in% areas ~ wv[3],
+                                 threatStatus == "Vulnerable" &
+                                   classGroup %in% areas ~ wv[3] + 10 ,
                                  threatStatus == "Endangered" &
                                    !classGroup %in% areas ~ wv[4],
+                                 threatStatus == "Endangered" &
+                                   classGroup %in% areas ~ wv[4] + 10 ,
                                  threatStatus == "Critically Endangered" &
                                    !classGroup %in% areas ~ wv[5],
+                                 threatStatus == "Critically Endangered" &
+                                   classGroup %in% areas ~ wv[5] + 10 ,
                                  threatStatus == "Data Deficient" &
                                    !classGroup %in% areas ~ wv[6],
-             .default = weight)) %>%
+                                 threatStatus == "Data Deficient" &
+                                   classGroup %in% areas ~ wv[6] + 10 ,
+                                 .default = weight)) %>%
       
       #mutate({{nm}} := case_when(classGroup %in% areas ~ weight)) %>%
       
