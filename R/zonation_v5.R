@@ -131,16 +131,17 @@ for(i in 1:ncol(weight_df)){
 
 #################################### NEEDS TESTING #############################
 ## Create bat files (testing; create loop)
-z5_path <- "C:/Program Files/Zonation5/z5.exe"
+txt <- "@setlocal\n@PATH=C:\\Program Files (x86)\\Zonation5;%PATH%\n"
 settings_file <- here(zonation_path, "species_area_scenarios", 
                       "species_area_equal_KBA", "species_area_equal_KBA.z5")
 output_dir <- here(zonation_path, "species_area_scenarios", 
                    "species_area_equal_KBA", "output")
-z5_options <- "-wg -h -b --mode==CAZMAX"
-run1 <- paste(z5_path, z5_options, settings_file, ouput_dir)
-run2 <- paste(z5_path, z5_options, settings_file, ouput_dir)
-fileConn <- file(here(zonation_path, "species_area_scenarios", "species_area_scenarios.bat"))
-writeLines(c(run1,run2), fileConn)
+z5_options <- "z5_16bit -wg -h -b --mode==CAZMAX"
+
+run1 <- paste(z5_options, settings_file, output_dir)
+run2 <- paste(z5_options, settings_file, output_dir)
+fileConn <- file(here(zonation_path, "species_area_scenarios", "test.bat"))
+writeLines(c(txt, run1,run2), fileConn)
 close(fileConn)
 
 ## Look at this approach. Perhaps suitable for loop?
