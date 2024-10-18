@@ -89,7 +89,7 @@ ggarrange(p7,p10,
           ncol = 1, nrow = 2)
 ################################################################################
 #Susceptible sites
-regional_model_path <- here(dirname(here()), "IAS_regional")
+regional_model_path <- here(dirname(here()), "data", "IAS_distributions", "IAS_regional")
 spp_list <- c("Apis mellifera",  "Monomorium floricola",
               "Monomorium destructor","Linepithema humile", "Vespula vulgaris",
               "Bombus terrestris", "Heteronychus arator",
@@ -232,6 +232,7 @@ for(i in 1:length(species_list)){
 }
 
 df <- data.frame(nms, code, type, vals)
+write.csv(df, file = here(dirname(here()), "data", "priority_site_vals.csv"))
 
 df_1 <- df %>% filter(nms == "Pheidole megacephala" |
                         nms == "Vespula germanica" |
@@ -323,42 +324,35 @@ HA_spec_comb <- Figure("Heteronychus arator", CAZ_wgt_var_ras, HA_spec_bin)
 # HA_KBA <- wilcox.test(HA_KBA_vals, HA_spec_vals, alternative = "two.sided")
 
 #Difference between species + weight IAS
-species_weight_df <- df %>%
-  filter(type == "species_weight")
+lapply(c(species_scenarios, species_area_scenarios), FUN = function(i){
+  
+  df_min <- df %>% filter(type == i)
+  
+  g <- ggstatsplot::ggbetweenstats(data = df_min, 
+                              y = vals, 
+                              x = code, 
+                              type = "nonparametric",
+                              pairwise.display = "non-significant",
+                              p.adjust.method = "bonferroni",
+                              package = "awtools",
+                              palette = "bpalette",
+                              xlab = "Insect species",
+                              ylab = "Priority site distribution",
+                              ggtheme = ggplot2::theme_bw())
+  
+  ggsave(plot = g,
+         filename = paste0(i, "_spec_comp.pdf"),
+         device = cairo_pdf,
+         dpi = 300,
+         width = 11.69,
+         height = 8.27,
+         units = "in",
+         path = here(dirname(here()), "figures"))
+  
+  
+})
 
 
-# spec_vals <- c(PM_spec_vals,VG_spec_vals,DG_spec_vals,TB_spec_vals,PL_spec_vals,
-#                AM_spec_vals,MF_spec_vals,MD_spec_vals,LH_spec_vals,VV_spec_vals, 
-#                BT_spec_vals,HA_spec_vals)
-
-# spec_names <- c(rep("Pm", length(PM_spec_vals)),
-#                 rep("Vg", length(VG_spec_vals)),
-#                 rep("Dg", length(DG_spec_vals)),
-#                 rep("Tb", length(TB_spec_vals)),
-#                 rep("Pl", length(PL_spec_vals)),
-#                 rep("Am", length(AM_spec_vals)),
-#                 rep("Mf", length(MF_spec_vals)),
-#                 rep("Md", length(MD_spec_vals)),
-#                 rep("Lh", length(LH_spec_vals)),
-#                 rep("Vv", length(VV_spec_vals)),
-#                 rep("Bt", length(BT_spec_vals)),
-#                 rep("Ha", length(HA_spec_vals)))
-
-# vals <- data.frame(spec_names, spec_vals)
-# kruskal.test(spec_vals ~ spec_names, data = vals)
-# FSA::dunnTest(spec_vals ~ spec_names, data = vals, method = "bonferroni")
-
-ggstatsplot::ggbetweenstats(data = vals, 
-                            y = spec_vals, 
-                            x = spec_names, 
-                            type = "nonparametric",
-                            pairwise.display = "non-significant",
-                            p.adjust.method = "bonferroni",
-                            package = "awtools",
-                            palette = "bpalette",
-                            xlab = "Insect species",
-                            ylab = "Priority site distribution",
-                            ggtheme = ggplot2::theme_bw())
 
 # #Difference between species + weight IAS
 # PM_VG <- ks.test(PM_spec_vals, VG_spec_vals, alternative = "two.sided")
@@ -506,6 +500,7 @@ for(ss in spp_list){
 }
 
 props_df <- data.frame(sp_name, tyt, sp_props)
+write.csv(props_df, file = here(dirname(here()), "data", "props_df.csv"))
 
 # PM_spec_prop <- multi_props(PM_spec_vals, props)
 # PM_KBA_prop <- multi_props(PM_KBA_vals, props)
