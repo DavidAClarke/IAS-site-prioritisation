@@ -9,6 +9,10 @@ zonation_path <- here(dirname(here()), "data", "zonation")
 species_path <- here(dirname(here()), "data","species_lowres")
 species_area_path <- here(dirname(here()), "data","species_area_lowres")
 
+hm <- rast(here(dirname(here()), "data", "hierarchic_mask.tif"))
+writeRaster(hm, filename = here(dirname(here()), "data", "hierarchic_mask.tif"), 
+            overwrite = T, datatype = "INT2S")
+
 # dir.create(here(zonation_path, "species_scenarios"))
 # dir.create(here(zonation_path, "species_area_scenarios"))
 
@@ -52,7 +56,7 @@ for(i in 1:ncol(weight_df)){
   
   variant_path <- here(zonation_path, "species_scenarios", paste0("species_",nm, "_KBA"))
   
-  mask_path <- here("hierarchic_mask.tif")
+  mask_path <- here("data", "hierarchic_mask.tif")
   
   feature_list <- data.frame(weight = weight_df[,i],
                              group = spp_list$classGroupNum,
@@ -109,7 +113,7 @@ for(i in 1:ncol(weight_df)){
   
   variant_path <- here(zonation_path, "species_area_scenarios", paste0("species_area_",nm, "_KBA"))
   
-  mask_path <- here("hierarchic_mask.tif")
+  mask_path <- here("data", "hierarchic_mask.tif")
   
   feature_list <- data.frame(weight = weight_df[,i],
                              group = spp_list$classGroupNum,
