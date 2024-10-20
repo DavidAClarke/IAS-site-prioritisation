@@ -1,6 +1,6 @@
 ### Testing script
 
-pkgs <- c("tidyverse", "sf", "terra", "stars", "here", "SSIMmap")
+pkgs <- c("tidyverse", "sf", "terra", "stars", "here", "SSIMmap", "raster")
 lapply(pkgs, require, character.only = T)
 
 source("R/01_new_functions.R")
@@ -69,6 +69,7 @@ for(sp in species_area_scenarios){
 }
 
 full_rank_stack <- c(species_rank_stack, species_area_rank_stack)
+rm(species_rank_stack, species_area_rank_stack, r)
 
 priority_cors <- ras_cor(full_rank_stack)
 colnames(priority_cors) <- names(full_rank_stack)
