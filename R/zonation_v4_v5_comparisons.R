@@ -44,13 +44,13 @@ for(sp in species_scenarios){
   #        filename = paste0(sp, "_rankmap.pdf"),
   #        device = cairo_pdf,
   #        dpi = 300,
-  #        path = here(dirname(here()), "figures")) #dirname() lets you go one folder up
+  #        path = here(dirname(here()), "figures"))
   
 }
 
 #rm(species_fig_list)
 
-# species_area_fig_list <- list()
+species_area_fig_list <- list()
 species_area_rank_stack <- rast()
 
 for(sp in species_area_scenarios){
@@ -59,12 +59,12 @@ for(sp in species_area_scenarios){
   r <- rast(here(species_area_path, sp, "output", "rankmap.tif"))
   names(r) <- sp
   species_area_rank_stack <- c(species_area_rank_stack, r)
-  # species_area_fig_list[[ind]] <- rank_plot(r)
-  # ggsave(plot = species_area_fig_list[[ind]],
-  #        filename = paste0(sp, "_rankmap.pdf"),
-  #        device = cairo_pdf,
-  #        dpi = 300,
-  #        path = here(dirname(here()), "figures")) #dirname() lets you go one folder up
+  species_area_fig_list[[ind]] <- rank_plot(r)
+  ggsave(plot = species_area_fig_list[[ind]],
+         filename = paste0(sp, "_rankmap.pdf"),
+         device = cairo_pdf,
+         dpi = 300,
+         path = here(dirname(here()), "figures")) 
   
 }
 
@@ -79,6 +79,7 @@ write.csv(priority_cors, file = here(dirname(here()), "data", "priority_cors.csv
 ## Structural similarity among sensitive sites
 # High similarity between KBA and non-KBA equivalents because only highest sensitive fraction differs
 ssims <- ssim(full_rank_stack)
+
 for(i in 1:length(ssims)){
   
   write.csv(ssims[[i]], file = here(dirname(here()), "data", "ssim", paste0(names(ssims)[i], ".csv")))
