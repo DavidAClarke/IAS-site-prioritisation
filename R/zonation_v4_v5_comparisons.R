@@ -151,4 +151,4 @@ ht2 <- Heatmap(jac2.5,
                 }
               })
 
-draw(ht1 + ht2, ht_gap = unit(-247.5, "mm"))
+draw(ht1 + ht2, ht_gap = unit(-230, "mm"))
