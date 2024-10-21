@@ -90,6 +90,9 @@ colnames(priority_cors) <- names(full_rank_stack)
 rownames(priority_cors) <- names(full_rank_stack)
 write.csv(priority_cors, file = here(dirname(here()), "data", "priority_cors.csv"))
 
+## Jaccard similarities
+source("R/13_jaccard_similarities.R")
+
 ## Structural similarity among sensitive sites
 # High similarity between KBA and non-KBA equivalents because only highest sensitive fraction differs
 ssims <- ssim(full_rank_stack)
@@ -113,10 +116,7 @@ ssim_heat(siv_mat, pal = "Reds", nm = "SIV", lines = F)
 sip_mat <- read.csv(here(dirname(here()), "data", "ssim", "sip_mat.csv"), row.names = 1)
 ssim_heat(sip_mat, pal = "YlOrBr", nm = "SIP", lines = F) 
 
-############################### Alternative ####################################
-# I could have sim on one tri and jaccard on the other tri
-#ssim_mat[upper.tri(ssim_mat)] <- t(ssim_mat)[upper.tri(ssim_mat)] #or make upper tri jaccard
-
+## Create heatmap with SIP on lower tri and jaccard (top 2%) on upper tri
 sip_mmat <- as.matrix(sip_mat)
 colnames(sip_mmat) <- gsub("_", " ", colnames(sip_mmat))
 jac2.5 <- read.csv(file = here(dirname(here()), "data", "jaccard", "jaccard_two.csv"), row.names = 1)
@@ -203,7 +203,7 @@ draw(ht1 + ht2, ht_gap = unit(-230, "mm"))
 ##Rank rasters
 
 
-source("R/13_jaccard_similarities.R")
+
 
 
 ######################################################################
