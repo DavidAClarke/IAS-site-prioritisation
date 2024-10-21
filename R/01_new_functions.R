@@ -499,7 +499,7 @@ spat_priority_dist <- function(df, n_col){
 clus_fun <- function(df, win_poly, lay_ind){
   
   df <- df %>% 
-    dplyr::select(ind,27,28) %>% 
+    dplyr::select(all_of(c(lay_ind,27,28))) %>% 
     filter(df[[lay_ind]] == 1)
   
   p <- ppp(df[,2], df[,3], 
