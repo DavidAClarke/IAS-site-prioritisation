@@ -1,6 +1,7 @@
 ### Testing script
 
-pkgs <- c("tidyverse", "sf", "terra", "stars", "here", "SSIMmap", "raster")
+pkgs <- c("tidyverse", "sf", "terra", "stars", "here", "SSIMmap", "raster",
+          "ComplexHeatmap")
 lapply(pkgs, require, character.only = T)
 
 source("R/01_new_functions.R")
@@ -86,49 +87,66 @@ for(i in 1:length(ssims)){
   
 }
 
+## SSI heatmaps (average index values)
 ssim_mat <- read.csv(here(dirname(here()), "data", "ssim", "ssim_mat.csv"), row.names = 1)
-ssim_mat <- as.matrix(ssim_mat)
-ssim_mat[upper.tri(ssim_mat)] <- t(ssim_mat)[upper.tri(ssim_mat)] #or make upper tri jaccard
+ssim_heat(ssim_mat, pal = "RdPu", nm = "SSIM", lines = F) 
 
-ssim_df <- as.data.frame(as.table(ssim_mat)) %>%
-  drop_na(Freq)
-g1 <- ggplot(ssim_df, aes(Var1, Var2, fill= Freq)) + 
-  geom_tile() +
-  scale_fill_distiller(palette = "RdPu")
+sim_mat <- read.csv(here(dirname(here()), "data", "ssim", "sim_mat.csv"), row.names = 1)
+ssim_heat(sim_mat, pal = "GnBu", nm = "SIM", lines = F) 
 
-g2 <- ggplot(ssim_df, aes(Var1, Var2, fill= Freq)) + 
-  geom_tile()
-  coord_flip() 
+siv_mat <- read.csv(here(dirname(here()), "data", "ssim", "siv_mat.csv"), row.names = 1)
+ssim_heat(siv_mat, pal = "Reds", nm = "SIV", lines = F) 
+
+sip_mat <- read.csv(here(dirname(here()), "data", "ssim", "sip_mat.csv"), row.names = 1)
+ssim_heat(sip_mat, pal = "YlOrBr", nm = "SIP", lines = F) 
+
+
 
 ############################### Alternative ####################################
 # I could have sim on one tri and jaccard on the other tri
-library(ComplexHeatmap)
-  
-col1 <- circlize::colorRamp2(c(0, 1), c("orange", "navy"))
-col2 <- circlize::colorRamp2(c(0, 1), c("lightblue","#643b9f"))
+#ssim_mat[upper.tri(ssim_mat)] <- t(ssim_mat)[upper.tri(ssim_mat)] #or make upper tri jaccard
 
-ht1 <- Heatmap(ssim_mat, 
+sip_mmat <- as.matrix(sip_mat)
+colnames(sip_mmat) <- gsub("_", " ", colnames(sip_mmat))
+jac2.5 <- read.csv(file = here(dirname(here()), "data", "jaccard", "jaccard_two.csv"), row.names = 1)
+jac2.5[jac2.5 == "-"] <- NA
+jac2.5 <- apply(jac2.5, 2, as.numeric)
+rownames(jac2.5) <- colnames(jac2.5)
+rownames(jac2.5) <- gsub("_", " ", rownames(jac2.5))
+  
+col1 <- circlize::colorRamp2(c(0, 0.5, 0.99,1), c("#ef476f", "#ffd166", "#26547c","black"))
+col2 <- circlize::colorRamp2(c(0, 0.5, 0.99,1), c("#C04000", "white","#008080","black"))
+
+ht1 <- Heatmap(sip_mmat, 
+               name = "SIP",
                rect_gp = gpar(type = "none"), 
                col = col1,
                cluster_rows = FALSE, 
                cluster_columns = FALSE,
-               show_row_names = F,
+               show_row_names = T,
+               column_names_gp = gpar(fontsize = 10),
                cell_fun = function(j, i, x, y, w, h, fill) {
                   if(i >= j) {
                     grid.rect(x, y, w, h, gp = gpar(fill = fill, col = fill))
+                    grid.text(sprintf("%.2f", sip_mmat[i, j]), x, y, gp = gpar(fontsize = 10))
                   }
                 })
 
-ht2 <- Heatmap(ssim_mat, 
+ht2 <- Heatmap(jac2.5, 
+               name = "Jaccard",
                rect_gp = gpar(type = "none"), 
                col = col2,
                cluster_rows = FALSE, 
                cluster_columns = FALSE,
                show_column_names = F,
+               show_row_names = T,
+               row_names_side = "right",
+               row_names_gp = gpar(fontsize = 10),
                cell_fun = function(j, i, x, y, w, h, fill) {
                 if(i <= j) {
                   grid.rect(x, y, w, h, gp = gpar(fill = fill, col = fill))
+                  grid.text(sprintf("%.2f", jac2.5[i, j]), x, y, gp = gpar(fontsize = 10))
                 }
               })
 
-draw(ht1 + ht2, ht_gap = unit(-200, "mm"))
+draw(ht1 + ht2, ht_gap = unit(-247.5, "mm"))
