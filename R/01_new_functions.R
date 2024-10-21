@@ -470,3 +470,44 @@ spp_area_wght_fun <- function(df, scheme = 1, wv = c(1,2,4,6,8,2)){
   return(df1)
   
 }
+
+## Taking a little off values of 1----
+squeeze <- function(pvector){
+  
+  for(i in 1:length(pvector)) {
+    
+    if(!is.na(pvector[i]) == T & pvector[i] == 1){
+      
+      pvector[i] <- pvector[i] - 0.000001
+      
+    }
+  }
+  return(pvector)
+}
+
+## Create binary layers based on given site sensitivity----
+spat_priority_dist <- function(df, n_col){
+  
+  for(i in 1:n_col){
+    
+    df[,i] <- ifelse(df[,i] >= 0.98, 1,0)}
+  
+  return(df)
+}
+
+## Clarke-Evans test with Donnely correction----
+clus_fun <- function(df, win_poly, lay_ind){
+  
+  df <- df %>% 
+    dplyr::select(ind,27,28) %>% 
+    filter(df[[lay_ind]] == 1)
+  
+  p <- ppp(df[,2], df[,3], 
+           window = as.owin(st_as_sf(win_poly)))
+  
+  ce <- clarkevans.test(p, alternative = "clustered", correction = "cdf")
+  
+  return(list(ce,p))
+  
+  
+}
