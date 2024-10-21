@@ -915,80 +915,67 @@ ggplot(Total_diff,
 
 #Distance to coast
 #Prior to doing any kind of distance work, need to project everything to GDA94
-CAZ_var_ras_proj <- projectRaster(CAZ_var_ras, 
-                                  res = 5000, 
-                                  crs = "+proj=aea +lat_1=-18 +lat_2=-36 +lat_0=0 +lon_0=132 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
-CAZ_wgt_var_ras_proj <- projectRaster(CAZ_wgt_var_ras, 
-                                      res = 5000, 
-                                      crs = "+proj=aea +lat_1=-18 +lat_2=-36 +lat_0=0 +lon_0=132 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
-CAZ_area_var_ras_proj <- projectRaster(CAZ_area_var_ras, 
-                                       res = 5000, 
-                                       crs = "+proj=aea +lat_1=-18 +lat_2=-36 +lat_0=0 +lon_0=132 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
-CAZ_area_wgt_var_ras_proj <- projectRaster(CAZ_area_wgt_var_ras, 
-                                           res = 5000, 
-                                           crs = "+proj=aea +lat_1=-18 +lat_2=-36 +lat_0=0 +lon_0=132 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
+full_rank_stack_proj <- project(full_rank_stack, y = "epsg:3112", res = 5000)
 
+## For each variant, produce plot and calculate correlation, between top fraction sites and distance to coast
+dist_coast <- rast(here(dirname(here()), "data", "dist_to_coast.tif"))
+dist_coast <- mask(dist_coast, full_rank_stack[[1]])
+dist_coast_proj <- project(dist_coast, y = "epsg:3112", res = 5000)
 
-
-#For each variant, produce plot and calculate correlation, between top fraction sites and distance to coast
-#load distance raster
-source("R/16_distance_to_coast.R")
-dist_coast <- raster(file.path("SpatialData", "Raster", "dist_aus_coast.tif"))
-dist_coast <- projectRaster(dist_coast, 
-                            res = 5000, 
-                            crs = "+proj=aea +lat_1=-18 +lat_2=-36 +lat_0=0 +lon_0=132 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
-dists <- values(dist_coast)
+dists <- values(dist_coast_proj)
 
 #extract site priority at each distance
-dist_coord <- as.data.frame(coordinates(dist_coast))
-pri.list <- list(CAZ_var_ras_proj, CAZ_wgt_var_ras_proj, 
-                 CAZ_area_var_ras_proj, CAZ_area_wgt_var_ras_proj)
-priority_dist <- data.frame(lapply(pri.list, function(i){
-  priority <- raster::extract(i, dist_coord)
-  priority <- squeeze(priority)
+dist_coord <- as.data.frame(crds(dist_coast_proj))
+
+
+priority_dist <- data.frame(lapply(full_rank_stack_proj, function(i){
+  priority <- terra::extract(i, dist_coord, ID = F)
+  priority <- squeeze(priority[[1]])
   names(priority) <- names(i)
   return(priority)
 }), dist_coord)
-colnames(priority_dist) <- c("species_CAZ","species_wgt_CAZ", 
-                             "species_area_CAZ", "species_area_wgt_CAZ", 
+
+colnames(priority_dist) <- c(names(full_rank_stack_proj), 
                              "longitude", "latitude")
 
 # Looking for spatial pattern of highest sensitive sites
-df_new <- spat_priority_dist(priority_dist, 4)
+df_new <- spat_priority_dist(priority_dist, 26)
 
-#E.g.variant 1. Do for all 4 in df
-df_1 <- data.frame(df_new[,1], df_new[,5], df_new[,6])
-df_1 <- df_1 %>% dplyr::filter(df_1[,1] == 1)
-p <- ppp(df_1[,2], df_1[,3], xrange = c(-2131603,2443397),
-         yrange = c(-4947747,-1097747))
-clarkevans.test(p, alternative = "clustered", correction = "Donnelly")
+## Get polygon for cluster tests
+my_pol <- dist_coast_proj
+my_pol[my_pol >= 0] <- 1
+my_pol <- as.polygons(my_pol)
 
-df_2 <- data.frame(df_new[,2], df_new[,5], df_new[,6])
-df_2 <- df_2 %>% dplyr::filter(df_2[,1] == 1)
-p <- ppp(df_2[,2], df_2[,3], xrange = c(-2131603,2443397),
-         yrange = c(-4947747,-1097747))
-clarkevans.test(p, alternative = "clustered", correction = "Donnelly")
+## Create empty list and populate with clustering test
+res_list <- list()
+plot_list <- list()
+for(i in 1:(length(df_new) -2)){
+  
+  res <- clus_fun(df_new, my_pol, i)
+  res_list[[i]] <-  res[[1]]
+  plot_list[[i]] <-  res[[2]]
+ 
+}
+names(res_list) <- names(df_new)[-c(27,28)]
+names(plot_list) <- names(df_new)[-c(27,28)]
 
-df_3 <- data.frame(df_new[,3], df_new[,5], df_new[,6])
-df_3 <- df_3 %>% dplyr::filter(df_3[,1] == 1)
-p <- ppp(df_3[,2], df_3[,3], xrange = c(-2131603,2443397),
-         yrange = c(-4947747,-1097747))
-clarkevans.test(p, alternative = "clustered", correction = "Donnelly")
+## Density plots
+#plot(density(plot_list[[1]], sigma = 50000))
 
-df_4 <- data.frame(df_new[,4], df_new[,5], df_new[,6])
-df_4 <- df_4 %>% dplyr::filter(df_4[,1] == 1)
-p <- ppp(df_4[,2], df_4[,3], xrange = c(-2131603,2443397),
-         yrange = c(-4947747,-1097747))
-clarkevans.test(p, alternative = "clustered", correction = "Donnelly")
+## Convert cluster results into data frame
+ce_res <- lapply(1:length(res_list), FUN = function(i){
+  
+  cedf <- as.data.frame(t(as.data.frame(unlist(res_list[[i]]))))
+  
+})
 
-#create data frame of priority and distance
-#dist_df <- data.frame(priority = priority, distance = dists)
+ce_res <- do.call(rbind, ce_res)
+rownames(ce_res) <- names(res_list)
 
-# #correlation
-# cor.test(priority_dist[,1], dists, method = "spearman")
-# cor.test(priority_dist[,2], dists, method = "spearman")
-# cor.test(priority_dist[,3], dists, method = "spearman")
-# cor.test(priority_dist[,4], dists, method = "spearman")
-# 
-# #scatterplot
-# plot(dists, priority, cex = 0.1)
+## Look at correlation between site sensitivity and distance to the coast
+site_coast_cors <- apply(priority_dist, 2, FUN = function(i)
+  
+  cor.test(i, dists[!is.na(dists)], method = "spearman")
+  
+)
+
