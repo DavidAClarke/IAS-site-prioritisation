@@ -869,48 +869,48 @@ write.csv(props_df, file = here(dirname(here()), "data", "props_df.csv"))
 
 #An accompanying figure could be showing numerical difference between non-kba and kba
 #Take differences, e.g. Here negative values means higher distribution coverage for KBAs
-pm_diff <- PM_area_prop - PM_area_KBA_prop
-vg_diff <- VG_area_prop - VG_area_KBA_prop
-
-props_df <- read.csv(here(dirname(here()), "data", "props_df.csv"))
-
-props_df_min <- props_df %>% 
-  filter(tyt == "species_equal" | tyt == "species_equal_KBA")
-
-#Then just follow through like before but using these values
-Total_diff <- data.frame(rbind(pm_diff, vg_diff))
-species_diff <- c("Pheidole megacephala", "Vespula germanica")
-Total_diff <- cbind(species_diff, Total_diff)
-Total_diff <- Total_diff %>%
-  as_tibble() %>%
-  mutate(species = factor(species)) %>%
-  pivot_longer(cols = !species, 
-               names_to = "SiteSensitivity", 
-               values_to = "ScenarioDifference") %>%
-  mutate(SiteSensitivity = as.double(SiteSensitivity))
-
-ggplot(Total_diff, 
-       aes(x = SiteSensitivity, 
-           y = ScenarioDifference, 
-           colour = species_diff)) +
-  geom_line(stat = "identity") +
-  scale_x_continuous(expand = c(0,0),
-                     limits = c(1,0),
-                     trans = "reverse") +
-  theme_bw() +
-  theme(axis.line = element_line(colour = "black"),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        panel.background = element_blank(),
-        axis.text = element_text(size = 12), 
-        axis.title.x = element_text(size = 14),
-        axis.title.y = element_text(size = 14),
-        legend.text = element_text(size = 12),
-        legend.title = element_text(size = 12, face = "bold")) +
-  geom_hline(yintercept = 0) +
-  geom_rect(data = df, aes(xmin = xmin, xmax = xmax, ymin=ymin, ymax=ymax),
-            fill = rev(leg$colors), alpha = 0.2, inherit.aes = F) +
-  font("legend.text", face = "italic")
+# pm_diff <- PM_area_prop - PM_area_KBA_prop
+# vg_diff <- VG_area_prop - VG_area_KBA_prop
+# 
+# props_df <- read.csv(here(dirname(here()), "data", "props_df.csv"))
+# 
+# props_df_min <- props_df %>% 
+#   filter(tyt == "species_equal" | tyt == "species_equal_KBA")
+# 
+# #Then just follow through like before but using these values
+# Total_diff <- data.frame(rbind(pm_diff, vg_diff))
+# species_diff <- c("Pheidole megacephala", "Vespula germanica")
+# Total_diff <- cbind(species_diff, Total_diff)
+# Total_diff <- Total_diff %>%
+#   as_tibble() %>%
+#   mutate(species = factor(species)) %>%
+#   pivot_longer(cols = !species, 
+#                names_to = "SiteSensitivity", 
+#                values_to = "ScenarioDifference") %>%
+#   mutate(SiteSensitivity = as.double(SiteSensitivity))
+# 
+# ggplot(Total_diff, 
+#        aes(x = SiteSensitivity, 
+#            y = ScenarioDifference, 
+#            colour = species_diff)) +
+#   geom_line(stat = "identity") +
+#   scale_x_continuous(expand = c(0,0),
+#                      limits = c(1,0),
+#                      trans = "reverse") +
+#   theme_bw() +
+#   theme(axis.line = element_line(colour = "black"),
+#         panel.grid.major = element_blank(),
+#         panel.grid.minor = element_blank(),
+#         panel.background = element_blank(),
+#         axis.text = element_text(size = 12), 
+#         axis.title.x = element_text(size = 14),
+#         axis.title.y = element_text(size = 14),
+#         legend.text = element_text(size = 12),
+#         legend.title = element_text(size = 12, face = "bold")) +
+#   geom_hline(yintercept = 0) +
+#   geom_rect(data = df, aes(xmin = xmin, xmax = xmax, ymin=ymin, ymax=ymax),
+#             fill = rev(leg$colors), alpha = 0.2, inherit.aes = F) +
+#   font("legend.text", face = "italic")
 
 
 #Distance to coast
@@ -918,6 +918,12 @@ ggplot(Total_diff,
 full_rank_stack_proj <- project(full_rank_stack, y = "epsg:3112", res = 5000)
 
 ## For each variant, produce plot and calculate correlation, between top fraction sites and distance to coast
+# ant <- full_rank_stack[[1]]
+# ant[is.na(ant)] <- 9999
+# ant[ant < 9999] <- NA
+# d <- distance(ant)
+# writeRaster(d, here(dirname(here()), "data", "dist_to_coast.tif"))
+
 dist_coast <- rast(here(dirname(here()), "data", "dist_to_coast.tif"))
 dist_coast <- mask(dist_coast, full_rank_stack[[1]])
 dist_coast_proj <- project(dist_coast, y = "epsg:3112", res = 5000)
