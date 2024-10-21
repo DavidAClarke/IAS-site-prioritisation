@@ -913,7 +913,7 @@ write.csv(props_df, file = here(dirname(here()), "data", "props_df.csv"))
 #   font("legend.text", face = "italic")
 
 
-#Distance to coast
+## Distance to coast
 #Prior to doing any kind of distance work, need to project everything to GDA94
 full_rank_stack_proj <- project(full_rank_stack, y = "epsg:3112", res = 5000)
 
@@ -935,10 +935,15 @@ dist_coord <- as.data.frame(crds(dist_coast_proj))
 
 
 priority_dist <- data.frame(lapply(full_rank_stack_proj, function(i){
+  
   priority <- terra::extract(i, dist_coord, ID = F)
+  
   priority <- squeeze(priority[[1]])
+  
   names(priority) <- names(i)
+  
   return(priority)
+  
 }), dist_coord)
 
 colnames(priority_dist) <- c(names(full_rank_stack_proj), 
@@ -977,6 +982,15 @@ ce_res <- lapply(1:length(res_list), FUN = function(i){
 
 ce_res <- do.call(rbind, ce_res)
 rownames(ce_res) <- names(res_list)
+ce_res <- ce_res %>% 
+  mutate(statistic.R = round(as.numeric(statistic.R), 2)) %>%
+  mutate(p.value = round(as.numeric(p.value), 2)) %>%
+  mutate(scenario = rownames(ce_res)) %>%
+  relocate(scenario)
+
+ft <- flextable(ce_res)
+ft <- autofit(ft, add_w = 0, add_h = 0)
+save_as_docx("Table S1" = ft, path = here(dirname(here()), "table_s1.docx"))
 
 ## Look at correlation between site sensitivity and distance to the coast
 site_coast_cors <- apply(priority_dist, 2, FUN = function(i)
