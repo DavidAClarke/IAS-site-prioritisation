@@ -51,7 +51,7 @@ for(sp in species_scenarios){
 
 #rm(species_fig_list)
 
-species_area_fig_list <- list()
+#species_area_fig_list <- list()
 species_area_rank_stack <- rast()
 
 for(sp in species_area_scenarios){
@@ -60,17 +60,18 @@ for(sp in species_area_scenarios){
   r <- rast(here(species_area_path, sp, "output", "rankmap.tif"))
   names(r) <- sp
   species_area_rank_stack <- c(species_area_rank_stack, r)
-  species_area_fig_list[[ind]] <- rank_plot(r)
-  ggsave(plot = species_area_fig_list[[ind]],
-         filename = paste0(sp, "_rankmap.pdf"),
-         device = cairo_pdf,
-         dpi = 300,
-         path = here(dirname(here()), "figures")) 
+  # species_area_fig_list[[ind]] <- rank_plot(r)
+  # ggsave(plot = species_area_fig_list[[ind]],
+  #        filename = paste0(sp, "_rankmap.pdf"),
+  #        device = cairo_pdf,
+  #        dpi = 300,
+  #        path = here(dirname(here()), "figures")) 
   
 }
 
 full_rank_stack <- c(species_rank_stack, species_area_rank_stack)
 rm(species_rank_stack, species_area_rank_stack, r)
+writeRaster(full_rank_stack, here(dirname(here()), "data", "zonation", "full_rank_stack.tif"))
 
 priority_cors <- ras_cor(full_rank_stack)
 colnames(priority_cors) <- names(full_rank_stack)
