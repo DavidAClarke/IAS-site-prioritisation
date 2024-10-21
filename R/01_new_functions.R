@@ -91,6 +91,8 @@ calculate_jaccards <- function(rank_stack, x.min, x.max, y.min, y.max,
   return(jaccards)
 }
 
+
+
 ## Raster correlation matrix----
 ras_cor <- function(ras_stack){
   
@@ -167,7 +169,48 @@ ssim <- function(ras_stack){
   
 }
 
+## Create SSIM heatmaps----
+ssim_heat <- function(data, pal, nm, lines){
+  
+  rownames(data) <- gsub("_", " ", rownames(data))
+  colnames(data) <- gsub("_", " ", colnames(data))
+  
+  mat <- as.matrix(data)
+  df <- as.data.frame(as.table(mat)) %>%
+    drop_na(Freq)
+  
+  g <- ggplot(df, aes(Var1, Var2, fill= Freq)) + 
+    geom_tile() +
+    scale_fill_distiller(palette = pal, name = nm) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+          axis.text = element_text(size = 10),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.background = element_blank(),
+          panel.border = element_blank(),
+          axis.line.x = element_line(),
+          axis.line.y = element_line(),
+          axis.title = element_blank()) +
+    geom_text(data = df, aes(label = round(Freq,2)), size = 4)
+  
+  if(lines == T){
+    g +
+    geom_vline(xintercept = 1.5, colour = "black", linetype = 1) +
+    geom_vline(xintercept = 6.5, colour = "black", linetype = 1) +
+    geom_vline(xintercept = 7.5, colour = "black", linetype = 1) +
+    geom_vline(xintercept = 12.5, colour = "black", linetype = 1) +
+    geom_vline(xintercept = 13.5, colour = "black", linetype = 1) +
+    geom_vline(xintercept = 14.5, colour = "black", linetype = 1) +
+    geom_vline(xintercept = 19.5, colour = "black", linetype = 1) +
+    geom_vline(xintercept = 20.5, colour = "black", linetype = 1) +
+    geom_vline(xintercept = 21.5, colour = "black", linetype = 1) +
+    geom_vline(xintercept = 25.5, colour = "black", linetype = 1)
+    } else {g}
+} 
+
 ## Calculate Jaccards----
+# Taken from zonator R package (https://github.com/cbig/zonator/tree/master)
 jaccard <- function(x, y, x.min=0.0, x.max=1.0, y.min=0.0, y.max=1.0,
                     warn.uneven=FALSE, limit.tolerance=4,
                     disable.checks=FALSE) {
