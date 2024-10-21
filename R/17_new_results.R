@@ -22,38 +22,38 @@ RLI_IAS
 
 
 ###################### Biodiversity feature performance ########################
-##Rename groups (may need to do two for the variants with and without areas)
-species_only <- c(CAZ_var, CAZ_wgt_var, CAZ_wgt_KBA_inv_var, RAN_var)
-species_area <- c(CAZ_area_var, CAZ_area_wgt_var, CAZ_area_wgt_KBA_inv_var, 
-                  RAN_area_var)
-
-species_only_groups <- c("1" = "Invertebrate", "2" = "Fish", "3" = "Plant", 
-                         "4" = "Reptile",
-                         "6" = "Mammal", "7" = "Amphibian", "8" = "Fungi", 
-                         "9" = "Bird")
-
-species_area_groups <- c("1" = "Invertebrate", "2" = "Fish", "3" = "Plant", 
-                         "4" = "Reptile",
-                         "6" = "Mammal", "7" = "Amphibian", "8" = "Fungi", 
-                         "9" = "Bird",
-                         "10" = "Community", "11" = "Ecosystem", 
-                         "12" = "Ramsar", "13" = "Upstream")
-
-#species + weights
-perf_1 <- performance_plot(CAZ_wgt_var, species_only_groups, "Set2")
-
-#species + weights + KBA
-perf_2 <- performance_plot(CAZ_wgt_KBA_inv_var, species_only_groups, "Set2")
-  
-#species + area + weights
-perf_3 <- performance_plot(CAZ_area_wgt_var, species_area_groups, "Set3")
-  
-#species + area + weights + KBA
-perf_4 <- performance_plot(CAZ_area_wgt_KBA_inv_var, species_area_groups, "Set3")
-
-
-ggarrange(perf_1, perf_2, common.legend = T, ncol = 2, nrow = 1, labels = c("A","B"))
-ggarrange(perf_3, perf_4, common.legend = T, ncol = 2, nrow = 1, labels = c("A","B"))
+# ##Rename groups (may need to do two for the variants with and without areas)
+# species_only <- c(CAZ_var, CAZ_wgt_var, CAZ_wgt_KBA_inv_var, RAN_var)
+# species_area <- c(CAZ_area_var, CAZ_area_wgt_var, CAZ_area_wgt_KBA_inv_var, 
+#                   RAN_area_var)
+# 
+# species_only_groups <- c("1" = "Invertebrate", "2" = "Fish", "3" = "Plant", 
+#                          "4" = "Reptile",
+#                          "6" = "Mammal", "7" = "Amphibian", "8" = "Fungi", 
+#                          "9" = "Bird")
+# 
+# species_area_groups <- c("1" = "Invertebrate", "2" = "Fish", "3" = "Plant", 
+#                          "4" = "Reptile",
+#                          "6" = "Mammal", "7" = "Amphibian", "8" = "Fungi", 
+#                          "9" = "Bird",
+#                          "10" = "Community", "11" = "Ecosystem", 
+#                          "12" = "Ramsar", "13" = "Upstream")
+# 
+# #species + weights
+# perf_1 <- performance_plot(CAZ_wgt_var, species_only_groups, "Set2")
+# 
+# #species + weights + KBA
+# perf_2 <- performance_plot(CAZ_wgt_KBA_inv_var, species_only_groups, "Set2")
+#   
+# #species + area + weights
+# perf_3 <- performance_plot(CAZ_area_wgt_var, species_area_groups, "Set3")
+#   
+# #species + area + weights + KBA
+# perf_4 <- performance_plot(CAZ_area_wgt_KBA_inv_var, species_area_groups, "Set3")
+# 
+# 
+# ggarrange(perf_1, perf_2, common.legend = T, ncol = 2, nrow = 1, labels = c("A","B"))
+# ggarrange(perf_3, perf_4, common.legend = T, ncol = 2, nrow = 1, labels = c("A","B"))
 
 
 ########################################################################
@@ -67,26 +67,26 @@ source("R/13_jaccard_similarities.R")
 ##Plotting rank rasters
 
 
-
-#Comparing effects of feature weighting  - rank differences
-#Red means weighted gave higher priority over unweighted, 
-#blue means it gave lower priority
-p8 <- rank_diff(CAZ_wgt_var_ras,CAZ_var_ras)
-p9 <- rank_diff(CAZ_area_wgt_var_ras,CAZ_area_var_ras)
-  
-p7 <- ggarrange(p1,p4,p2,p5, 
-                common.legend = T, 
-                ncol = 2, nrow = 2,
-                labels = c("A","C","B","D"))
-
-p10 <- ggarrange(p8,p9, 
-                common.legend = T, 
-                ncol = 2, nrow = 2,
-                labels = c("E","F"))
-
-ggarrange(p7,p10, 
-          common.legend = F, 
-          ncol = 1, nrow = 2)
+# 
+# #Comparing effects of feature weighting  - rank differences
+# #Red means weighted gave higher priority over unweighted, 
+# #blue means it gave lower priority
+# p8 <- rank_diff(CAZ_wgt_var_ras,CAZ_var_ras)
+# p9 <- rank_diff(CAZ_area_wgt_var_ras,CAZ_area_var_ras)
+#   
+# p7 <- ggarrange(p1,p4,p2,p5, 
+#                 common.legend = T, 
+#                 ncol = 2, nrow = 2,
+#                 labels = c("A","C","B","D"))
+# 
+# p10 <- ggarrange(p8,p9, 
+#                 common.legend = T, 
+#                 ncol = 2, nrow = 2,
+#                 labels = c("E","F"))
+# 
+# ggarrange(p7,p10, 
+#           common.legend = F, 
+#           ncol = 1, nrow = 2)
 ################################################################################
 #Susceptible sites
 regional_model_path <- here(dirname(here()), "data", "IAS_distributions", "IAS_regional")
@@ -985,3 +985,12 @@ site_coast_cors <- apply(priority_dist, 2, FUN = function(i)
   
 )
 
+## Convert correlation results into data frame
+sc_res <- lapply(1:(length(site_coast_cors)-2), FUN = function(i){
+  
+  scdf <- as.data.frame(t(as.data.frame(unlist(site_coast_cors[[i]]))))
+  
+})
+
+sc_res <- do.call(rbind, sc_res)
+rownames(sc_res) <- names(res_list)
