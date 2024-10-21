@@ -125,8 +125,10 @@ jac2.5 <- apply(jac2.5, 2, as.numeric)
 rownames(jac2.5) <- colnames(jac2.5)
 rownames(jac2.5) <- gsub("_", " ", rownames(jac2.5))
 
-col1 <- circlize::colorRamp2(c(0, 0.5, 0.99,1), c("#ef476f", "#ffd166", "#26547c","black"))
-col2 <- circlize::colorRamp2(c(0, 0.5, 0.99,1), c("#C04000", "white","#008080","black"))
+col1 <- circlize::colorRamp2(c(0, 0.5, 0.99,1), 
+                             c("#ef476f", "#ffd166", "#26547c","black"))
+col2 <- circlize::colorRamp2(c(0, 0.5, 0.99,1), 
+                             c("#C04000", "white","#008080","black"))
 
 ht1 <- Heatmap(sip_mmat, 
                name = "SIP",
