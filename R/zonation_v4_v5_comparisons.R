@@ -1,7 +1,7 @@
 ### Testing script
 
 pkgs <- c("tidyverse", "sf", "terra", "stars", "here", "SSIMmap", "raster",
-          "ComplexHeatmap")
+          "ComplexHeatmap", "flextable", "spatstat")
 lapply(pkgs, require, character.only = T)
 
 source("R/01_new_functions.R")
@@ -72,6 +72,7 @@ for(sp in species_area_scenarios){
 full_rank_stack <- c(species_rank_stack, species_area_rank_stack)
 rm(species_rank_stack, species_area_rank_stack, r)
 writeRaster(full_rank_stack, here(dirname(here()), "data", "zonation", "full_rank_stack.tif"))
+full_rank_stack <- rast(here(dirname(here()), "data", "zonation", "full_rank_stack.tif"))
 
 priority_cors <- ras_cor(full_rank_stack)
 colnames(priority_cors) <- names(full_rank_stack)
