@@ -377,6 +377,82 @@ for(i in 1:length(species_list)){
 df <- data.frame(nms, code, type, vals)
 write.csv(df, file = here(dirname(here()), "data", "priority_site_vals.csv"))
 
+ps_df <- read.csv(here(dirname(here()), "data", "priority_site_vals.csv"))
+
+# Want to loop over species and scenarios,comparing KBA and non-KBA scenarios
+# for each species. First species, then scenarios
+# Separate out KBA ones
+
+KBA <- scenarios[str_detect(scenarios, "KBA")]
+nonKBA <- scenarios[str_detect(scenarios, "KBA", negate = T)]
+nonKBA <- nonKBA[str_detect(nonKBA, "random", negate = T)]
+scenarios <- c(nonKBA, KBA)
+
+sp <- c()
+wcs <- c()
+wcp <- c()
+ty1 <- c()
+ty2 <- c()
+
+for(i in spp_list){
+  
+  df_min <- ps_df %>% filter(nms == i)
+  
+  for(j in seq_along(nonKBA)){
+    
+    df <- df_min %>% filter(type == nonKBA[j] | type == KBA[j])
+    
+    v1 <- df %>% filter(type == nonKBA[j]) %>% pull(vals)
+    v2 <- df %>% filter(type == KBA[j]) %>% pull(vals)
+    
+    wc <- wilcox.test(v1, v2, alternative = "two.sided")
+    wcs <- c(wcs, wc$statistic)
+    wcp <- c(wcp, wc$p.value)
+    sp <- c(sp, i)
+    ty1 <- c(ty1, nonKBA[j])
+    ty2 <- c(ty2, KBA[j])
+    
+    
+  }
+}
+
+wc_df <- data.frame(sp, ty, ty2, wcs, wcp)
+
+for(i in seq_along(nonKBA)){
+  
+  sp <- gsub("_", " ", nonKBA[i])
+  
+  scen_one <- ps_df %>% filter(type == nonKBA[i] | type == KBA[i])
+  
+  g <- ggplot(scen_one, aes(x = vals, y = reorder(nms, desc(nms)), fill = type, height = ..density..)) +
+    ggridges::geom_density_ridges(stat = "density", alpha = 0.7, scale = 1) +
+    theme_bw() +
+    theme(axis.text = element_text(size = 10),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.background = element_blank(),
+          axis.line.x = element_line(),
+          axis.line.y = element_line()) +
+    scale_x_continuous(expand = c(0.01,0.01)) +
+    scale_fill_manual(values = c("#FDDB27FF", "#00B1D2FF"),
+                      labels = c(sp, "KBA mask"),
+                      name = "Scenarios") +
+    ylab("Introduced species") +
+    xlab("Site sensitivity")
+  
+  ggsave(plot = g,
+         filename = paste0(nonKBA[i], "_violin.pdf"),
+         device = cairo_pdf,
+         dpi = 300,
+         width = 8.27,
+         height = 11.69,
+         units = "in",
+         path = here(dirname(here()), "figures"))
+  
+  
+}
+
+
 # df_1 <- df %>% filter(nms == "Pheidole megacephala" |
 #                         nms == "Vespula germanica" |
 #                         nms == "Digitonthophagus gazella" |
