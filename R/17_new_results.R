@@ -425,7 +425,7 @@ for(i in seq_along(nonKBA)){
   
   scen_one <- ps_df %>% filter(type == nonKBA[i] | type == KBA[i])
   
-  g <- ggplot(scen_one, aes(x = vals, y = reorder(nms, desc(nms)), fill = type, height = ..density..)) +
+  g <- ggplot(scen_one, aes(x = vals, y = reorder(nms, desc(nms)), fill = type, height = after_stat(density))) +
     ggridges::geom_density_ridges(stat = "density", alpha = 0.7, scale = 1) +
     theme_bw() +
     theme(axis.text = element_text(size = 10),
