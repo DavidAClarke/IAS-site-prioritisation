@@ -382,7 +382,7 @@ ps_df <- read.csv(here(dirname(here()), "data", "priority_site_vals.csv"))
 # Want to loop over species and scenarios,comparing KBA and non-KBA scenarios
 # for each species. First species, then scenarios
 # Separate out KBA ones
-
+scenarios <- c(species_scenarios, species_area_scenarios)
 KBA <- scenarios[str_detect(scenarios, "KBA")]
 nonKBA <- scenarios[str_detect(scenarios, "KBA", negate = T)]
 nonKBA <- nonKBA[str_detect(nonKBA, "random", negate = T)]
@@ -416,7 +416,8 @@ for(i in spp_list){
   }
 }
 
-wc_df <- data.frame(sp, ty, ty2, wcs, wcp)
+wc_df <- data.frame(sp, ty1, ty2, wcs, wcp)
+write.csv(wc_df, here(dirname(here()), "data", "wilcox_df.csv"))
 
 for(i in seq_along(nonKBA)){
   
