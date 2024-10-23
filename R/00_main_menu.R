@@ -3,10 +3,11 @@
 ################################################################################
 
 ## Load libraries
-pkgs <- c("tidyverse", "sp", "sf", "raster", "data.table", "CoordinateCleaner",
+pkgs <- c("tidyverse", "sf", "raster", "data.table", "CoordinateCleaner",
           "countrycode", "MASS", "bossMaps", "rJava", "ENMTools", "zonator",
           "taxize", "biomod2", "usdm", "rgbif", "galah", "spatstat", "stars", 
-          "ggpubr","cowplot", "RColorBrewer", "PNWColors")
+          "ggpubr","cowplot", "RColorBrewer", "PNWColors", "terra", 
+          "ComplexHeatmap", "flextable")
 lapply(pkgs, require, character.only = T)
 
 
