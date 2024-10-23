@@ -164,53 +164,8 @@ ht2 <- Heatmap(jac2.5,
 
 draw(ht1 + ht2, ht_gap = unit(-230, "mm"))
 
-###################### Biodiversity feature performance ########################
-# ##Rename groups (may need to do two for the variants with and without areas)
-# species_only <- c(CAZ_var, CAZ_wgt_var, CAZ_wgt_KBA_inv_var, RAN_var)
-# species_area <- c(CAZ_area_var, CAZ_area_wgt_var, CAZ_area_wgt_KBA_inv_var, 
-#                   RAN_area_var)
-# 
-# species_only_groups <- c("1" = "Invertebrate", "2" = "Fish", "3" = "Plant", 
-#                          "4" = "Reptile",
-#                          "6" = "Mammal", "7" = "Amphibian", "8" = "Fungi", 
-#                          "9" = "Bird")
-# 
-# species_area_groups <- c("1" = "Invertebrate", "2" = "Fish", "3" = "Plant", 
-#                          "4" = "Reptile",
-#                          "6" = "Mammal", "7" = "Amphibian", "8" = "Fungi", 
-#                          "9" = "Bird",
-#                          "10" = "Community", "11" = "Ecosystem", 
-#                          "12" = "Ramsar", "13" = "Upstream")
-# 
-# #species + weights
-# perf_1 <- performance_plot(CAZ_wgt_var, species_only_groups, "Set2")
-# 
-# #species + weights + KBA
-# perf_2 <- performance_plot(CAZ_wgt_KBA_inv_var, species_only_groups, "Set2")
-#   
-# #species + area + weights
-# perf_3 <- performance_plot(CAZ_area_wgt_var, species_area_groups, "Set3")
-#   
-# #species + area + weights + KBA
-# perf_4 <- performance_plot(CAZ_area_wgt_KBA_inv_var, species_area_groups, "Set3")
-# 
-# 
-# ggarrange(perf_1, perf_2, common.legend = T, ncol = 2, nrow = 1, labels = c("A","B"))
-# ggarrange(perf_3, perf_4, common.legend = T, ncol = 2, nrow = 1, labels = c("A","B"))
+########################### Plotting rank rasters ##############################
 
-
-########################################################################
-##Rank rasters
-
-
-
-
-
-######################################################################
-##Plotting rank rasters
-
-
-# 
 # #Comparing effects of feature weighting  - rank differences
 # #Red means weighted gave higher priority over unweighted, 
 # #blue means it gave lower priority
@@ -231,8 +186,10 @@ draw(ht1 + ht2, ht_gap = unit(-230, "mm"))
 #           common.legend = F, 
 #           ncol = 1, nrow = 2)
 ################################################################################
-#Susceptible sites
+
+################################ Susceptible sites #############################
 regional_model_path <- here(dirname(here()), "data", "IAS_distributions", "IAS_regional")
+
 spp_list <- c("Apis mellifera",  "Monomorium floricola",
               "Monomorium destructor","Linepithema humile", "Vespula vulgaris",
               "Bombus terrestris", "Heteronychus arator",
@@ -288,6 +245,12 @@ ias_map <- ggplot()+
         panel.border = element_blank(),
         axis.ticks = element_blank())
 
+ggsave(plot = ias_map,
+       filename = "ias_map.pdf",
+       device = cairo_pdf,
+       dpi = 300,
+       path = here(dirname(here()), "figures"))
+
 non.na <- as.numeric(global(ias_sum_sp, fun = "notNA")) #number of non NA cells
 no.cells <- c()
 perc.total <- c()
@@ -306,17 +269,30 @@ totaltable <- data.frame("Richness" = richness,
                          "Number of cells" = no.cells, 
                          "Percent total" = round(perc.total,2))
 
-pretty_table <- formattable::formattable(totaltable,
-                                         align = c("c", "c", "c"),
-                                         list(Richness = formattable::color_tile("#e69b99","#2c6184")))
+total_ft <- autofit(flextable(totaltable)) %>%
+  bg(j = "Richness", bg = colorRampPalette(c("#e69b99","#2c6184"))(12), part = "body")
+
+total_ft2 <- labelizor(x = total_ft,
+                       part = "header",
+                       labels = c("Number.of.cells" = "No. cells",
+                                  "Percent.total" = "Total (%)"))
+
+save_as_docx(total_ft2, path = here(dirname(here()), "total_ft2.docx"))
+save_as_image(total_ft2, path = here(dirname(here()), "total_ft2.svg"), res = 500)
 
 ## IAS SDM evaluations
 eval_scores <- read.table(here(regional_model_path, 
                                "Table_IAS_regional_accuracy.txt"), 
                           header = T)
-pretty_eval_table <- formattable::formattable(eval_scores,
-                                              align = c("l", "c", "c", "c", "c"))
 
+eval_ft <- autofit(flextable(eval_scores))
+
+eval_ft2 <- labelizor(x = eval_ft,
+                       part = "header",
+                       labels = c("Cut.off.binary" = "Binary cutoff"))
+
+save_as_docx(eval_ft2, path = here(dirname(here()), "eval_scores.docx"))
+save_as_image(eval_ft2, path = here(dirname(here()), "eval_scores.svg"), res = 500)
 
 ####################### Priority sites - species + weights #####################
 species_list <- list()
