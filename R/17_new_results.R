@@ -197,6 +197,29 @@ spp_list <- c("Apis mellifera",  "Monomorium floricola",
               "Vespula germanica","Tetramorium bicarinatum",
               "Paratrechina longicornis")
 
+## Create IAS distribution plots
+ias_list <- list()
+
+for(sp in spp_list){
+
+  ind <- which(spp_list == sp)
+
+  ias_list[[ind]] <- IAS_plot(sp) +
+
+    ggtitle(sp) +
+
+    theme(plot.title = element_text(face = "italic", size = 16, hjust = 0.5))
+
+  spn <- gsub(" ", "_", sp)
+
+  ggsave(plot = ias_list[[ind]],
+         filename = paste0(spn, "_dist.pdf"),
+         device = cairo_pdf,
+         dpi = 300,
+         path = here(dirname(here()), "figures"))
+
+}
+
 ## Prepare for priority sites results
 susceptible_site_prep <- lapply(spp_list[1:length(spp_list)], function(i){
   
