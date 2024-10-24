@@ -220,6 +220,8 @@ for(sp in spp_list){
 
 }
 
+ggpubr::ggarrange(plotlist = ias_list, nrow = 3, ncol = 4, common.legend = T)
+
 ## Prepare for priority sites results
 susceptible_site_prep <- lapply(spp_list[1:length(spp_list)], function(i){
   
