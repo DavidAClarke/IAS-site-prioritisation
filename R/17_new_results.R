@@ -208,7 +208,7 @@ for(sp in spp_list){
 
     ggtitle(sp) +
 
-    theme(plot.title = element_text(face = "italic", size = 16, hjust = 0.5))
+    theme(plot.title = element_text(face = "italic", size = 12, hjust = 0.5))
 
   spn <- gsub(" ", "_", sp)
 
@@ -220,7 +220,7 @@ for(sp in spp_list){
 
 }
 
-ggpubr::ggarrange(plotlist = ias_list, nrow = 3, ncol = 4, common.legend = T)
+ggpubr::ggarrange(plotlist = ias_list, nrow = 4, ncol = 3, common.legend = T)
 
 ## Prepare for priority sites results
 susceptible_site_prep <- lapply(spp_list[1:length(spp_list)], function(i){
