@@ -511,3 +511,38 @@ clus_fun <- function(df, win_poly, lay_ind){
   
   
 }
+
+## Create predicted IAS distribution plots----
+IAS_plot <- function(species){
+  
+  species <- gsub(" ", ".", species)
+  
+  r <- rast(raster(here(regional_model_path, 
+                        species, 
+              paste0(species,"_EMcaByTSS_mergedAlgo_mergedRun_mergedData.gri"))))
+  
+  r <- r/1000 #back to a 0-1 scale
+  r_sf <- st_as_stars(r) %>%
+    st_as_sf()
+  
+  r_plot <- ggplot()+
+    
+    geom_sf(data = r_sf, aes(fill=layer), 
+            color=NA, 
+            show.legend = T) + 
+    
+    scale_fill_gradientn(colours = brewer.pal('YlGnBu', n=9),
+                         name = "Probability") +
+    
+    theme_bw() +
+    
+    theme(axis.line = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.background = element_blank(),
+          axis.text = element_blank(),
+          panel.border = element_blank(),
+          axis.ticks = element_blank()) 
+  
+  return(r_plot)
+}
