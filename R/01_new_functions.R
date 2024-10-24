@@ -532,7 +532,7 @@ IAS_plot <- function(species){
             show.legend = T) + 
     
     scale_fill_gradientn(colours = brewer.pal('YlGnBu', n=9),
-                         name = "Probability") +
+                         name = "Habitat suitability") +
     
     theme_bw() +
     
