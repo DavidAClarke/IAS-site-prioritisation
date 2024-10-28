@@ -75,7 +75,11 @@ for(sp in species_area_scenarios){
   r <- rast(here(species_area_path, sp, "output", "rankmap.tif"))
   names(r) <- sp
   species_area_rank_stack <- c(species_area_rank_stack, r)
-  species_area_fig_list[[ind]] <- rank_plot(r)
+  species_area_fig_list[[ind]] <- rank_plot(r) + 
+    
+    ggtitle(sp) +
+    
+    theme(plot.title = element_text(face = "italic", size = 12, hjust = 0.5))
   # ggsave(plot = species_area_fig_list[[ind]],
   #        filename = paste0(sp, "_rankmap.pdf"),
   #        device = cairo_pdf,
@@ -84,7 +88,7 @@ for(sp in species_area_scenarios){
   
 }
 
-ggpubr::ggarrange(plotlist = species_area_fig_list, nrow = 4, ncol = 3, common.legend = T)
+ggpubr::ggarrange(plotlist = species_area_fig_list[-13], nrow = 4, ncol = 3, common.legend = T)
 
 full_rank_stack <- c(species_rank_stack, species_area_rank_stack)
 rm(species_rank_stack, species_area_rank_stack, r)
