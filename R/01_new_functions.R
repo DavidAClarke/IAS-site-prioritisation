@@ -495,7 +495,7 @@ spat_priority_dist <- function(df, n_col){
   return(df)
 }
 
-## Clarke-Evans test with Donnely correction----
+## Clarke-Evans test with cdf correction----
 clus_fun <- function(df, win_poly, lay_ind){
   
   df <- df %>% 
