@@ -51,7 +51,11 @@ for(sp in species_scenarios){
   r <- rast(here(species_path, sp, "output", "rankmap.tif"))
   names(r) <- sp
   species_rank_stack <- c(species_rank_stack, r)
-  species_fig_list[[ind]] <- rank_plot(r)
+  species_fig_list[[ind]] <- rank_plot(r) + 
+    
+    ggtitle(sp) +
+    
+    theme(plot.title = element_text(face = "italic", size = 12, hjust = 0.5))
   # ggsave(plot = species_fig_list[[ind]],
   #        filename = paste0(sp, "_rankmap.pdf"),
   #        device = cairo_pdf,
