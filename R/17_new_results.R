@@ -51,11 +51,11 @@ for(sp in species_scenarios){
   r <- rast(here(species_path, sp, "output", "rankmap.tif"))
   names(r) <- sp
   species_rank_stack <- c(species_rank_stack, r)
-  species_fig_list[[ind]] <- rank_plot(r) + 
-    
+  species_fig_list[[ind]] <- rank_plot(r) +
+
     ggtitle(sp) +
-    
-    theme(plot.title = element_text(face = "italic", size = 12, hjust = 0.5))
+
+    theme(plot.title = element_text(face = "italic", size = 10, hjust = 0.5))
   # ggsave(plot = species_fig_list[[ind]],
   #        filename = paste0(sp, "_rankmap.pdf"),
   #        device = cairo_pdf,
@@ -75,11 +75,11 @@ for(sp in species_area_scenarios){
   r <- rast(here(species_area_path, sp, "output", "rankmap.tif"))
   names(r) <- sp
   species_area_rank_stack <- c(species_area_rank_stack, r)
-  species_area_fig_list[[ind]] <- rank_plot(r) + 
-    
+  species_area_fig_list[[ind]] <- rank_plot(r) +
+
     ggtitle(sp) +
-    
-    theme(plot.title = element_text(face = "italic", size = 12, hjust = 0.5))
+
+    theme(plot.title = element_text(face = "italic", size = 10, hjust = 0.5))
   # ggsave(plot = species_area_fig_list[[ind]],
   #        filename = paste0(sp, "_rankmap.pdf"),
   #        device = cairo_pdf,
@@ -307,7 +307,26 @@ eval_ft2 <- labelizor(x = eval_ft,
 save_as_docx(eval_ft2, path = here(dirname(here()), "eval_scores.docx"))
 save_as_image(eval_ft2, path = here(dirname(here()), "eval_scores.svg"), res = 500)
 
-####################### Priority sites - species + weights #####################
+############################### Priority sites  ################################
+## Priority maps
+pri_maps <- list()
+
+for(i in seq_along(susceptible_site_prep)){
+  
+  sp <- spp_list[[i]]
+  
+  pri_maps[[i]] <- priority_map(full_rank_stack[["species_area_weight"]], 
+                                susceptible_site_prep[[i]][[2]]) +
+    
+    ggtitle(sp) +
+    
+    theme(plot.title = element_text(face = "italic", size = 12, hjust = 0.5))
+  
+}
+
+ggpubr::ggarrange(plotlist = pri_maps, nrow = 4, ncol = 3, common.legend = T)
+
+
 species_list <- list()
 vals_list <- list()
 
@@ -400,6 +419,80 @@ for(i in spp_list){
 wc_df <- data.frame(sp, ty1, ty2, wcs, wcp)
 write.csv(wc_df, here(dirname(here()), "data", "wilcox_df.csv"))
 
+################################################################################
+## Calculate median site sensitivity for each species X scenario
+
+spec <- c()
+scen <- c()
+medsen <- c()
+
+for(i in spp_list){
+  
+  df_min <- ps_df %>% filter(nms == i) 
+  
+  for(sc in scenarios){
+    
+    vs <- df_min %>% filter(type == sc) %>% pull(vals)
+    spec <- c(spec, i)
+    scen <- c(scen, sc)
+    medsen <- c(medsen, median(vs))
+    
+   }
+}
+
+med_df <- data.frame(spec, scen, medsen)
+write.csv(med_df, here(dirname(here()), "data", "medsen_df.csv"))
+
+bpalette <- c('#c62828','#f44336','#9c27b0','#673ab7','#3f51b5','#2196f3',
+             '#29b6f6','#006064','#009688','#4caf50','#8bc34a','#ffeb3b')
+
+
+med_df <- med_df %>% mutate(scen = gsub("_", " ", scen))
+
+ggplot(med_df, aes(x = spec, y = medsen, fill = spec)) +
+  
+  geom_boxplot() +
+  
+  scale_fill_manual(values = bpalette) +
+  
+  theme_bw() +
+  
+  theme(axis.text = element_text(size = 10),
+        axis.text.x = element_text(angle = 45, vjust = 0.5, hjust = 0.5),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        axis.line.x = element_line(),
+        axis.line.y = element_line(), 
+        legend.position = "none") +
+  
+  ylab("Median value of site sensitivity") +
+  
+  xlab("Introduced species")
+
+## Compare scenarios
+ggplot(med_df, aes(x = scen, y = medsen, fill = scen)) +
+  
+  geom_boxplot() +
+  
+  #scale_fill_manual(values = bpalette) +
+  
+  theme_bw() +
+  
+  theme(axis.text = element_text(size = 10),
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        axis.line.x = element_line(),
+        axis.line.y = element_line(), 
+        legend.position = "none") +
+  
+  ylab("Median value of site sensitivity") +
+  
+  xlab("Sensitive site identification scenario")
+
+################################################################################
 for(i in seq_along(nonKBA)){
   
   sp <- gsub("_", " ", nonKBA[i])
