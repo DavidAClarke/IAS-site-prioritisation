@@ -284,17 +284,13 @@ jaccard <- function(x, y, x.min=0.0, x.max=1.0, y.min=0.0, y.max=1.0,
   
   return(raster::cellStats(intersection, "sum") / raster::cellStats(union, "sum"))
 }
-## Susceptible site prep
+## Susceptible site prep----
 susc_site_prep <- function(species_name, ras_stack){
   
   sp <- gsub(" ", ".", species_name)
 
-  bin <- rast(raster::raster(here(regional_model_path, 
-                             sp, 
-                             "proj_regional", 
-                             "individual_projections", 
-                             paste0(sp,
-                                    "_EMcaByTSS_mergedAlgo_mergedRun_mergedData_TSSbin.gri"))))
+  bin <- rast(raster::raster(here(regional_model_path,  sp, 
+            paste0(sp,"_EMcaByTSS_mergedAlgo_mergedRun_mergedData_TSSbin.gri"))))
   
   bin2 <- bin
   bin2[bin2 != 0] <- 1
@@ -545,4 +541,51 @@ IAS_plot <- function(species){
           axis.ticks = element_blank()) 
   
   return(r_plot)
+}
+
+## Priority map----
+priority_map <- function(sens, susc){
+  
+  susc[susc == 0] <- NA
+  
+  r1 <- as.polygons(susc) %>% 
+    st_as_sf()
+  
+  r2 <- resample(sens, susc)
+  
+  r2 <- mask(r2, r1)
+  
+  r2 <- st_as_stars(r2) %>%
+    st_as_sf()
+  
+  r3 <- st_as_stars(sens) %>%
+    st_as_sf() 
+  
+  ggplot()+
+    
+    geom_sf(data = r3, aes(fill = r3[[1]]), 
+            color = NA, 
+            show.legend = F,
+            alpha = 0.2) + 
+    
+    geom_sf(data = r2, aes(fill = r2[[1]]),
+            color = NA, 
+            show.legend = T) +
+    
+    scale_fill_gradientn(colours = z_colors_spectral$colors,
+                         values = z_colors_spectral$values,
+                         name = "Site\nsensitivity",
+                         breaks = c(0.0, 0.2, 0.4, 0.6, 0.8,1)) +
+    
+    theme_bw() +
+    
+    theme(axis.line = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.background = element_blank(),
+          axis.text = element_blank(),
+          panel.border = element_blank(),
+          axis.ticks = element_blank())
+  
+  
 }
