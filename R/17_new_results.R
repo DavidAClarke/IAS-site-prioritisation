@@ -95,10 +95,26 @@ rm(species_rank_stack, species_area_rank_stack, r)
 writeRaster(full_rank_stack, here(dirname(here()), "data", "zonation", "full_rank_stack.tif"))
 full_rank_stack <- rast(here(dirname(here()), "data", "zonation", "full_rank_stack.tif"))
 
+## Correlations
 priority_cors <- ras_cor(full_rank_stack)
 colnames(priority_cors) <- names(full_rank_stack)
 rownames(priority_cors) <- names(full_rank_stack)
 write.csv(priority_cors, file = here(dirname(here()), "data", "priority_cors.csv"))
+
+priority_cors <- read.csv(here(dirname(here()), "data", "priority_cors.csv"), row.names = 1)
+
+corrplot::corrplot(round(as.matrix(priority_cors),2), 
+                   type = "lower", 
+                   method = "color",
+                   cl.pos = "n", 
+                   tl.pos = "l",
+                   col=colorRampPalette(brewer.pal(n=9, name="Blues"))(15),
+                   tl.srt = 0, 
+                   tl.col = "black", 
+                   tl.cex = 0.8, 
+                   number.cex = 0.8,
+                   addCoef.col = "white",
+                   mar = c(0,0,0,0))
 
 ## Jaccard similarities
 source("R/13_jaccard_similarities.R")
@@ -503,11 +519,13 @@ for(i in seq_along(nonKBA)){
     ggridges::geom_density_ridges(stat = "density", alpha = 0.7, scale = 1) +
     theme_bw() +
     theme(axis.text = element_text(size = 10),
+          axis.text.y = element_text(face = "italic"),
           panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(),
           panel.background = element_blank(),
           axis.line.x = element_line(),
-          axis.line.y = element_line()) +
+          axis.line.y = element_line(),
+          legend.position = "top") +
     scale_x_continuous(expand = c(0.01,0.01)) +
     scale_fill_manual(values = c("#FDDB27FF", "#00B1D2FF"),
                       labels = c(sp, "KBA mask"),
@@ -679,4 +697,13 @@ sc_res <- lapply(1:(length(site_coast_cors)-2), FUN = function(i){
 })
 
 sc_res <- do.call(rbind, sc_res)
-rownames(sc_res) <- names(res_list)
+sc_res$scenario <- names(res_list)
+sc_res <- sc_res %>% 
+  relocate(scenario) %>%
+  dplyr::select(scenario, estimate.rho, p.value) %>%
+  mutate(across(2:3, as.numeric)) %>%
+  mutate(across(2:3, round,2))
+
+ft <- flextable(sc_res)
+ft <- autofit(ft, add_w = 0, add_h = 0)
+save_as_docx("Table S3" = ft, path = here(dirname(here()), "table_s3.docx"))
