@@ -2,7 +2,7 @@
 
 ################################################################################
 ##Summary information for all species used (n = 5113)
-source("R/13_redlist_summary.R")
+source("R/15_redlist_summary.R")
 sum_info
 IAS_threats
 IAS_species
@@ -18,154 +18,427 @@ IAS_threatend_species_stack
 RLI_IAS
 
 ################################## Zonation results ############################
-#Get scenario variants
-#Core Area Zonation
-CAZ_var <- scenario_variants("species_CAZ_proj")
-CAZ_wgt_var <- scenario_variants("species_wgt_CAZ_proj")
-#CAZ_wgt_KBA_inv_var <- scenario_variants("species_wgt_CAZ_KBA_proj_inv")
-CAZ_wgt_KBA_inv_var <- scenario_variants("species_wgt_CAZ_KBA_proj")
-CAZ_area_var <- scenario_variants("species_area_CAZ_proj")
-CAZ_area_wgt_var <- scenario_variants("species_area_wgt_CAZ_proj")
-#CAZ_area_wgt_KBA_inv_var <- scenario_variants("species_area_wgt_CAZ_KBA_proj_inv")
-CAZ_area_wgt_KBA_inv_var <- scenario_variants("species_area_wgt_CAZ_KBA_proj")
+z_colors_spectral <- list(values=c(0.0, 0.2, 0.5, 0.75, 0.9, 0.95, 0.98, 1.0),
+                          labels=c("0.00-0.20", "0.20-0.50", "0.50-0.75",
+                                   "0.75-0.90", "0.90-0.95", "0.95-0.98",
+                                   "0.98-1.00"),
+                          colors=c("#2b83ba", "#80bfab", "#c7e8ad", "#ffffbf",
+                                   "#fdc980", "#f07c4a", "#d7191c"))
 
-#Random
-RAN_var <- scenario_variants("species_RAN_proj")
-#RAN_wgt_var <- scenario_variants("species_wgt_RAN_proj")
-RAN_area_var <- scenario_variants("species_area_RAN_proj")
-#RAN_area_wgt_var <- scenario_variants("species_area_wgt_RAN_proj")
+species_path <- here(dirname(here()), "data", "zonation", "species_scenarios")
+species_area_path <- here(dirname(here()), "data", "zonation", "species_area_scenarios")
 
+species_scenarios <- c("species_equal", "species_weight", "species_scheme_1", 
+                       "species_scheme_2", "species_scheme_3", "species_scheme_4",
+                       "species_equal_KBA", "species_weight_KBA", "species_scheme_1_KBA", 
+                       "species_scheme_2_KBA", "species_scheme_3_KBA", "species_scheme_4_KBA",
+                       "species_random")
 
-###################### Biodiversity feature performance ########################
-##Rename groups (may need to do two for the variants with and without areas)
-species_only <- c(CAZ_var, CAZ_wgt_var, CAZ_wgt_KBA_inv_var, RAN_var)
-species_area <- c(CAZ_area_var, CAZ_area_wgt_var, CAZ_area_wgt_KBA_inv_var, 
-                  RAN_area_var)
+species_area_scenarios <- c("species_area_equal", "species_area_weight", 
+                            "species_area_scheme_1", "species_area_scheme_2", 
+                            "species_area_scheme_3", "species_area_scheme_4",
+                            "species_area_equal_KBA", "species_area_weight_KBA", 
+                            "species_area_scheme_1_KBA", "species_area_scheme_2_KBA", 
+                            "species_area_scheme_3_KBA", "species_area_scheme_4_KBA",
+                            "species_area_random")
 
-species_only_groups <- c("1" = "Invertebrate", "2" = "Fish", "3" = "Plant", 
-                         "4" = "Reptile",
-                         "6" = "Mammal", "7" = "Amphibian", "8" = "Fungi", 
-                         "9" = "Bird")
+species_fig_list <- list()
+species_rank_stack <- rast()
 
-species_area_groups <- c("1" = "Invertebrate", "2" = "Fish", "3" = "Plant", 
-                         "4" = "Reptile",
-                         "6" = "Mammal", "7" = "Amphibian", "8" = "Fungi", 
-                         "9" = "Bird",
-                         "10" = "Community", "11" = "Ecosystem", 
-                         "12" = "Ramsar", "13" = "Upstream")
-
-#species + weights
-perf_1 <- performance_plot(CAZ_wgt_var, species_only_groups, "Set2")
-
-#species + weights + KBA
-perf_2 <- performance_plot(CAZ_wgt_KBA_inv_var, species_only_groups, "Set2")
+for(sp in species_scenarios){
   
-#species + area + weights
-perf_3 <- performance_plot(CAZ_area_wgt_var, species_area_groups, "Set3")
+  ind <- which(species_scenarios == sp)
+  r <- rast(here(species_path, sp, "output", "rankmap.tif"))
+  names(r) <- sp
+  species_rank_stack <- c(species_rank_stack, r)
+  species_fig_list[[ind]] <- rank_plot(r) +
+
+    ggtitle(sp) +
+
+    theme(plot.title = element_text(face = "italic", size = 10, hjust = 0.5))
+  # ggsave(plot = species_fig_list[[ind]],
+  #        filename = paste0(sp, "_rankmap.pdf"),
+  #        device = cairo_pdf,
+  #        dpi = 300,
+  #        path = here(dirname(here()), "figures"))
   
-#species + area + weights + KBA
-perf_4 <- performance_plot(CAZ_area_wgt_KBA_inv_var, species_area_groups, "Set3")
+}
 
+ggpubr::ggarrange(plotlist = species_fig_list[-13], nrow = 4, ncol = 3, common.legend = T)
 
-ggarrange(perf_1, perf_2, common.legend = T, ncol = 2, nrow = 1, labels = c("A","B"))
-ggarrange(perf_3, perf_4, common.legend = T, ncol = 2, nrow = 1, labels = c("A","B"))
+species_area_fig_list <- list()
+species_area_rank_stack <- rast()
 
-
-########################################################################
-##Rank rasters
-#species only - no weights
-CAZ_var_ras <- rank_raster(CAZ_var)
-RAN_var_ras <- rank_raster(RAN_var)
-
-#species only - with weights
-CAZ_wgt_var_ras <- rank_raster(CAZ_wgt_var)
-#RAN_wgt_var_ras <- rank_raster(RAN_wgt_var)
-
-#species only - with weights and KBA mask
-#CAZ_wgt_KBA_var_ras <- rank_raster(CAZ_wgt_KBA_var)
-
-
-#species only - with weights and inverted KBA mask
-CAZ_wgt_KBA_inv_var_ras <- rank_raster(CAZ_wgt_KBA_inv_var)
-
-#species and areas - no weights
-CAZ_area_var_ras <- rank_raster(CAZ_area_var)
-RAN_area_var_ras <- rank_raster(RAN_area_var)
-
-#species and areas - with weights
-CAZ_area_wgt_var_ras <- rank_raster(CAZ_area_wgt_var)
-#RAN_area_wgt_var_ras <- rank_raster(RAN_area_wgt_var)
-
-#species and areas - with weights and KBA mask
-#CAZ_area_wgt_KBA_var_ras <- rank_raster(CAZ_area_wgt_KBA_var)
-
-#species and areas - with weights and inverted KBA mask
-CAZ_area_wgt_KBA_inv_var_ras <- rank_raster(CAZ_area_wgt_KBA_inv_var)
-
-CAZ_stack <- stack(CAZ_var_ras,
-                   CAZ_wgt_var_ras,
-                   CAZ_wgt_KBA_inv_var_ras,
-                   RAN_var_ras,
-                   CAZ_area_var_ras,
-                   CAZ_area_wgt_var_ras,
-                   CAZ_area_wgt_KBA_inv_var_ras,
-                   RAN_area_var_ras)
-pairs(CAZ_stack, method = "kendall")
-
-source("R/13_jaccard_similarities.R")
-
-
-######################################################################
-##Plotting rank rasters
-leg <- zlegend("spectral")
-
-p1 <- rank_plot(CAZ_var_ras)
-p2 <- rank_plot(CAZ_wgt_var_ras)
-p3 <- rank_plot(CAZ_wgt_KBA_inv_var_ras)
-p4 <- rank_plot(CAZ_area_var_ras)
-p5 <- rank_plot(CAZ_area_wgt_var_ras)
-p6 <- rank_plot(CAZ_area_wgt_KBA_inv_var_ras)
-
-p11 <- rank_plot(RAN_var_ras)
-p12 <- rank_plot(RAN_wgt_var_ras)
-p13 <- rank_plot(RAN_area_var_ras)
-p14 <- rank_plot(RAN_area_wgt_var_ras)
-
-
-#Comparing effects of feature weighting  - rank differences
-#Red means weighted gave higher priority over unweighted, 
-#blue means it gave lower priority
-p8 <- rank_diff(CAZ_wgt_var_ras,CAZ_var_ras)
-p9 <- rank_diff(CAZ_area_wgt_var_ras,CAZ_area_var_ras)
+for(sp in species_area_scenarios){
   
-p7 <- ggarrange(p1,p4,p2,p5, 
-                common.legend = T, 
-                ncol = 2, nrow = 2,
-                labels = c("A","C","B","D"))
+  ind <- which(species_area_scenarios == sp)
+  r <- rast(here(species_area_path, sp, "output", "rankmap.tif"))
+  names(r) <- sp
+  species_area_rank_stack <- c(species_area_rank_stack, r)
+  species_area_fig_list[[ind]] <- rank_plot(r) +
 
-p10 <- ggarrange(p8,p9, 
-                common.legend = T, 
-                ncol = 2, nrow = 2,
-                labels = c("E","F"))
+    ggtitle(sp) +
 
-ggarrange(p7,p10, 
-          common.legend = F, 
-          ncol = 1, nrow = 2)
+    theme(plot.title = element_text(face = "italic", size = 10, hjust = 0.5))
+  # ggsave(plot = species_area_fig_list[[ind]],
+  #        filename = paste0(sp, "_rankmap.pdf"),
+  #        device = cairo_pdf,
+  #        dpi = 300,
+  #        path = here(dirname(here()), "figures")) 
+  
+}
+
+ggpubr::ggarrange(plotlist = species_area_fig_list[-13], nrow = 4, ncol = 3, common.legend = T)
+
+full_rank_stack <- c(species_rank_stack, species_area_rank_stack)
+rm(species_rank_stack, species_area_rank_stack, r)
+writeRaster(full_rank_stack, here(dirname(here()), "data", "zonation", "full_rank_stack.tif"))
+full_rank_stack <- rast(here(dirname(here()), "data", "zonation", "full_rank_stack.tif"))
+
+## Correlations
+priority_cors <- ras_cor(full_rank_stack)
+colnames(priority_cors) <- names(full_rank_stack)
+rownames(priority_cors) <- names(full_rank_stack)
+write.csv(priority_cors, file = here(dirname(here()), "data", "priority_cors.csv"))
+
+priority_cors <- read.csv(here(dirname(here()), "data", "priority_cors.csv"), row.names = 1)
+
+corrplot::corrplot(round(as.matrix(priority_cors),2), 
+                   type = "lower", 
+                   method = "color",
+                   cl.pos = "n", 
+                   tl.pos = "l",
+                   col=colorRampPalette(brewer.pal(n=9, name="Blues"))(15),
+                   tl.srt = 0, 
+                   tl.col = "black", 
+                   tl.cex = 0.8, 
+                   number.cex = 0.8,
+                   addCoef.col = "white",
+                   mar = c(0,0,0,0))
+
+## Jaccard similarities
+source("R/14_jaccard_similarities.R")
+
+## Structural similarity among sensitive sites
+# High similarity between KBA and non-KBA equivalents because only highest sensitive fraction differs
+ssims <- ssim(full_rank_stack)
+
+for(i in 1:length(ssims)){
+  
+  write.csv(ssims[[i]], file = here(dirname(here()), "data", "ssim", 
+                                    paste0(names(ssims)[i], ".csv")))
+  
+}
 ################################################################################
-#Susceptible sites
-#external hard drive
-#regional_model_path <- "G:/Chapter_3/SpatialData/IAS_distributions/IAS_regional" 
-regional_model_path <- here(dirname(here()), "IAS_regional")
-source("R/15_susceptible_site_prep.R")
+## SSIM maps
+r <- rast(here(dirname(here()), 
+            "data", "ssim", "species_area_weight-species_area_weight_KBA.tif"))
 
-#Overlap among all IAS (turn into function?)
-ias_sum <- sum(PM_bin2, VG_bin2, DG_bin2, TB_bin2, PL_bin2, AM_bin2, MF_bin2, 
-               MD_bin2, LH_bin2,
-               VV_bin2, BT_bin2, HA_bin2)
-ias_sum_one <- ias_sum
-ias_sum_one[ias_sum_one != 1] <- NA
+r1 <- st_as_stars(r[[2]]) %>%
+    st_as_sf()
 
-####################### Priority sites - species + weights #####################
+r1v <- st_drop_geometry(r1)
+  
+gsim <- ggplot() +
+      geom_sf(data = r1, 
+            aes(fill=r1v[,1]), 
+            color=NA, 
+            show.legend = T) +
+      colorspace::scale_fill_continuous_sequential("ag_sunset",
+                                                    name = "SIM") +
+      theme_bw() +
+      theme(axis.line = element_blank(),
+            panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank(),
+            panel.background = element_blank(),
+            axis.text = element_blank(),
+            panel.border = element_blank(),
+            axis.ticks = element_blank())
+
+r2 <- st_as_stars(r[[3]]) %>%
+  st_as_sf()
+
+r2v <- st_drop_geometry(r2)
+
+gsiv <- ggplot() +
+  geom_sf(data = r2, 
+          aes(fill=r2v[,1]), 
+          color=NA, 
+          show.legend = T) +
+  colorspace::scale_fill_continuous_sequential("batlow",
+                                               name = "SIV") +
+  theme_bw() +
+  theme(axis.line = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        axis.text = element_blank(),
+        panel.border = element_blank(),
+        axis.ticks = element_blank())
+
+r3 <- st_as_stars(r[[4]]) %>%
+  st_as_sf()
+
+r3v <- st_drop_geometry(r3)
+
+gsip <- ggplot() +
+  geom_sf(data = r3, 
+          aes(fill=r3v[,1]), 
+          color=NA, 
+          show.legend = T) +
+  colorspace::scale_fill_continuous_diverging("Blue-Red",
+                                               name = "SIP") +
+  theme_bw() +
+  theme(axis.line = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        axis.text = element_blank(),
+        panel.border = element_blank(),
+        axis.ticks = element_blank())
+
+r4 <- st_as_stars(full_rank_stack[[15]] - full_rank_stack[[21]]) %>%
+  st_as_sf()
+
+r4v <- st_drop_geometry(r4)
+
+gdif <- ggplot() +
+  geom_sf(data = r4, 
+          aes(fill=r4v[,1]), 
+          color=NA, 
+          show.legend = T) +
+  colorspace::scale_fill_continuous_diverging("Purple-Green",
+                                              name = "DIFF") +
+  theme_bw() +
+  theme(axis.line = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        axis.text = element_blank(),
+        panel.border = element_blank(),
+        axis.ticks = element_blank())
+  
+
+ggpubr::ggarrange(g1, gdif, gsim, 
+                  g2, gsiv, gsip, 
+                  nrow = 2, ncol = 3, 
+                  common.legend = F,
+                  labels = "AUTO")
+################################################################################
+## SSI heatmaps (average index values)
+ssim_mat <- read.csv(here(dirname(here()), "data", "ssim", "ssim_mat.csv"), row.names = 1)
+ssim_heat(ssim_mat, pal = "RdPu", nm = "SSIM", lines = F) 
+
+sim_mat <- read.csv(here(dirname(here()), "data", "ssim", "sim_mat.csv"), row.names = 1)
+ssim_heat(sim_mat, pal = "GnBu", nm = "SIM", lines = F) 
+
+siv_mat <- read.csv(here(dirname(here()), "data", "ssim", "siv_mat.csv"), row.names = 1)
+ssim_heat(siv_mat, pal = "Reds", nm = "SIV", lines = F) 
+
+sip_mat <- read.csv(here(dirname(here()), "data", "ssim", "sip_mat.csv"), row.names = 1)
+ssim_heat(sip_mat, pal = "YlOrBr", nm = "SIP", lines = F) 
+
+## Create heatmap with SIP on lower tri and jaccard (top 2%) on upper tri
+sip_mmat <- as.matrix(sip_mat)
+colnames(sip_mmat) <- gsub("_", " ", colnames(sip_mmat))
+jac2.5 <- read.csv(file = here(dirname(here()), "data", "jaccard", "jaccard_two.csv"), row.names = 1)
+jac2.5[jac2.5 == "-"] <- NA
+jac2.5 <- apply(jac2.5, 2, as.numeric)
+rownames(jac2.5) <- colnames(jac2.5)
+rownames(jac2.5) <- gsub("_", " ", rownames(jac2.5))
+
+col1 <- circlize::colorRamp2(c(0, 0.5, 0.99,1), 
+                             c("#ef476f", "#ffd166", "#26547c","black"))
+col2 <- circlize::colorRamp2(c(0, 0.5, 0.99,1), 
+                             c("#C04000", "white","#008080","black"))
+
+ht1 <- Heatmap(sip_mmat, 
+               name = "SIP",
+               rect_gp = gpar(type = "none"), 
+               col = col1,
+               cluster_rows = FALSE, 
+               cluster_columns = FALSE,
+               show_row_names = T,
+               column_names_gp = gpar(fontsize = 10),
+               cell_fun = function(j, i, x, y, w, h, fill) {
+                 if(i >= j) {
+                   grid.rect(x, y, w, h, gp = gpar(fill = fill, col = fill))
+                   grid.text(sprintf("%.2f", sip_mmat[i, j]), x, y, gp = gpar(fontsize = 10))
+                 }
+               })
+
+ht2 <- Heatmap(jac2.5, 
+               name = "Jaccard",
+               rect_gp = gpar(type = "none"), 
+               col = col2,
+               cluster_rows = FALSE, 
+               cluster_columns = FALSE,
+               show_column_names = F,
+               show_row_names = T,
+               row_names_side = "right",
+               row_names_gp = gpar(fontsize = 10),
+               cell_fun = function(j, i, x, y, w, h, fill) {
+                 if(i <= j) {
+                   grid.rect(x, y, w, h, gp = gpar(fill = fill, col = fill))
+                   grid.text(sprintf("%.2f", jac2.5[i, j]), x, y, gp = gpar(fontsize = 10))
+                 }
+               })
+
+draw(ht1 + ht2, ht_gap = unit(-230, "mm"))
+
+
+################################ Susceptible sites #############################
+regional_model_path <- here(dirname(here()), "data", "IAS_distributions", "IAS_regional")
+
+spp_list <- c("Apis mellifera",  "Monomorium floricola",
+              "Monomorium destructor","Linepithema humile", "Vespula vulgaris",
+              "Bombus terrestris", "Heteronychus arator",
+              "Digitonthophagus gazella", "Pheidole megacephala",
+              "Vespula germanica","Tetramorium bicarinatum",
+              "Paratrechina longicornis")
+
+## Create IAS distribution plots
+ias_list <- list()
+
+for(sp in spp_list){
+
+  ind <- which(spp_list == sp)
+
+  ias_list[[ind]] <- IAS_plot(sp) +
+
+    ggtitle(sp) +
+
+    theme(plot.title = element_text(face = "italic", size = 12, hjust = 0.5))
+
+  spn <- gsub(" ", "_", sp)
+
+  ggsave(plot = ias_list[[ind]],
+         filename = paste0(spn, "_dist.pdf"),
+         device = cairo_pdf,
+         dpi = 300,
+         path = here(dirname(here()), "figures"))
+
+}
+
+ggpubr::ggarrange(plotlist = ias_list, nrow = 4, ncol = 3, common.legend = T)
+
+## Prepare for priority sites results
+susceptible_site_prep <- lapply(spp_list[1:length(spp_list)], function(i){
+  
+  susc_site_prep(i, full_rank_stack)
+  
+})
+
+## Overlap among all IAS
+ias_stack <- rast()
+
+for(i in 1:length(susceptible_site_prep)){
+  
+  r <- susceptible_site_prep[[i]][[2]]
+  ias_stack <- c(ias_stack, r)
+  
+}
+
+ias_rich <- sum(ias_stack)
+ias_rich_one <- ias_rich
+ias_rich_one[ias_rich_one != 1] <- NA
+
+ias_sum_sp <- resample(ias_rich, full_rank_stack[[2]], method = "near")
+ias_sum_sp_ar <- resample(ias_rich, full_rank_stack[[15]], method = "near")
+
+ras_sf <- st_as_stars(ias_sum_sp_ar) %>%
+  st_as_sf()
+
+fill_ras_sf <- st_drop_geometry(ras_sf)
+
+cl <- colorRampPalette(c("#e69b99","#2c6184"))
+
+ias_map <- ggplot()+
+  geom_sf(data = ras_sf, 
+          aes(fill=fill_ras_sf[,1]), 
+          color=NA, 
+          show.legend = T) +
+  scale_fill_gradientn(colours = cl(12),
+                       name = "Alien\nrichness",
+                       breaks = seq(0,11)) +
+  theme_bw() +
+  theme(axis.line = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        axis.text = element_blank(),
+        panel.border = element_blank(),
+        axis.ticks = element_blank())
+
+ggsave(plot = ias_map,
+       filename = "ias_map.pdf",
+       device = cairo_pdf,
+       dpi = 300,
+       path = here(dirname(here()), "figures"))
+
+non.na <- as.numeric(global(ias_sum_sp, fun = "notNA")) #number of non NA cells
+no.cells <- c()
+perc.total <- c()
+
+for(i in 0:11){
+  
+  c <- length(which(values(ias_sum_sp == i)))
+  no.cells <- c(no.cells, c)
+  p <- (c/non.na)*100
+  perc.total <- c(perc.total, p)
+  
+}
+
+richness <- c("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11")
+totaltable <- data.frame("Richness" = richness, 
+                         "Number of cells" = no.cells, 
+                         "Percent total" = round(perc.total,2))
+
+total_ft <- autofit(flextable(totaltable)) %>%
+  bg(j = "Richness", bg = colorRampPalette(c("#e69b99","#2c6184"))(12), part = "body")
+
+total_ft2 <- labelizor(x = total_ft,
+                       part = "header",
+                       labels = c("Number.of.cells" = "No. cells",
+                                  "Percent.total" = "Total (%)"))
+
+save_as_docx(total_ft2, path = here(dirname(here()), "total_ft2.docx"))
+save_as_image(total_ft2, path = here(dirname(here()), "total_ft2.svg"), res = 500)
+
+## IAS SDM evaluations
+eval_scores <- read.table(here(regional_model_path, 
+                               "Table_IAS_regional_accuracy.txt"), 
+                          header = T)
+
+eval_ft <- autofit(flextable(eval_scores))
+
+eval_ft2 <- labelizor(x = eval_ft,
+                       part = "header",
+                       labels = c("Cut.off.binary" = "Binary cutoff"))
+
+save_as_docx(eval_ft2, path = here(dirname(here()), "eval_scores.docx"))
+save_as_image(eval_ft2, path = here(dirname(here()), "eval_scores.svg"), res = 500)
+
+############################### Priority sites  ################################
+## Priority maps
+pri_maps <- list()
+
+for(i in seq_along(susceptible_site_prep)){
+  
+  sp <- spp_list[[i]]
+  
+  pri_maps[[i]] <- priority_map(full_rank_stack[["species_area_weight"]], 
+                                susceptible_site_prep[[i]][[2]]) +
+    
+    ggtitle(sp) +
+    
+    theme(plot.title = element_text(face = "italic", size = 12, hjust = 0.5))
+  
+}
+
+ggpubr::ggarrange(plotlist = pri_maps, nrow = 4, ncol = 3, common.legend = T)
+
+
 species_list <- list()
 vals_list <- list()
 
@@ -187,66 +460,6 @@ for(i in 1:length(susceptible_site_prep)){
 names(species_list) <- spp_list #spp_list is from susceptible_site_prep.R
 
 
-# PM_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, PM_spec_bin)
-# PM_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, PM_KBA_bin)
-# PM_RAN_vals <- get_msk_vals(RAN_var_ras, PM_RAN_bin)
-# 
-# VG_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, VG_spec_bin)
-# VG_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, VG_KBA_bin)
-# VG_RAN_vals <- get_msk_vals(RAN_var_ras, VG_RAN_bin)
-# 
-# DG_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, DG_spec_bin)
-# DG_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, DG_KBA_bin)
-# DG_RAN_vals <- get_msk_vals(RAN_var_ras, DG_RAN_bin)
-# 
-# TB_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, TB_spec_bin)
-# TB_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, TB_KBA_bin)
-# TB_RAN_vals <- get_msk_vals(RAN_var_ras, TB_RAN_bin)
-# 
-# PL_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, PL_spec_bin)
-# PL_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, PL_KBA_bin)
-# PL_RAN_vals <- get_msk_vals(RAN_var_ras, PL_RAN_bin)
-# 
-# AM_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, AM_spec_bin)
-# AM_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, AM_KBA_bin)
-# AM_RAN_vals <- get_msk_vals(RAN_var_ras, AM_RAN_bin)
-# 
-# MF_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, MF_spec_bin)
-# MF_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, MF_KBA_bin)
-# MF_RAN_vals <- get_msk_vals(RAN_var_ras, MF_RAN_bin)
-# 
-# MD_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, MD_spec_bin)
-# MD_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, MD_KBA_bin)
-# MD_RAN_vals <- get_msk_vals(RAN_var_ras, MD_RAN_bin)
-# 
-# LH_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, LH_spec_bin)
-# LH_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, LH_KBA_bin)
-# LH_RAN_vals <- get_msk_vals(RAN_var_ras, LH_RAN_bin)
-# 
-# VV_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, VV_spec_bin)
-# VV_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, VV_KBA_bin)
-# VV_RAN_vals <- get_msk_vals(RAN_var_ras, VV_RAN_bin)
-# 
-# # MR_vals <- get_msk_vals(CAZ_wgt_var_ras, MR_bin)
-# # MR_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, MR_bin_KBA)
-# # MR_RAN_vals <- get_msk_vals(RAN_var_ras, MR_bin_RAN)
-# 
-# BT_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, BT_spec_bin)
-# BT_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, BT_KBA_bin)
-# BT_RAN_vals <- get_msk_vals(RAN_var_ras, BT_RAN_bin)
-# 
-# HA_spec_vals <- get_msk_vals(CAZ_wgt_var_ras, HA_spec_bin)
-# HA_KBA_vals <- get_msk_vals(CAZ_wgt_KBA_inv_var_ras, HA_KBA_bin)
-# HA_RAN_vals <- get_msk_vals(RAN_var_ras, HA_RAN_bin)
-
-#Get cell values for Kolmogorov-smirnoff tests
-#Could use violin plots to make visual comparisons.
-#x axis = sensitivities, y = ias insects; 3 violins per sp?
-#maybe need two plots; a species one and a species + areas one.
-#simply use geom_violin() instead of geom_boxplot()
-#could also lump all together instead of separate species to see combined results
-
-#AM_vals <- c(species_list[[1]][[2]], species_list[[1]][[8]])
 vals <- c()
 nms <- c()
 type <- c()
@@ -274,338 +487,195 @@ for(i in 1:length(species_list)){
 }
 
 df <- data.frame(nms, code, type, vals)
+write.csv(df, file = here(dirname(here()), "data", "priority_site_vals.csv"))
 
-# #Example
-# PM_vals <- c(PM_spec_vals, PM_KBA_vals)
-# VG_vals <- c(VG_spec_vals, VG_KBA_vals)
-# DG_vals <- c(DG_spec_vals, DG_KBA_vals)
-# TB_vals <- c(TB_spec_vals, TB_KBA_vals)
-# PL_vals <- c(PL_spec_vals, PL_KBA_vals)
-# AM_vals <- c(AM_spec_vals, AM_KBA_vals)
-# MF_vals <- c(MF_spec_vals, MF_KBA_vals)
-# MD_vals <- c(MD_spec_vals, MD_KBA_vals)
-# LH_vals <- c(LH_spec_vals, LH_KBA_vals)
-# VV_vals <- c(VV_spec_vals, VV_KBA_vals)
-# BT_vals <- c(BT_spec_vals, BT_KBA_vals)
-# HA_vals <- c(HA_spec_vals, HA_KBA_vals)
-# vals <- c(PM_vals, VG_vals,DG_vals,TB_vals,PL_vals,AM_vals,MF_vals,MD_vals,
-#           LH_vals,VV_vals,BT_vals, HA_vals)
-# nms <- c(rep("Pheidole megacephala", length(PM_vals)),
-#          rep("Vespula germanica", length(VG_vals)),
-#          rep("Digitonthophagus gazella", length(DG_vals)),
-#          rep("Tetramorium bicarinatum", length(TB_vals)),
-#          rep("Paratrechina longicornis", length(PL_vals)),
-#          rep("Apis mellifera", length(AM_vals)),
-#          rep("Monomorium floricola", length(MF_vals)),
-#          rep("Monomorium destructor", length(MD_vals)),
-#          rep("Linepithema humile", length(LH_vals)),
-#          rep("Vespula vulgaris", length(VV_vals)),
-#          rep("Bombus terrestris", length(BT_vals)),
-#          rep("Heteronychus arator", length(HA_vals)))
-# type <- c(rep("species", length(PM_spec_vals)), 
-#           rep("KBA", length(PM_KBA_vals)),
-#           rep("species", length(VG_spec_vals)), 
-#           rep("KBA", length(VG_KBA_vals)),
-#           rep("species", length(DG_spec_vals)), 
-#           rep("KBA", length(DG_KBA_vals)),
-#           rep("species", length(TB_spec_vals)), 
-#           rep("KBA", length(TB_KBA_vals)),
-#           rep("species", length(PL_spec_vals)), 
-#           rep("KBA", length(PL_KBA_vals)),
-#           rep("species", length(AM_spec_vals)), 
-#           rep("KBA", length(AM_KBA_vals)),
-#           rep("species", length(MF_spec_vals)), 
-#           rep("KBA", length(MF_KBA_vals)),
-#           rep("species", length(MD_spec_vals)), 
-#           rep("KBA", length(MD_KBA_vals)),
-#           rep("species", length(LH_spec_vals)), 
-#           rep("KBA", length(LH_KBA_vals)),
-#           rep("species", length(VV_spec_vals)), 
-#           rep("KBA", length(VV_KBA_vals)),
-#           rep("species", length(BT_spec_vals)), 
-#           rep("KBA", length(BT_KBA_vals)),
-#           rep("species", length(HA_spec_vals)), 
-#           rep("KBA", length(HA_KBA_vals)))
-# meds <- c(rep(median(PM_spec_vals), length(PM_spec_vals)), 
-#           rep(median(PM_KBA_vals), length(PM_KBA_vals)),
-#           rep(median(VG_spec_vals), length(VG_spec_vals)), 
-#           rep(median(VG_KBA_vals), length(VG_KBA_vals)),
-#           rep(median(DG_spec_vals), length(DG_spec_vals)), 
-#           rep(median(DG_KBA_vals), length(DG_KBA_vals)),
-#           rep(median(TB_spec_vals), length(TB_spec_vals)), 
-#           rep(median(TB_KBA_vals), length(TB_KBA_vals)),
-#           rep(median(PL_spec_vals), length(PL_spec_vals)), 
-#           rep(median(PL_KBA_vals), length(PL_KBA_vals)),
-#           rep(median(AM_spec_vals), length(AM_spec_vals)), 
-#           rep(median(AM_KBA_vals), length(AM_KBA_vals)),
-#           rep(median(MF_spec_vals), length(MF_spec_vals)), 
-#           rep(median(MF_KBA_vals), length(MF_KBA_vals)),
-#           rep(median(MD_spec_vals), length(MD_spec_vals)), 
-#           rep(median(MD_KBA_vals), length(MD_KBA_vals)),
-#           rep(median(LH_spec_vals), length(LH_spec_vals)), 
-#           rep(median(LH_KBA_vals), length(LH_KBA_vals)),
-#           rep(median(VV_spec_vals), length(VV_spec_vals)), 
-#           rep(median(VV_KBA_vals), length(VV_KBA_vals)),
-#           rep(median(BT_spec_vals), length(BT_spec_vals)), 
-#           rep(median(BT_KBA_vals), length(BT_KBA_vals)),
-#           rep(median(HA_spec_vals), length(HA_spec_vals)), 
-#           rep(median(HA_KBA_vals), length(HA_KBA_vals)))
-# df <- data.frame(nms, type, vals, meds)
+ps_df <- read.csv(here(dirname(here()), "data", "priority_site_vals.csv"))
 
-df_1 <- df %>% filter(nms == "Pheidole megacephala" |
-                        nms == "Vespula germanica" |
-                        nms == "Digitonthophagus gazella" |
-                        nms == "Paratrechina longicornis" |
-                        nms == "Tetramorium bicarinatum" |
-                        nms == "Apis mellifera")
+# Want to loop over species and scenarios,comparing KBA and non-KBA scenarios
+# for each species. First species, then scenarios
+# Separate out KBA ones
+scenarios <- c(species_scenarios, species_area_scenarios)
+KBA <- scenarios[str_detect(scenarios, "KBA")]
+nonKBA <- scenarios[str_detect(scenarios, "KBA", negate = T)]
+nonKBA <- nonKBA[str_detect(nonKBA, "random", negate = T)]
+scenarios <- c(nonKBA, KBA)
 
-df_2 <- df %>% filter(nms == "Monomorium floricola" |
-                        nms == "Monomorium destructor" |
-                        nms == "Linepithema humile" |
-                        nms == "Vespula vulgaris" |
-                        nms == "Bombus terrestris" |
-                        nms == "Heteronychus arator")
+sp <- c()
+wcs <- c()
+wcp <- c()
+ty1 <- c()
+ty2 <- c()
 
-val_plot_1 <- ggplot(df_1, aes(x = vals, y = nms, fill = type)) +
-  geom_violin(draw_quantiles = 0.5, 
-            adjust = 0.2, #changes the smoothness; lower is more faithful to the data
-            scale = "width") +
+for(i in spp_list){
+  
+  df_min <- ps_df %>% filter(nms == i)
+  
+  for(j in seq_along(nonKBA)){
+    
+    df <- df_min %>% filter(type == nonKBA[j] | type == KBA[j])
+    
+    v1 <- df %>% filter(type == nonKBA[j]) %>% pull(vals)
+    v2 <- df %>% filter(type == KBA[j]) %>% pull(vals)
+    
+    wc <- wilcox.test(v1, v2, alternative = "two.sided")
+    wcs <- c(wcs, wc$statistic)
+    wcp <- c(wcp, wc$p.value)
+    sp <- c(sp, i)
+    ty1 <- c(ty1, nonKBA[j])
+    ty2 <- c(ty2, KBA[j])
+    
+    
+  }
+}
+
+wc_df <- data.frame(sp, ty1, ty2, wcs, wcp)
+write.csv(wc_df, here(dirname(here()), "data", "wilcox_df.csv"))
+
+################################################################################
+## Calculate median site sensitivity for each species X scenario
+
+spec <- c()
+scen <- c()
+medsen <- c()
+
+for(i in spp_list){
+  
+  df_min <- ps_df %>% filter(nms == i) 
+  
+  for(sc in scenarios){
+    
+    vs <- df_min %>% filter(type == sc) %>% pull(vals)
+    spec <- c(spec, i)
+    scen <- c(scen, sc)
+    medsen <- c(medsen, median(vs))
+    
+   }
+}
+
+med_df <- data.frame(spec, scen, medsen)
+write.csv(med_df, here(dirname(here()), "data", "medsen_df.csv"))
+
+bpalette <- c('#c62828','#f44336','#9c27b0','#673ab7','#3f51b5','#2196f3',
+             '#29b6f6','#006064','#009688','#4caf50','#8bc34a','#ffeb3b')
+
+
+med_df <- med_df %>% mutate(scen = gsub("_", " ", scen))
+
+ggplot(med_df, aes(x = spec, y = medsen, fill = spec)) +
+  
+  geom_boxplot() +
+  
+  scale_fill_manual(values = bpalette) +
+  
   theme_bw() +
-  theme(axis.line = element_line(colour = "black"),
+  
+  theme(axis.text = element_text(size = 10),
+        axis.text.x = element_text(angle = 45, vjust = 0.5, hjust = 0.5),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
         panel.background = element_blank(),
-        axis.text = element_text(size = 12), 
-        axis.title.x = element_text(size = 14),
-        axis.title.y = element_blank(),
-        strip.text.x = element_text(size = 12),
-        axis.text.y = element_text(face = "italic"),
-        legend.position = "top") +
-  scale_fill_manual(values = c("#66B2FF", "#FFB266"),
-                    labels = c("KBA mask", "species + weight"),
-                    name = "Scenarios") +
-  scale_y_discrete(limits = rev)
+        axis.line.x = element_line(),
+        axis.line.y = element_line(), 
+        legend.position = "none") +
+  
+  ylab("Median value of site sensitivity") +
+  
+  xlab("Introduced species")
 
-val_plot_2 <- ggplot(df_2, aes(x = vals, y = nms, fill = type)) +
-  geom_violin(draw_quantiles = 0.5, 
-              adjust = 0.2, #changes the smoothness; lower is more faithful to the data
-              scale = "width") +
+## Compare scenarios
+ggplot(med_df, aes(x = scen, y = medsen, fill = scen)) +
+  
+  geom_boxplot() +
+  
+  #scale_fill_manual(values = bpalette) +
+  
   theme_bw() +
-  theme(axis.line = element_line(colour = "black"),
+  
+  theme(axis.text = element_text(size = 10),
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
         panel.background = element_blank(),
-        axis.text = element_text(size = 12), 
-        axis.title.x = element_text(size = 14),
-        axis.title.y = element_blank(),
-        strip.text.x = element_text(size = 12),
-        axis.text.y = element_text(face = "italic"),
-        legend.position = "top") +
-  scale_fill_manual(values = c("#66B2FF", "#FFB266"),
-                    labels = c("KBA mask", "species + weight"),
-                    name = "Scenarios") +
-  scale_y_discrete(limits = rev)
+        axis.line.x = element_line(),
+        axis.line.y = element_line(), 
+        legend.position = "none") +
+  
+  ylab("Median value of site sensitivity") +
+  
+  xlab("Sensitive site identification scenario")
 
-ggarrange(val_plot_1, val_plot_2, ncol = 1, nrow = 2, common.legend = T)
+################################################################################
+for(i in seq_along(nonKBA)){
+  
+  sp <- gsub("_", " ", nonKBA[i])
+  
+  scen_one <- ps_df %>% filter(type == nonKBA[i] | type == KBA[i])
+  
+  g <- ggplot(scen_one, aes(x = vals, y = reorder(nms, desc(nms)), fill = type, height = after_stat(density))) +
+    ggridges::geom_density_ridges(stat = "density", alpha = 0.7, scale = 1) +
+    theme_bw() +
+    theme(axis.text = element_text(size = 10),
+          axis.text.y = element_text(face = "italic"),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.background = element_blank(),
+          axis.line.x = element_line(),
+          axis.line.y = element_line(),
+          legend.position = "top") +
+    scale_x_continuous(expand = c(0.01,0.01)) +
+    scale_fill_manual(values = c("#FDDB27FF", "#00B1D2FF"),
+                      labels = c(sp, "KBA mask"),
+                      name = "Scenarios") +
+    ylab("Introduced species") +
+    xlab("Site sensitivity")
+  
+  ggsave(plot = g,
+         filename = paste0(nonKBA[i], "_violin.pdf"),
+         device = cairo_pdf,
+         dpi = 300,
+         width = 8.27,
+         height = 11.69,
+         units = "in",
+         path = here(dirname(here()), "figures"))
+  
+  
+}
 
-
-#Multi-panel figures
-PM_spec_comb <- Figure("Pheidole megacephala", CAZ_wgt_var_ras, PM_spec_bin)
-VG_spec_comb <- Figure("Vespula germanica", CAZ_wgt_var_ras, PM_spec_bin)
-DG_spec_comb <- Figure("Digitonthophagus gazella", CAZ_wgt_var_ras, DG_spec_bin)
-PL_spec_comb <- Figure("Paratrechina longicornis", CAZ_wgt_var_ras, PL_spec_bin)
-TB_spec_comb <- Figure("Tetramorium bicarinatum", CAZ_wgt_var_ras, TB_spec_bin)
-AM_spec_comb <- Figure("Apis mellifera", CAZ_wgt_var_ras, AM_spec_bin)
-MF_spec_comb <- Figure("Monomorium floricola", CAZ_wgt_var_ras, MF_spec_bin)
-MD_spec_comb <- Figure("Monomorium destructor", CAZ_wgt_var_ras, MD_spec_bin)
-LH_spec_comb <- Figure("Linepithema humile", CAZ_wgt_var_ras, LH_spec_bin)
-VV_spec_comb <- Figure("Vespula vulgaris", CAZ_wgt_var_ras, VV_spec_bin)
-#MR_comb <- Figure("Megachile rotundata", CAZ_wgt_var_ras, MR_bin)
-BT_spec_comb <- Figure("Bombus terrestris", CAZ_wgt_var_ras, BT_spec_bin)
-HA_spec_comb <- Figure("Heteronychus arator", CAZ_wgt_var_ras, HA_spec_bin)
-
-# #Kolmogorov-smirnoff tests - KBA vs no KBA
-# #a two-sample test of the null hypothesis that x and y were drawn from the same continuous distribution
-# #presence of ties a result of rounding
-# PM_KBA <- wilcox.test(PM_KBA_vals, PM_spec_vals, alternative = "two.sided")
-# VG_KBA <- wilcox.test(VG_KBA_vals, VG_spec_vals, alternative = "two.sided")
-# DG_KBA <- wilcox.test(DG_KBA_vals, DG_spec_vals, alternative = "two.sided")
-# TB_KBA <- wilcox.test(TB_KBA_vals, TB_spec_vals, alternative = "two.sided")
-# PL_KBA <- wilcox.test(PL_KBA_vals, PL_spec_vals, alternative = "two.sided")
-# AM_KBA <- wilcox.test(AM_KBA_vals, AM_spec_vals, alternative = "two.sided")
-# MF_KBA <- wilcox.test(MF_KBA_vals, MF_spec_vals, alternative = "two.sided")
-# MD_KBA <- wilcox.test(MD_KBA_vals, MD_spec_vals, alternative = "two.sided")
-# LH_KBA <- wilcox.test(LH_KBA_vals, LH_spec_vals, alternative = "two.sided")
-# VV_KBA <- wilcox.test(VV_KBA_vals, VV_spec_vals, alternative = "two.sided")
-# #ks.test(MR_KBA_vals, MR_vals, alternative = "two.sided")
-# BT_KBA <- wilcox.test(BT_KBA_vals, BT_spec_vals, alternative = "two.sided")
-# HA_KBA <- wilcox.test(HA_KBA_vals, HA_spec_vals, alternative = "two.sided")
 
 #Difference between species + weight IAS
-species_weight_df <- df %>%
-  filter(type == "species_weight")
+lapply(c(species_scenarios, species_area_scenarios), FUN = function(i){
+  
+  df_min <- df %>% filter(type == i)
+  
+  g <- ggstatsplot::ggbetweenstats(data = df_min, 
+                              y = vals, 
+                              x = code, 
+                              type = "nonparametric",
+                              pairwise.display = "non-significant",
+                              p.adjust.method = "bonferroni",
+                              package = "awtools",
+                              palette = "bpalette",
+                              xlab = "Insect species",
+                              ylab = "Priority site distribution",
+                              ggtheme = ggplot2::theme_bw())
+  
+  ggsave(plot = g,
+         filename = paste0(i, "_spec_comp.pdf"),
+         device = cairo_pdf,
+         dpi = 300,
+         width = 11.69,
+         height = 8.27,
+         units = "in",
+         path = here(dirname(here()), "figures"))
+  
+  
+})
 
-
-# spec_vals <- c(PM_spec_vals,VG_spec_vals,DG_spec_vals,TB_spec_vals,PL_spec_vals,
-#                AM_spec_vals,MF_spec_vals,MD_spec_vals,LH_spec_vals,VV_spec_vals, 
-#                BT_spec_vals,HA_spec_vals)
-
-# spec_names <- c(rep("Pm", length(PM_spec_vals)),
-#                 rep("Vg", length(VG_spec_vals)),
-#                 rep("Dg", length(DG_spec_vals)),
-#                 rep("Tb", length(TB_spec_vals)),
-#                 rep("Pl", length(PL_spec_vals)),
-#                 rep("Am", length(AM_spec_vals)),
-#                 rep("Mf", length(MF_spec_vals)),
-#                 rep("Md", length(MD_spec_vals)),
-#                 rep("Lh", length(LH_spec_vals)),
-#                 rep("Vv", length(VV_spec_vals)),
-#                 rep("Bt", length(BT_spec_vals)),
-#                 rep("Ha", length(HA_spec_vals)))
-
-# vals <- data.frame(spec_names, spec_vals)
-# kruskal.test(spec_vals ~ spec_names, data = vals)
-# FSA::dunnTest(spec_vals ~ spec_names, data = vals, method = "bonferroni")
-
-ggstatsplot::ggbetweenstats(data = vals, 
-                            y = spec_vals, 
-                            x = spec_names, 
-                            type = "nonparametric",
-                            pairwise.display = "non-significant",
-                            p.adjust.method = "bonferroni",
-                            package = "awtools",
-                            palette = "bpalette",
-                            xlab = "Insect species",
-                            ylab = "Priority site distribution",
-                            ggtheme = ggplot2::theme_bw())
-
-# #Difference between species + weight IAS
-# PM_VG <- ks.test(PM_spec_vals, VG_spec_vals, alternative = "two.sided")
-# PM_DG <- ks.test(PM_spec_vals, DG_spec_vals, alternative = "two.sided")
-# PM_TB <- ks.test(PM_spec_vals, TB_spec_vals, alternative = "two.sided")
-# PM_PL <- ks.test(PM_spec_vals, PL_spec_vals, alternative = "two.sided")
-# PM_AM <- ks.test(PM_spec_vals, AM_spec_vals, alternative = "two.sided")
-# PM_MF <- ks.test(PM_spec_vals, MF_spec_vals, alternative = "two.sided")
-# PM_MD <- ks.test(PM_spec_vals, MD_spec_vals, alternative = "two.sided")
-# PM_LH <- ks.test(PM_spec_vals, LH_spec_vals, alternative = "two.sided")
-# PM_VV <- ks.test(PM_spec_vals, VV_spec_vals, alternative = "two.sided")
-# #PM_MR <- ks.test(PM_vals, MR_vals, alternative = "two.sided")
-# PM_BT <- ks.test(PM_spec_vals, BT_spec_vals, alternative = "two.sided")
-# PM_HA <- ks.test(PM_spec_vals, HA_spec_vals, alternative = "two.sided")
-# 
-# VG_DG <- ks.test(VG_spec_vals, DG_spec_vals, alternative = "two.sided")
-# VG_TB <- ks.test(VG_spec_vals, TB_spec_vals, alternative = "two.sided")
-# VG_PL <- ks.test(VG_spec_vals, PL_spec_vals, alternative = "two.sided")
-# VG_AM <- ks.test(VG_spec_vals, AM_spec_vals, alternative = "two.sided")
-# VG_MF <- ks.test(VG_spec_vals, MF_spec_vals, alternative = "two.sided")
-# VG_MD <- ks.test(VG_spec_vals, MD_spec_vals, alternative = "two.sided")
-# VG_LH <- ks.test(VG_spec_vals, LH_spec_vals, alternative = "two.sided")
-# VG_VV <- ks.test(VG_spec_vals, VV_spec_vals, alternative = "two.sided")
-# #VG_MR <- ks.test(VG_vals, MR_vals, alternative = "two.sided")
-# VG_BT <- ks.test(VG_spec_vals, BT_spec_vals, alternative = "two.sided")
-# VG_HA <- ks.test(VG_spec_vals, HA_spec_vals, alternative = "two.sided")
-# 
-# DG_TB <- ks.test(DG_spec_vals, TB_spec_vals, alternative = "two.sided")
-# DG_PL <- ks.test(DG_spec_vals, PL_spec_vals, alternative = "two.sided")
-# DG_AM <- ks.test(DG_spec_vals, AM_spec_vals, alternative = "two.sided")
-# DG_MF <- ks.test(DG_spec_vals, MF_spec_vals, alternative = "two.sided")
-# DG_MD <- ks.test(DG_spec_vals, MD_spec_vals, alternative = "two.sided")
-# DG_LH <- ks.test(DG_spec_vals, LH_spec_vals, alternative = "two.sided")
-# DG_VV <- ks.test(DG_spec_vals, VV_spec_vals, alternative = "two.sided")
-# #DG_MR <- ks.test(DG_vals, MR_vals, alternative = "two.sided")
-# DG_BT <- ks.test(DG_spec_vals, BT_spec_vals, alternative = "two.sided")
-# DG_HA <- ks.test(DG_spec_vals, HA_spec_vals, alternative = "two.sided")
-# 
-# TB_PL <- ks.test(TB_spec_vals, PL_spec_vals, alternative = "two.sided")
-# TB_AM <- ks.test(TB_spec_vals, AM_spec_vals, alternative = "two.sided")
-# TB_MF <- ks.test(TB_spec_vals, MF_spec_vals, alternative = "two.sided")
-# TB_MD <- ks.test(TB_spec_vals, MD_spec_vals, alternative = "two.sided")
-# TB_LH <- ks.test(TB_spec_vals, LH_spec_vals, alternative = "two.sided")
-# TB_VV <- ks.test(TB_spec_vals, VV_spec_vals, alternative = "two.sided")
-# #TB_MR <- ks.test(TB_vals, MR_vals, alternative = "two.sided")
-# TB_BT <- ks.test(TB_spec_vals, BT_spec_vals, alternative = "two.sided")
-# TB_HA <- ks.test(TB_spec_vals, HA_spec_vals, alternative = "two.sided")
-# 
-# PL_AM <- ks.test(PL_spec_vals, AM_spec_vals, alternative = "two.sided")
-# PL_MF <- ks.test(PL_spec_vals, MF_spec_vals, alternative = "two.sided")
-# PL_MD <- ks.test(PL_spec_vals, MD_spec_vals, alternative = "two.sided")
-# PL_LH <- ks.test(PL_spec_vals, LH_spec_vals, alternative = "two.sided")
-# PL_VV <- ks.test(PL_spec_vals, VV_spec_vals, alternative = "two.sided")
-# #PL_MR <- ks.test(PL_vals, MR_vals, alternative = "two.sided")
-# PL_BT <- ks.test(PL_spec_vals, BT_spec_vals, alternative = "two.sided")
-# PL_HA <- ks.test(PL_spec_vals, HA_spec_vals, alternative = "two.sided")
-# 
-# AM_MF <- ks.test(AM_spec_vals, MF_spec_vals, alternative = "two.sided")
-# AM_MD <- ks.test(AM_spec_vals, MD_spec_vals, alternative = "two.sided")
-# AM_LH <- ks.test(AM_spec_vals, LH_spec_vals, alternative = "two.sided")
-# AM_VV <- ks.test(AM_spec_vals, VV_spec_vals, alternative = "two.sided")
-# #AM_MR <- ks.test(AM_vals, MR_vals, alternative = "two.sided")
-# AM_BT <- ks.test(AM_spec_vals, BT_spec_vals, alternative = "two.sided")
-# AM_HA <- ks.test(AM_spec_vals, HA_spec_vals, alternative = "two.sided")
-# 
-# MF_MD <- ks.test(MF_spec_vals, MD_spec_vals, alternative = "two.sided")
-# MF_LH <- ks.test(MF_spec_vals, LH_spec_vals, alternative = "two.sided")
-# MF_VV <- ks.test(MF_spec_vals, VV_spec_vals, alternative = "two.sided")
-# #MF_MR <- ks.test(MF_vals, MR_vals, alternative = "two.sided")
-# MF_BT <- ks.test(MF_spec_vals, BT_spec_vals, alternative = "two.sided")
-# MF_HA <- ks.test(MF_spec_vals, HA_spec_vals, alternative = "two.sided")
-# 
-# MD_LH <- ks.test(MD_spec_vals, LH_spec_vals, alternative = "two.sided")
-# MD_VV <- ks.test(MD_spec_vals, VV_spec_vals, alternative = "two.sided")
-# #MD_MR <- ks.test(MD_vals, MR_vals, alternative = "two.sided")
-# MD_BT <- ks.test(MD_spec_vals, BT_spec_vals, alternative = "two.sided")
-# MD_HA <- ks.test(MD_spec_vals, HA_spec_vals, alternative = "two.sided")
-# 
-# LH_VV <- ks.test(LH_spec_vals, VV_spec_vals, alternative = "two.sided")
-# #LH_MR <- ks.test(LH_vals, MR_vals, alternative = "two.sided")
-# LH_BT <- ks.test(LH_spec_vals, BT_spec_vals, alternative = "two.sided")
-# LH_HA <- ks.test(LH_spec_vals, HA_spec_vals, alternative = "two.sided")
-# 
-# #VV_MR <- ks.test(VV_vals, MR_vals, alternative = "two.sided")
-# VV_BT <- ks.test(VV_spec_vals, BT_spec_vals, alternative = "two.sided")
-# VV_HA <- ks.test(VV_spec_vals, HA_spec_vals, alternative = "two.sided")
-# 
-# #MR_BT <- ks.test(MR_vals, BT_vals, alternative = "two.sided")
-# #MR_HA <- ks.test(MR_vals, HA_vals, alternative = "two.sided")
-# 
-# BT_HA <- ks.test(BT_spec_vals, HA_spec_vals, alternative = "two.sided")
-# 
-# v <- c(0,PM_VG$statistic,PM_DG$statistic,PM_TB$statistic,PM_PL$statistic,PM_AM$statistic,PM_MF$statistic,PM_MD$statistic,PM_LH$statistic,PM_VV$statistic,PM_BT$statistic,PM_HA$statistic,
-#        0,0,VG_DG$statistic,VG_TB$statistic,VG_PL$statistic,VG_AM$statistic,VG_MF$statistic,VG_MD$statistic,VG_LH$statistic,VG_VV$statistic,VG_BT$statistic,VG_HA$statistic,
-#        0,0,0,DG_TB$statistic,DG_PL$statistic,DG_AM$statistic,DG_MF$statistic,DG_MD$statistic,DG_LH$statistic,DG_VV$statistic,DG_BT$statistic,DG_HA$statistic,
-#        0,0,0,0,TB_PL$statistic,TB_AM$statistic,TB_MF$statistic,TB_MD$statistic,TB_LH$statistic,TB_VV$statistic,TB_BT$statistic,TB_HA$statistic,
-#        0,0,0,0,0,PL_AM$statistic,PL_MF$statistic,PL_MD$statistic,PL_LH$statistic,PL_VV$statistic,PL_BT$statistic,PL_HA$statistic,
-#        0,0,0,0,0,0,AM_MF$statistic,AM_MD$statistic,AM_LH$statistic,AM_VV$statistic,AM_BT$statistic,AM_HA$statistic,
-#        0,0,0,0,0,0,0,MF_MD$statistic,MF_LH$statistic,MF_VV$statistic,MF_BT$statistic,MF_HA$statistic,
-#        0,0,0,0,0,0,0,0,MD_LH$statistic,MD_VV$statistic,MD_BT$statistic,MD_HA$statistic,
-#        0,0,0,0,0,0,0,0,0,LH_VV$statistic,LH_BT$statistic,LH_HA$statistic,
-#        0,0,0,0,0,0,0,0,0,0,VV_BT$statistic,VV_HA$statistic,
-#        0,0,0,0,0,0,0,0,0,0,0,BT_HA$statistic,
-#        0,0,0,0,0,0,0,0,0,0,0,0)
-#        
-# tm <- matrix(v, nrow = 12, ncol = 12)
-# rownames(tm) <- c(":italic(Pheidole~~megacephala)", 
-#                   ":italic(Vespula~~germanica)", 
-#                   ":italic(Digitonthophagus~~gazella)", 
-#                   ":italic(Tetramorium~~bicarinatum)", 
-#                   ":italic(Paratrechina~~longicornis)",
-#                   ":italic(Apis~~mellifera)",
-#                   ":italic(Monomorium~~floricola)",
-#                   ":italic(Monomorium~~destructor)",
-#                   ":italic(Linepithema~~humile)",
-#                   ":italic(Vespula~~vulgaris)",
-#                   ":italic(Bombus~~terrestris)",
-#                   ":italic(Heteronychus~~arator)")
-# colnames(tm) <- c("Pm", "Vg", "Dg", "Tb", "Pl", "Am", "Mf", "Md", "Lh", "Vv", "Bt", "HA")
-# corrplot::corrplot(tm, type = "lower", method = "color", 
-#                    cl.pos = "n", col=brewer.pal(n=10, name="Spectral"), 
-#                    tl.srt = 0, tl.col = "black", tl.cex = 0.8, addCoef.col = "black",
-#                    mar = c(0,0,0,0))
 
 #Proportion difference (KBA vs no KBA vs Random) in number of top sensitive sites
 #Top two (i.e. >= 0.98 sensitivity)
 props <- c(1, 0.98, 0.95, 0.90, 0.75, 0.50, 0.25, 0.00)
-types <- unique(type)
+types <- unique(df$type)
 sp_props <- c()
 sp_name <- c()
 tyt <- c()
@@ -624,679 +694,112 @@ for(ss in spp_list){
   }
 }
 
-props_df <- data.frame(sp_name, tyt, sp_props)
-
-# PM_spec_prop <- multi_props(PM_spec_vals, props)
-# PM_KBA_prop <- multi_props(PM_KBA_vals, props)
-# PM_RAN_prop <- multi_props(PM_RAN_vals, props)
-# 
-# VG_spec_prop <- multi_props(VG_spec_vals, props)
-# VG_KBA_prop <- multi_props(VG_KBA_vals, props)
-# VG_RAN_prop <- multi_props(VG_RAN_vals, props)
-# 
-# DG_spec_prop <- multi_props(DG_spec_vals, props)
-# DG_KBA_prop <- multi_props(DG_KBA_vals, props)
-# DG_RAN_prop <- multi_props(DG_RAN_vals, props)
-# 
-# TB_spec_prop <- multi_props(TB_spec_vals, props)
-# TB_KBA_prop <- multi_props(TB_KBA_vals, props)
-# TB_RAN_prop <- multi_props(TB_RAN_vals, props)
-# 
-# PL_spec_prop <- multi_props(PL_spec_vals, props)
-# PL_KBA_prop <- multi_props(PL_KBA_vals, props)
-# PL_RAN_prop <- multi_props(PL_RAN_vals, props)
-# 
-# AM_spec_prop <- multi_props(AM_spec_vals, props)
-# AM_KBA_prop <- multi_props(AM_KBA_vals, props)
-# AM_RAN_prop <- multi_props(AM_RAN_vals, props)
-# 
-# MF_spec_prop <- multi_props(MF_spec_vals, props)
-# MF_KBA_prop <- multi_props(MF_KBA_vals, props)
-# MF_RAN_prop <- multi_props(MF_RAN_vals, props)
-# 
-# MD_spec_prop <- multi_props(MD_spec_vals, props)
-# MD_KBA_prop <- multi_props(MD_KBA_vals, props)
-# MD_RAN_prop <- multi_props(MD_RAN_vals, props)
-# 
-# LH_spec_prop <- multi_props(LH_spec_vals, props)
-# LH_KBA_prop <- multi_props(LH_KBA_vals, props)
-# LH_RAN_prop <- multi_props(LH_RAN_vals, props)
-# 
-# VV_spec_prop <- multi_props(VV_spec_vals, props)
-# VV_KBA_prop <- multi_props(VV_KBA_vals, props)
-# VV_RAN_prop <- multi_props(VV_RAN_vals, props)
-# 
-# # MR_prop <- multi_props(MR_vals, props)
-# # MR_KBA_prop <- multi_props(MR_KBA_vals, props)
-# # MR_RAN_prop <- multi_props(MR_RAN_vals, props)
-# 
-# BT_spec_prop <- multi_props(BT_spec_vals, props)
-# BT_KBA_prop <- multi_props(BT_KBA_vals, props)
-# BT_RAN_prop <- multi_props(BT_RAN_vals, props)
-# 
-# HA_spec_prop <- multi_props(HA_spec_vals, props)
-# HA_KBA_prop <- multi_props(HA_KBA_vals, props)
-# HA_RAN_prop <- multi_props(HA_RAN_vals, props)
-
-Total <- as.data.frame(rbind(PM_spec_prop,VG_spec_prop,DG_spec_prop,
-                             TB_spec_prop,PL_spec_prop,AM_spec_prop,
-                             MF_spec_prop,MD_spec_prop,LH_spec_prop,
-                             VV_spec_prop,BT_spec_prop,HA_spec_prop,
-           PM_KBA_prop, VG_KBA_prop, DG_KBA_prop, TB_KBA_prop, PL_KBA_prop,
-           AM_KBA_prop,MF_KBA_prop,MD_KBA_prop,LH_KBA_prop,VV_KBA_prop,
-           BT_KBA_prop,HA_KBA_prop,
-           PM_RAN_prop, VG_RAN_prop, DG_RAN_prop, TB_RAN_prop, PL_RAN_prop,
-           AM_RAN_prop,MF_RAN_prop,MD_RAN_prop,LH_RAN_prop,VV_RAN_prop,
-           BT_RAN_prop,HA_RAN_prop))
-Type <- c(rep("Unmasked", 12), rep("Masked", 12), rep("Random", 12))
-Species <- rep(c("P. megacephala", "V. germanica", "D. gazella",
-                 "T. bicarinatum", "P. longicornis", "A. mellifera",
-                 "M. floricola", "M. destructor", "L. humile",
-                 "V. vulgaris", "B. terrestris", "H. arator"), 3)
-Total <- cbind(Species, Type,Total)
-Total <- Total %>%
-  as_tibble() %>%
-  mutate(Species = factor(Species)) %>%
-  mutate(Type = factor(Type)) %>%
-  pivot_longer(cols = !Species & !Type, 
-               names_to = "SiteSensitivity", 
-               values_to = "DistributionCoverage") %>%
-  mutate(SiteSensitivity = as.double(SiteSensitivity))
-#cols <- c("#b409a7","#0db02f", "#5bb4f2","#040200","#9c5200")
-Total_min <- Total %>%
-  dplyr::filter(SiteSensitivity == 1 | SiteSensitivity == 0.98)
-df <- data.frame(xmin = c(1,0.98,0.95,0.9,0.75,0.5,0.25),
-                 xmax = c(0.98,0.95,0.9,0.75,0.5,0.25,0),
-                 ymin = rep(-Inf,7),
-                 ymax = rep(Inf,7))
-p <- ggplot(Total, 
-       aes(x = SiteSensitivity, 
-           y = DistributionCoverage, 
-           colour = Species,
-           group = interaction(Species,Type))) +
-  geom_line(stat = "identity", aes(linetype = Type), size = 0.8) +
-  scale_linetype_manual(values = c("solid", "dotted", "longdash")) +
-  scale_colour_manual(values = pnw_palette("Starfish", 12, "continuous")) + 
-  ylab("Distribution Coverage (%)") +
-  xlab("Site Sensitivity") +
-  theme_bw() +
-  theme(axis.line = element_line(colour = "black"),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        panel.background = element_blank(),
-        axis.text = element_text(size = 12), 
-        axis.title.x = element_text(size = 14),
-        axis.title.y = element_text(size = 14),
-        legend.text = element_text(size = 14),
-        legend.title = element_text(size = 14, face = "bold")) +
-  scale_x_continuous(expand = c(0,0),
-                     limits = c(1,0),
-                     trans = "reverse") +
-  scale_y_continuous(expand = c(0,0))
-p2 <-  p + 
-    geom_rect(data = df, aes(xmin = xmin, xmax = xmax, ymin=ymin, ymax=ymax),
-              fill = rev(leg$colors), alpha = 0.2, inherit.aes = F) +
-    font("legend.text", face = "italic")
-
-#For inset
-ins <- ggplot(Total_min, 
-         aes(x = SiteSensitivity, 
-             y = DistributionCoverage, 
-             colour = Species,
-             group = interaction(Species,Type))) +
-    geom_line(stat = "identity", aes(linetype = Type), size = 0.8) +
-    scale_linetype_manual(values = c("solid", "dotted", "longdash")) +
-    scale_colour_manual(values = pnw_palette("Starfish", 12, "continuous")) +
-    ylab("Distribution Coverage (%)") +
-    xlab("Site Sensitivity") +
-    theme_bw() +
-    theme(axis.line = element_blank(),
-          panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(),
-          panel.background = element_rect(fill = alpha(leg$colors[7],0.2)),
-          axis.text = element_blank(), 
-          axis.title.x = element_blank(),
-          axis.title.y = element_blank(),
-          legend.text = element_blank(),
-          legend.title = element_blank(),
-          legend.position = "none",
-          axis.ticks = element_blank()) +
-    scale_x_continuous(expand = c(0,0),
-                       limits = c(1,0.98),
-                       trans = "reverse") +
-    scale_y_continuous(expand = c(0,0))
-
-################## Priority sites - species + area + weights ###################
-
-#Get cell values for Kolmogorov-smirnoff tests
-PM_area_vals <- get_msk_vals(CAZ_area_wgt_var_ras, PM_area_bin)
-PM_area_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, PM_area_KBA_bin)
-PM_area_RAN_vals <- get_msk_vals(RAN_area_var_ras, PM_area_RAN_bin)
-
-VG_area_vals <- get_msk_vals(CAZ_area_wgt_var_ras, VG_area_bin)
-VG_area_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, VG_area_KBA_bin)
-VG_area_RAN_vals <- get_msk_vals(RAN_area_var_ras, VG_area_RAN_bin)
-
-DG_area_vals <- get_msk_vals(CAZ_area_wgt_var_ras, DG_area_bin)
-DG_area_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, DG_area_KBA_bin)
-DG_area_RAN_vals <- get_msk_vals(RAN_area_var_ras, DG_area_RAN_bin)
-
-TB_area_vals <- get_msk_vals(CAZ_area_wgt_var_ras, TB_area_bin)
-TB_area_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, TB_area_KBA_bin)
-TB_area_RAN_vals <- get_msk_vals(RAN_area_var_ras, TB_area_RAN_bin)
-
-PL_area_vals <- get_msk_vals(CAZ_area_wgt_var_ras, PL_area_bin)
-PL_area_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, PL_area_KBA_bin)
-PL_area_RAN_vals <- get_msk_vals(RAN_area_var_ras, PL_area_RAN_bin)
-
-AM_area_vals <- get_msk_vals(CAZ_area_wgt_var_ras, AM_area_bin)
-AM_area_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, AM_area_KBA_bin)
-AM_area_RAN_vals <- get_msk_vals(RAN_area_var_ras, AM_area_RAN_bin)
-
-MF_area_vals <- get_msk_vals(CAZ_area_wgt_var_ras, MF_area_bin)
-MF_area_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, MF_area_KBA_bin)
-MF_area_RAN_vals <- get_msk_vals(RAN_area_var_ras, MF_area_RAN_bin)
-
-MD_area_vals <- get_msk_vals(CAZ_area_wgt_var_ras, MD_area_bin)
-MD_area_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, MD_area_KBA_bin)
-MD_area_RAN_vals <- get_msk_vals(RAN_area_var_ras, MD_area_RAN_bin)
-
-LH_area_vals <- get_msk_vals(CAZ_area_wgt_var_ras, LH_area_bin)
-LH_area_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, LH_area_KBA_bin)
-LH_area_RAN_vals <- get_msk_vals(RAN_area_var_ras, LH_area_RAN_bin)
-
-VV_area_vals <- get_msk_vals(CAZ_area_wgt_var_ras, VV_area_bin)
-VV_area_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, VV_area_KBA_bin)
-VV_area_RAN_vals <- get_msk_vals(RAN_area_var_ras, VV_area_RAN_bin)
-
-# MR_vals <- get_msk_vals(CAZ_area_wgt_var_ras, MR_bin)
-# MR_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, MR_bin_KBA)
-# MR_RAN_vals <- get_msk_vals(RAN_area_wgt_var_ras, MR_bin_RAN)
-
-BT_area_vals <- get_msk_vals(CAZ_area_wgt_var_ras, BT_area_bin)
-BT_area_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, BT_area_KBA_bin)
-BT_area_RAN_vals <- get_msk_vals(RAN_area_var_ras, BT_area_RAN_bin)
-
-HA_area_vals <- get_msk_vals(CAZ_area_wgt_var_ras, HA_area_bin)
-HA_area_KBA_vals <- get_msk_vals(CAZ_area_wgt_KBA_inv_var_ras, HA_area_KBA_bin)
-HA_area_RAN_vals <- get_msk_vals(RAN_area_var_ras, HA_area_RAN_bin)
-
-#Multi-panel figures
-# PM_area_comb <- Figure("Pheidole megacephala", CAZ_area_wgt_var_ras, PM_area_bin)
-# VG_area_comb <- Figure("Vespula germanica", CAZ_area_wgt_var_ras, VG_area_bin)
-# DG_area_comb <- Figure("Digitonthophagus gazella", CAZ_area_wgt_var_ras, DG_area_bin)
-# PL_area_comb <- Figure("Paratrechina longicornis", CAZ_area_wgt_var_ras, PL_area_bin)
-# TB_area_comb <- Figure("Tetramorium bicarinatum", CAZ_area_wgt_var_ras, TB_area_bin)
-# AM_area_comb <- Figure("Apis mellifera", CAZ_area_wgt_var_ras, AM_area_bin)
-# MF_area_comb <- Figure("Monomorium floricola", CAZ_area_wgt_var_ras, MF_area_bin)
-# MD_area_comb <- Figure("Monomorium destructor", CAZ_area_wgt_var_ras, MD_area_bin)
-# LH_area_comb <- Figure("Linepithema humile", CAZ_area_wgt_var_ras, LH_area_bin)
-# VV_area_comb <- Figure("Vespula vulgaris", CAZ_area_wgt_var_ras, VV_area_bin)
-# #MR_comb <- Figure("Megachile rotundata", CAZ_area_wgt_var_ras, MR_bin)
-# BT_area_comb <- Figure("Bombus terrestris", CAZ_area_wgt_var_ras, BT_area_bin)
-# HA_area_comb <- Figure("Heteronychus arator", CAZ_area_wgt_var_ras, HA_area_bin)
-
-#Kolmogorov-smirnoff tests - KBA vs no KBA
-#a two-sample test of the null hypothesis that x and y were drawn from the same continuous distribution
-#presence of ties a result of rounding
-PM_KBA_area <- wilcox.test(PM_area_KBA_vals, PM_area_vals, alternative = "two.sided")
-VG_KBA_area <- wilcox.test(VG_area_KBA_vals, VG_area_vals, alternative = "two.sided")
-DG_KBA_area <- wilcox.test(DG_area_KBA_vals, DG_area_vals, alternative = "two.sided")
-TB_KBA_area <- wilcox.test(TB_area_KBA_vals, TB_area_vals, alternative = "two.sided")
-PL_KBA_area <- wilcox.test(PL_area_KBA_vals, PL_area_vals, alternative = "two.sided")
-AM_KBA_area <- wilcox.test(AM_area_KBA_vals, AM_area_vals, alternative = "two.sided")
-MF_KBA_area <- wilcox.test(MF_area_KBA_vals, MF_area_vals, alternative = "two.sided")
-MD_KBA_area <- wilcox.test(MD_area_KBA_vals, MD_area_vals, alternative = "two.sided")
-LH_KBA_area <- wilcox.test(LH_area_KBA_vals, LH_area_vals, alternative = "two.sided")
-VV_KBA_area <- wilcox.test(VV_area_KBA_vals, VV_area_vals, alternative = "two.sided")
-#ks.test(MR_KBA_vals, MR_vals, alternative = "two.sided")
-BT_KBA_area <- wilcox.test(BT_area_KBA_vals, BT_area_vals, alternative = "two.sided")
-HA_KBA_area <- wilcox.test(HA_area_KBA_vals, HA_area_vals, alternative = "two.sided")
+sens_props <- rep(props, 312)
+props_df <- data.frame(sp_name, tyt, sp_props, sens_props)
+write.csv(props_df, file = here(dirname(here()), "data", "props_df.csv"))
 
 
-#Difference between species + area + weight IAS
-area_vals <- c(PM_area_vals,VG_area_vals,DG_area_vals,TB_area_vals,PL_area_vals,
-               AM_area_vals,MF_area_vals,MD_area_vals,LH_area_vals,VV_area_vals, 
-               BT_area_vals,HA_area_vals)
-
-spec_names <- c(rep("Pm", length(PM_area_vals)),
-                rep("Vg", length(VG_area_vals)),
-                rep("Dg", length(DG_area_vals)),
-                rep("Tb", length(TB_area_vals)),
-                rep("Pl", length(PL_area_vals)),
-                rep("Am", length(AM_area_vals)),
-                rep("Mf", length(MF_area_vals)),
-                rep("Md", length(MD_area_vals)),
-                rep("Lh", length(LH_area_vals)),
-                rep("Vv", length(VV_area_vals)),
-                rep("Bt", length(BT_area_vals)),
-                rep("Ha", length(HA_area_vals)))
-
-vals <- data.frame(spec_names, area_vals)
-kruskal.test(area_vals ~ spec_names, data = vals)
-FSA::dunnTest(area_vals ~ spec_names, data = vals, method = "bonferroni")
-
-ggstatsplot::ggbetweenstats(data = vals, 
-                            y = area_vals, 
-                            x = spec_names, 
-                            type = "nonparametric",
-                            pairwise.display = "non-significant",
-                            p.adjust.method = "bonferroni",
-                            package = "awtools",
-                            palette = "bpalette",
-                            xlab = "Insect species",
-                            ylab = "Priority site distribution",
-                            ggtheme = ggplot2::theme_bw())
-
-#Difference between species + area + weight IAS
-# PM_VG_area <- ks.test(PM_area_vals, VG_area_vals, alternative = "two.sided")
-# PM_DG_area <- ks.test(PM_area_vals, DG_area_vals, alternative = "two.sided")
-# PM_TB_area <- ks.test(PM_area_vals, TB_area_vals, alternative = "two.sided")
-# PM_PL_area <- ks.test(PM_area_vals, PL_area_vals, alternative = "two.sided")
-# PM_AM_area <- ks.test(PM_area_vals, AM_area_vals, alternative = "two.sided")
-# PM_MF_area <- ks.test(PM_area_vals, MF_area_vals, alternative = "two.sided")
-# PM_MD_area <- ks.test(PM_area_vals, MD_area_vals, alternative = "two.sided")
-# PM_LH_area <- ks.test(PM_area_vals, LH_area_vals, alternative = "two.sided")
-# PM_VV_area <- ks.test(PM_area_vals, VV_area_vals, alternative = "two.sided")
-# #PM_MR <- ks.test(PM_vals, MR_vals, alternative = "two.sided")
-# PM_BT_area <- ks.test(PM_area_vals, BT_area_vals, alternative = "two.sided")
-# PM_HA_area <- ks.test(PM_area_vals, HA_area_vals, alternative = "two.sided")
-# 
-# VG_DG_area <- ks.test(VG_area_vals, DG_area_vals, alternative = "two.sided")
-# VG_TB_area <- ks.test(VG_area_vals, TB_area_vals, alternative = "two.sided")
-# VG_PL_area <- ks.test(VG_area_vals, PL_area_vals, alternative = "two.sided")
-# VG_AM_area <- ks.test(VG_area_vals, AM_area_vals, alternative = "two.sided")
-# VG_MF_area <- ks.test(VG_area_vals, MF_area_vals, alternative = "two.sided")
-# VG_MD_area <- ks.test(VG_area_vals, MD_area_vals, alternative = "two.sided")
-# VG_LH_area <- ks.test(VG_area_vals, LH_area_vals, alternative = "two.sided")
-# VG_VV_area <- ks.test(VG_area_vals, VV_area_vals, alternative = "two.sided")
-# #VG_MR <- ks.test(VG_vals, MR_vals, alternative = "two.sided")
-# VG_BT_area <- ks.test(VG_area_vals, BT_area_vals, alternative = "two.sided")
-# VG_HA_area <- ks.test(VG_area_vals, HA_area_vals, alternative = "two.sided")
-# 
-# DG_TB_area <- ks.test(DG_area_vals, TB_area_vals, alternative = "two.sided")
-# DG_PL_area <- ks.test(DG_area_vals, PL_area_vals, alternative = "two.sided")
-# DG_AM_area <- ks.test(DG_area_vals, AM_area_vals, alternative = "two.sided")
-# DG_MF_area <- ks.test(DG_area_vals, MF_area_vals, alternative = "two.sided")
-# DG_MD_area <- ks.test(DG_area_vals, MD_area_vals, alternative = "two.sided")
-# DG_LH_area <- ks.test(DG_area_vals, LH_area_vals, alternative = "two.sided")
-# DG_VV_area <- ks.test(DG_area_vals, VV_area_vals, alternative = "two.sided")
-# #DG_MR <- ks.test(DG_vals, MR_vals, alternative = "two.sided")
-# DG_BT_area <- ks.test(DG_area_vals, BT_area_vals, alternative = "two.sided")
-# DG_HA_area <- ks.test(DG_area_vals, HA_area_vals, alternative = "two.sided")
-# 
-# TB_PL_area <- ks.test(TB_area_vals, PL_area_vals, alternative = "two.sided")
-# TB_AM_area <- ks.test(TB_area_vals, AM_area_vals, alternative = "two.sided")
-# TB_MF_area <- ks.test(TB_area_vals, MF_area_vals, alternative = "two.sided")
-# TB_MD_area <- ks.test(TB_area_vals, MD_area_vals, alternative = "two.sided")
-# TB_LH_area <- ks.test(TB_area_vals, LH_area_vals, alternative = "two.sided")
-# TB_VV_area <- ks.test(TB_area_vals, VV_area_vals, alternative = "two.sided")
-# #TB_MR <- ks.test(TB_vals, MR_vals, alternative = "two.sided")
-# TB_BT_area <- ks.test(TB_area_vals, BT_area_vals, alternative = "two.sided")
-# TB_HA_area <- ks.test(TB_area_vals, HA_area_vals, alternative = "two.sided")
-# 
-# PL_AM_area <- ks.test(PL_area_vals, AM_area_vals, alternative = "two.sided")
-# PL_MF_area <- ks.test(PL_area_vals, MF_area_vals, alternative = "two.sided")
-# PL_MD_area <- ks.test(PL_area_vals, MD_area_vals, alternative = "two.sided")
-# PL_LH_area <- ks.test(PL_area_vals, LH_area_vals, alternative = "two.sided")
-# PL_VV_area <- ks.test(PL_area_vals, VV_area_vals, alternative = "two.sided")
-# #PL_MR <- ks.test(PL_vals, MR_vals, alternative = "two.sided")
-# PL_BT_area <- ks.test(PL_area_vals, BT_area_vals, alternative = "two.sided")
-# PL_HA_area <- ks.test(PL_area_vals, HA_area_vals, alternative = "two.sided")
-# 
-# AM_MF_area <- ks.test(AM_area_vals, MF_area_vals, alternative = "two.sided")
-# AM_MD_area <- ks.test(AM_area_vals, MD_area_vals, alternative = "two.sided")
-# AM_LH_area <- ks.test(AM_area_vals, LH_area_vals, alternative = "two.sided")
-# AM_VV_area <- ks.test(AM_area_vals, VV_area_vals, alternative = "two.sided")
-# #AM_MR <- ks.test(AM_vals, MR_vals, alternative = "two.sided")
-# AM_BT_area <- ks.test(AM_area_vals, BT_area_vals, alternative = "two.sided")
-# AM_HA_area <- ks.test(AM_area_vals, HA_area_vals, alternative = "two.sided")
-# 
-# MF_MD_area <- ks.test(MF_area_vals, MD_area_vals, alternative = "two.sided")
-# MF_LH_area <- ks.test(MF_area_vals, LH_area_vals, alternative = "two.sided")
-# MF_VV_area <- ks.test(MF_area_vals, VV_area_vals, alternative = "two.sided")
-# #MF_MR <- ks.test(MF_vals, MR_vals, alternative = "two.sided")
-# MF_BT_area <- ks.test(MF_area_vals, BT_area_vals, alternative = "two.sided")
-# MF_HA_area <- ks.test(MF_area_vals, HA_area_vals, alternative = "two.sided")
-# 
-# MD_LH_area <- ks.test(MD_area_vals, LH_area_vals, alternative = "two.sided")
-# MD_VV_area <- ks.test(MD_area_vals, VV_area_vals, alternative = "two.sided")
-# #MD_MR <- ks.test(MD_vals, MR_vals, alternative = "two.sided")
-# MD_BT_area <- ks.test(MD_area_vals, BT_area_vals, alternative = "two.sided")
-# MD_HA_area <- ks.test(MD_area_vals, HA_area_vals, alternative = "two.sided")
-# 
-# LH_VV_area <- ks.test(LH_area_vals, VV_area_vals, alternative = "two.sided")
-# #LH_MR <- ks.test(LH_vals, MR_vals, alternative = "two.sided")
-# LH_BT_area <- ks.test(LH_area_vals, BT_area_vals, alternative = "two.sided")
-# LH_HA_area <- ks.test(LH_area_vals, HA_area_vals, alternative = "two.sided")
-# 
-# #VV_MR <- ks.test(VV_vals, MR_vals, alternative = "two.sided")
-# VV_BT_area <- ks.test(VV_area_vals, BT_area_vals, alternative = "two.sided")
-# VV_HA_area <- ks.test(VV_area_vals, HA_area_vals, alternative = "two.sided")
-# 
-# #MR_BT <- ks.test(MR_vals, BT_vals, alternative = "two.sided")
-# #MR_HA <- ks.test(MR_vals, HA_vals, alternative = "two.sided")
-# 
-# BT_HA_area <- ks.test(BT_area_vals, HA_area_vals, alternative = "two.sided")
-
-# v <- c(0,PM_VG_area$statistic,PM_DG_area$statistic,PM_TB_area$statistic,PM_PL_area$statistic,PM_AM_area$statistic,PM_MF_area$statistic,PM_MD_area$statistic,PM_LH_area$statistic,PM_VV_area$statistic,PM_BT_area$statistic,PM_HA_area$statistic,
-#        0,0,VG_DG_area$statistic,VG_TB_area$statistic,VG_PL_area$statistic,VG_AM_area$statistic,VG_MF_area$statistic,VG_MD_area$statistic,VG_LH_area$statistic,VG_VV_area$statistic,VG_BT_area$statistic,VG_HA_area$statistic,
-#        0,0,0,DG_TB_area$statistic,DG_PL_area$statistic,DG_AM_area$statistic,DG_MF_area$statistic,DG_MD_area$statistic,DG_LH_area$statistic,DG_VV_area$statistic,DG_BT_area$statistic,DG_HA_area$statistic,
-#        0,0,0,0,TB_PL_area$statistic,TB_AM_area$statistic,TB_MF_area$statistic,TB_MD_area$statistic,TB_LH_area$statistic,TB_VV_area$statistic,TB_BT_area$statistic,TB_HA_area$statistic,
-#        0,0,0,0,0,PL_AM_area$statistic,PL_MF_area$statistic,PL_MD_area$statistic,PL_LH_area$statistic,PL_VV_area$statistic,PL_BT_area$statistic,PL_HA_area$statistic,
-#        0,0,0,0,0,0,AM_MF_area$statistic,AM_MD_area$statistic,AM_LH_area$statistic,AM_VV_area$statistic,AM_BT_area$statistic,AM_HA_area$statistic,
-#        0,0,0,0,0,0,0,MF_MD_area$statistic,MF_LH_area$statistic,MF_VV_area$statistic,MF_BT_area$statistic,MF_HA_area$statistic,
-#        0,0,0,0,0,0,0,0,MD_LH_area$statistic,MD_VV_area$statistic,MD_BT_area$statistic,MD_HA_area$statistic,
-#        0,0,0,0,0,0,0,0,0,LH_VV_area$statistic,LH_BT_area$statistic,LH_HA_area$statistic,
-#        0,0,0,0,0,0,0,0,0,0,VV_BT_area$statistic,VV_HA_area$statistic,
-#        0,0,0,0,0,0,0,0,0,0,0,BT_HA_area$statistic,
-#        0,0,0,0,0,0,0,0,0,0,0,0)
-# 
-# tm <- matrix(v, nrow = 12, ncol = 12)
-# rownames(tm) <- c(":italic(Pheidole~~megacephala)", 
-#                   ":italic(Vespula~~germanica)", 
-#                   ":italic(Digitonthophagus~~gazella)", 
-#                   ":italic(Tetramorium~~bicarinatum)", 
-#                   ":italic(Paratrechina~~longicornis)",
-#                   ":italic(Apis~~mellifera)",
-#                   ":italic(Monomorium~~floricola)",
-#                   ":italic(Monomorium~~destructor)",
-#                   ":italic(Linepithema~~humile)",
-#                   ":italic(Vespula~~vulgaris)",
-#                   ":italic(Bombus~~terrestris)",
-#                   ":italic(Heteronychus~~arator)")
-# colnames(tm) <- c("Pm", "Vg", "Dg", "Tb", "Pl", "Am", "Mf", "Md", "Lh", "Vv", "Bt", "Ha")
-# corrplot::corrplot(tm, type = "lower", method = "color", 
-#                    cl.pos = "n", col=brewer.pal(n=10, name="Spectral"), 
-#                    tl.srt = 0, tl.col = "black", tl.cex = 0.8, addCoef.col = "black",
-#                    mar = c(0,0,0,0))
-
-# #Alternative
-# rv <- rev(v)
-# tmr <- matrix(rv, nrow = 12, ncol = 12)
-# rownames(tmr) <- rev(c(":italic(Pheidole~~megacephala)", 
-#                   ":italic(Vespula~~germanica)", 
-#                   ":italic(Digitonthophagus~~gazella)", 
-#                   ":italic(Tetramorium~~bicarinatum)", 
-#                   ":italic(Paratrechina~~longicornis)",
-#                   ":italic(Apis~~mellifera)",
-#                   ":italic(Monomorium~~floricola)",
-#                   ":italic(Monomorium~~destructor)",
-#                   ":italic(Linepithema~~humile)",
-#                   ":italic(Vespula~~vulgaris)",
-#                   ":italic(Bombus~~terrestris)",
-#                   ":italic(Heteronychus~~arator)"))
-# colnames(tm) <- rev(c("Pm", "Vg", "Dg", "Tb", "Pl", "Am", "Mf", "Md", "Lh", "Vv", "Bt", "Ha"))
-# corrplot::corrplot(tm, type = "upper", method = "color", 
-#                    cl.pos = "n", col=brewer.pal(n=10, name="Spectral"), 
-#                    tl.srt = 0, tl.col = "black", tl.cex = 0.8, addCoef.col = "black",
-#                    mar = c(0,0,0,0))
-
-#Proportion difference (KBA vs no KBA) in number of top sensitive sites
-#Top two (i.e. >= 0.98 sensitivity)
-props <- c(1, 0.98, 0.95, 0.90, 0.75, 0.50, 0.25, 0.00)
-diffs <- c()
-
-PM_area_prop <- multi_props(PM_area_vals, props)
-PM_area_KBA_prop <- multi_props(PM_KBA_vals, props)
-PM_area_RAN_prop <- multi_props(PM_area_RAN_vals, props)
-
-VG_area_prop <- multi_props(VG_area_vals, props)
-VG_area_KBA_prop <- multi_props(VG_area_KBA_vals, props)
-VG_area_RAN_prop <- multi_props(VG_area_RAN_vals, props)
-
-DG_area_prop <- multi_props(DG_area_vals, props)
-DG_area_KBA_prop <- multi_props(DG_area_KBA_vals, props)
-DG_area_RAN_prop <- multi_props(DG_area_RAN_vals, props)
-
-TB_area_prop <- multi_props(TB_area_vals, props)
-TB_area_KBA_prop <- multi_props(TB_area_KBA_vals, props)
-TB_area_RAN_prop <- multi_props(TB_area_RAN_vals, props)
-
-PL_area_prop <- multi_props(PL_area_vals, props)
-PL_area_KBA_prop <- multi_props(PL_area_KBA_vals, props)
-PL_area_RAN_prop <- multi_props(PL_area_RAN_vals, props)
-
-AM_area_prop <- multi_props(AM_area_vals, props)
-AM_area_KBA_prop <- multi_props(AM_area_KBA_vals, props)
-AM_area_RAN_prop <- multi_props(AM_area_RAN_vals, props)
-
-MF_area_prop <- multi_props(MF_area_vals, props)
-MF_area_KBA_prop <- multi_props(MF_area_KBA_vals, props)
-MF_area_RAN_prop <- multi_props(MF_area_RAN_vals, props)
-
-MD_area_prop <- multi_props(MD_area_vals, props)
-MD_area_KBA_prop <- multi_props(MD_area_KBA_vals, props)
-MD_area_RAN_prop <- multi_props(MD_area_RAN_vals, props)
-
-LH_area_prop <- multi_props(LH_area_vals, props)
-LH_area_KBA_prop <- multi_props(LH_area_KBA_vals, props)
-LH_area_RAN_prop <- multi_props(LH_area_RAN_vals, props)
-
-VV_area_prop <- multi_props(VV_area_vals, props)
-VV_area_KBA_prop <- multi_props(VV_area_KBA_vals, props)
-VV_area_RAN_prop <- multi_props(VV_area_RAN_vals, props)
-
-# MR_prop <- multi_props(MR_vals, props)
-# MR_KBA_prop <- multi_props(MR_KBA_vals, props)
-# MR_RAN_prop <- multi_props(MR_RAN_vals, props)
-
-BT_area_prop <- multi_props(BT_area_vals, props)
-BT_area_KBA_prop <- multi_props(BT_area_KBA_vals, props)
-BT_area_RAN_prop <- multi_props(BT_area_RAN_vals, props)
-
-HA_area_prop <- multi_props(HA_area_vals, props)
-HA_area_KBA_prop <- multi_props(HA_area_KBA_vals, props)
-HA_area_RAN_prop <- multi_props(HA_area_RAN_vals, props)
-
-Total <- as.data.frame(rbind(PM_area_prop,VG_area_prop,DG_area_prop,
-                             TB_area_prop,PL_area_prop,AM_area_prop,
-                             MF_area_prop,MD_area_prop,LH_area_prop,
-                             VV_area_prop,BT_area_prop,HA_area_prop,
-                             PM_area_KBA_prop, VG_area_KBA_prop, 
-                             DG_area_KBA_prop, TB_area_KBA_prop, 
-                             PL_area_KBA_prop,AM_area_KBA_prop,MF_area_KBA_prop,
-                             MD_area_KBA_prop,LH_area_KBA_prop,VV_area_KBA_prop,
-                             BT_area_KBA_prop,HA_area_KBA_prop,
-                             PM_area_RAN_prop, VG_area_RAN_prop, 
-                             DG_area_RAN_prop, TB_area_RAN_prop, 
-                             PL_area_RAN_prop,AM_area_RAN_prop,MF_area_RAN_prop,
-                             MD_area_RAN_prop,LH_area_RAN_prop,VV_area_RAN_prop,
-                             BT_area_RAN_prop,HA_area_RAN_prop))
-Type <- c(rep("Unmasked", 12), rep("Masked", 12), rep("Random", 12))
-Species <- rep(c("P. megacephala", "V. germanica", "D. gazella",
-                 "T. bicarinatum", "P. longicornis", "A. mellifera",
-                 "M. floricola", "M. destructor", "L. humile",
-                 "V. vulgaris", "B. terrestris", "H. arator"), 3)
-Total <- cbind(Species, Type,Total)
-Total <- Total %>%
-  as_tibble() %>%
-  mutate(Species = factor(Species)) %>%
-  mutate(Type = factor(Type)) %>%
-  pivot_longer(cols = !Species & !Type, 
-               names_to = "SiteSensitivity", 
-               values_to = "DistributionCoverage") %>%
-  mutate(SiteSensitivity = as.double(SiteSensitivity))
-#cols <- c("#b409a7","#0db02f", "#5bb4f2","#040200","#9c5200")
-Total_min <- Total %>%
-  dplyr::filter(SiteSensitivity == 1 | SiteSensitivity == 0.98)
-df <- data.frame(xmin = c(1,0.98,0.95,0.9,0.75,0.5,0.25),
-                 xmax = c(0.98,0.95,0.9,0.75,0.5,0.25,0),
-                 ymin = rep(-Inf,7),
-                 ymax = rep(Inf,7))
-p <- ggplot(Total, 
-            aes(x = SiteSensitivity, 
-                y = DistributionCoverage, 
-                colour = Species,
-                group = interaction(Species,Type))) +
-  geom_line(stat = "identity", aes(linetype = Type), size = 0.8) +
-  scale_linetype_manual(values = c("solid", "dotted", "longdash")) +
-  scale_colour_manual(values = pnw_palette("Starfish", 12, "continuous")) +
-  ylab("Distribution Coverage (%)") +
-  xlab("Site Sensitivity") +
-  theme_bw() +
-  theme(axis.line = element_line(colour = "black"),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        panel.background = element_blank(),
-        axis.text = element_text(size = 12), 
-        axis.title.x = element_text(size = 14),
-        axis.title.y = element_text(size = 14),
-        legend.text = element_text(size = 12),
-        legend.title = element_text(size = 12, face = "bold")) +
-  scale_x_continuous(expand = c(0,0),
-                     limits = c(1,0),
-                     trans = "reverse") +
-  scale_y_continuous(expand = c(0,0))
-p2 <-  p + 
-  geom_rect(data = df, aes(xmin = xmin, xmax = xmax, ymin=ymin, ymax=ymax),
-            fill = rev(leg$colors), alpha = 0.2, inherit.aes = F) +
-  font("legend.text", face = "italic")
-
-#For inset
-ins <- ggplot(Total_min, 
-              aes(x = SiteSensitivity, 
-                  y = DistributionCoverage, 
-                  colour = Species,
-                  group = interaction(Species,Type))) +
-  geom_line(stat = "identity", aes(linetype = Type),size = 0.8) +
-  scale_linetype_manual(values = c("solid", "dotted", "longdash")) +
-  #scale_size_manual(values = c(1,1,1)) +
-  scale_colour_manual(values = pnw_palette("Starfish", 12)) +
-  ylab("Distribution Coverage (%)") +
-  xlab("Site Sensitivity") +
-  theme_bw() +
-  theme(axis.line = element_blank(),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        panel.background = element_rect(fill = alpha(leg$colors[7],0.2)),
-        axis.text = element_blank(), 
-        axis.title.x = element_blank(),
-        axis.title.y = element_blank(),
-        legend.text = element_blank(),
-        legend.title = element_blank(),
-        legend.position = "none",
-        axis.ticks = element_blank()) +
-  scale_x_continuous(expand = c(0,0),
-                     limits = c(1,0.98),
-                     trans = "reverse") +
-  scale_y_continuous(expand = c(0,0))
-
-#An accompanying figure could be showing numerical difference between non-kba and kba
-#Take differences, e.g. Here negative values means higher distribution coverage for KBAs
-pm_diff <- PM_area_prop - PM_area_KBA_prop
-vg_diff <- VG_area_prop - VG_area_KBA_prop
-
-#Then just follow through like before but using these values
-Total_diff <- data.frame(rbind(pm_diff, vg_diff))
-species_diff <- c("Pheidole megacephala", "Vespula germanica")
-Total_diff <- cbind(species_diff, Total_diff)
-Total_diff <- Total_diff %>%
-  as_tibble() %>%
-  mutate(species = factor(species)) %>%
-  pivot_longer(cols = !species, 
-               names_to = "SiteSensitivity", 
-               values_to = "ScenarioDifference") %>%
-  mutate(SiteSensitivity = as.double(SiteSensitivity))
-
-ggplot(Total_diff, 
-       aes(x = SiteSensitivity, 
-           y = ScenarioDifference, 
-           colour = species_diff)) +
-  geom_line(stat = "identity") +
-  scale_x_continuous(expand = c(0,0),
-                     limits = c(1,0),
-                     trans = "reverse") +
-  theme_bw() +
-  theme(axis.line = element_line(colour = "black"),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        panel.background = element_blank(),
-        axis.text = element_text(size = 12), 
-        axis.title.x = element_text(size = 14),
-        axis.title.y = element_text(size = 14),
-        legend.text = element_text(size = 12),
-        legend.title = element_text(size = 12, face = "bold")) +
-  geom_hline(yintercept = 0) +
-  geom_rect(data = df, aes(xmin = xmin, xmax = xmax, ymin=ymin, ymax=ymax),
-            fill = rev(leg$colors), alpha = 0.2, inherit.aes = F) +
-  font("legend.text", face = "italic")
-
-
-#Distance to coast
+## Distance to coast
 #Prior to doing any kind of distance work, need to project everything to GDA94
-CAZ_var_ras_proj <- projectRaster(CAZ_var_ras, 
-                                  res = 5000, 
-                                  crs = "+proj=aea +lat_1=-18 +lat_2=-36 +lat_0=0 +lon_0=132 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
-CAZ_wgt_var_ras_proj <- projectRaster(CAZ_wgt_var_ras, 
-                                      res = 5000, 
-                                      crs = "+proj=aea +lat_1=-18 +lat_2=-36 +lat_0=0 +lon_0=132 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
-CAZ_area_var_ras_proj <- projectRaster(CAZ_area_var_ras, 
-                                       res = 5000, 
-                                       crs = "+proj=aea +lat_1=-18 +lat_2=-36 +lat_0=0 +lon_0=132 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
-CAZ_area_wgt_var_ras_proj <- projectRaster(CAZ_area_wgt_var_ras, 
-                                           res = 5000, 
-                                           crs = "+proj=aea +lat_1=-18 +lat_2=-36 +lat_0=0 +lon_0=132 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
+full_rank_stack_proj <- project(full_rank_stack, y = "epsg:3112", res = 5000)
 
-#For each variant, produce plot and calculate correlation, between top fraction sites and distance to coast
-#load distance raster
-source("R/16_distance_to_coast.R")
-dist_coast <- raster(file.path("SpatialData", "Raster", "dist_aus_coast.tif"))
-dist_coast <- projectRaster(dist_coast, 
-                            res = 5000, 
-                            crs = "+proj=aea +lat_1=-18 +lat_2=-36 +lat_0=0 +lon_0=132 +x_0=0 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs")
-dists <- values(dist_coast)
+## For each variant, produce plot and calculate correlation, between top fraction sites and distance to coast
+# ant <- full_rank_stack[[1]]
+# ant[is.na(ant)] <- 9999
+# ant[ant < 9999] <- NA
+# d <- distance(ant)
+# writeRaster(d, here(dirname(here()), "data", "dist_to_coast.tif"))
+
+dist_coast <- rast(here(dirname(here()), "data", "dist_to_coast.tif"))
+dist_coast <- mask(dist_coast, full_rank_stack[[1]])
+dist_coast_proj <- project(dist_coast, y = "epsg:3112", res = 5000)
+
+dists <- values(dist_coast_proj)
 
 #extract site priority at each distance
-dist_coord <- as.data.frame(coordinates(dist_coast))
-pri.list <- list(CAZ_var_ras_proj, CAZ_wgt_var_ras_proj, 
-                 CAZ_area_var_ras_proj, CAZ_area_wgt_var_ras_proj)
-priority_dist <- data.frame(lapply(pri.list, function(i){
-  priority <- raster::extract(i, dist_coord)
-  priority <- squeeze(priority)
+dist_coord <- as.data.frame(crds(dist_coast_proj))
+
+
+priority_dist <- data.frame(lapply(full_rank_stack_proj, function(i){
+  
+  priority <- terra::extract(i, dist_coord, ID = F)
+  
+  priority <- squeeze(priority[[1]])
+  
   names(priority) <- names(i)
+  
   return(priority)
+  
 }), dist_coord)
-colnames(priority_dist) <- c("species_CAZ","species_wgt_CAZ", 
-                             "species_area_CAZ", "species_area_wgt_CAZ", 
+
+colnames(priority_dist) <- c(names(full_rank_stack_proj), 
                              "longitude", "latitude")
 
 # Looking for spatial pattern of highest sensitive sites
-df_new <- spat_priority_dist(priority_dist, 4)
+df_new <- spat_priority_dist(priority_dist, 26)
 
-#E.g.variant 1. Do for all 4 in df
-df_1 <- data.frame(df_new[,1], df_new[,5], df_new[,6])
-df_1 <- df_1 %>% dplyr::filter(df_1[,1] == 1)
-p <- ppp(df_1[,2], df_1[,3], xrange = c(-2131603,2443397),
-         yrange = c(-4947747,-1097747))
-clarkevans.test(p, alternative = "clustered", correction = "Donnelly")
+## Get polygon for cluster tests
+my_pol <- dist_coast_proj
+my_pol[my_pol >= 0] <- 1
+my_pol <- as.polygons(my_pol)
 
-df_2 <- data.frame(df_new[,2], df_new[,5], df_new[,6])
-df_2 <- df_2 %>% dplyr::filter(df_2[,1] == 1)
-p <- ppp(df_2[,2], df_2[,3], xrange = c(-2131603,2443397),
-         yrange = c(-4947747,-1097747))
-clarkevans.test(p, alternative = "clustered", correction = "Donnelly")
+## Create empty list and populate with clustering test
+res_list <- list()
+plot_list <- list()
+for(i in 1:(length(df_new) -2)){
+  
+  res <- clus_fun(df_new, my_pol, i)
+  res_list[[i]] <-  res[[1]]
+  plot_list[[i]] <-  res[[2]]
+ 
+}
+names(res_list) <- names(df_new)[-c(27,28)]
+names(plot_list) <- names(df_new)[-c(27,28)]
 
-df_3 <- data.frame(df_new[,3], df_new[,5], df_new[,6])
-df_3 <- df_3 %>% dplyr::filter(df_3[,1] == 1)
-p <- ppp(df_3[,2], df_3[,3], xrange = c(-2131603,2443397),
-         yrange = c(-4947747,-1097747))
-clarkevans.test(p, alternative = "clustered", correction = "Donnelly")
+## Density plots
+#plot(density(plot_list[[1]], sigma = 50000))
 
-df_4 <- data.frame(df_new[,4], df_new[,5], df_new[,6])
-df_4 <- df_4 %>% dplyr::filter(df_4[,1] == 1)
-p <- ppp(df_4[,2], df_4[,3], xrange = c(-2131603,2443397),
-         yrange = c(-4947747,-1097747))
-clarkevans.test(p, alternative = "clustered", correction = "Donnelly")
+## Convert cluster results into data frame
+ce_res <- lapply(1:length(res_list), FUN = function(i){
+  
+  cedf <- as.data.frame(t(as.data.frame(unlist(res_list[[i]]))))
+  
+})
 
-#create data frame of priority and distance
-#dist_df <- data.frame(priority = priority, distance = dists)
+ce_res <- do.call(rbind, ce_res)
+rownames(ce_res) <- names(res_list)
+ce_res <- ce_res %>% 
+  mutate(statistic.R = round(as.numeric(statistic.R), 2)) %>%
+  mutate(p.value = round(as.numeric(p.value), 2)) %>%
+  mutate(scenario = rownames(ce_res)) %>%
+  relocate(scenario)
 
-# #correlation
-# cor.test(priority_dist[,1], dists, method = "spearman")
-# cor.test(priority_dist[,2], dists, method = "spearman")
-# cor.test(priority_dist[,3], dists, method = "spearman")
-# cor.test(priority_dist[,4], dists, method = "spearman")
-# 
-# #scatterplot
-# plot(dists, priority, cex = 0.1)
+ft <- flextable(ce_res)
+ft <- autofit(ft, add_w = 0, add_h = 0)
+save_as_docx("Table S1" = ft, path = here(dirname(here()), "table_s1.docx"))
+
+## Look at correlation between site sensitivity and distance to the coast
+site_coast_cors <- apply(priority_dist, 2, FUN = function(i)
+  
+  cor.test(i, dists[!is.na(dists)], method = "spearman")
+  
+)
+
+## Convert correlation results into data frame
+sc_res <- lapply(1:(length(site_coast_cors)-2), FUN = function(i){
+  
+  scdf <- as.data.frame(t(as.data.frame(unlist(site_coast_cors[[i]]))))
+  
+})
+
+sc_res <- do.call(rbind, sc_res)
+sc_res$scenario <- names(res_list)
+sc_res <- sc_res %>% 
+  relocate(scenario) %>%
+  dplyr::select(scenario, estimate.rho, p.value) %>%
+  mutate(across(2:3, as.numeric)) %>%
+  mutate(across(2:3, round,2))
+
+ft <- flextable(sc_res)
+ft <- autofit(ft, add_w = 0, add_h = 0)
+save_as_docx("Table S3" = ft, path = here(dirname(here()), "table_s3.docx"))
