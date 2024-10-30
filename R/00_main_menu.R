@@ -8,7 +8,6 @@ pkgs <- c("tidyverse", "sf", "raster", "data.table", "CoordinateCleaner",
           "taxize", "biomod2", "usdm", "rgbif", "galah", "spatstat", "stars", 
           "ggpubr","cowplot", "RColorBrewer", "PNWColors", "terra", 
           "ComplexHeatmap", "flextable", "here")
-rlang::check_installed(pkgs)
 lapply(pkgs, require, character.only = T)
 
 
