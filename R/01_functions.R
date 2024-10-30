@@ -1,76 +1,22 @@
 ################################################################################
 ## Script name: 01_functions.R
+## Author: David Clarke
+## Copyright (c) David Clarke, 2024
+## Email: david_anthony_clarke@hotmail.com
 ################################################################################
 
-xy_match <- function(initial, pre, Layer) {
-  pre <- initial
+## Priority rank map----
+rank_plot <- function(rankmap){
   
-  coordinates(pre) <- ~ decimalLongitude + decimalLatitude
-  crs(pre) <- crs(Layer)
-  
-  final <- cbind(initial, over(pre, Layer))
-  return(final)
-}
-
-#Removing points with no environmental data
-rm_occs <- function(env, pts) {
-  
-  oc <- extract(env, pts[,2:3])
-  oc <- as.data.frame(oc)
-  pts <- cbind(pts, oc)
-  pts <- na.omit(pts)
-  pts <- pts %>% dplyr::select(scientificName, Longitude, Latitude)
-  return(pts)
-  
-}
-
-# Create a shell (.sh) file
-create_sh_file <- function(x) {
-  if (class(x) == "Zvariant") {
-    bat_file <- x@bat.file
-  } else {
-    bat_file <- x
-  }
-  
-  sh_file <- gsub("\\.bat", "\\.sh", bat_file)
-  
-  cmd_lines <- readLines(bat_file)
-  new_cmd_lines <- c("#!/bin/sh")
-  
-  for (line in cmd_lines) {
-    line <- gsub("call ", "", line)
-    line <- gsub("\\.exe", "", line)
-    new_cmd_lines <- c(new_cmd_lines, line)
-  }
-  
-  file_con <- file(sh_file)
-  writeLines(new_cmd_lines, file_con)
-  close(file_con)
-  Sys.chmod(sh_file)
-  return(invisible(TRUE))
-}
-
-#Get scenario variants
-scenario_variants <- function(project) {
-  
-  proj <- load_zproject(file.path("zonation", project))
-  proj_var <- get_variant(proj, 1)
-  
-}
-
-
-#Create rank raster plots
-rank_plot <- function(rank_raster) {
-  
-  ras_st <- st_as_stars(rank_raster)
+  ras_st <- stars::st_as_stars(rankmap)
   ras_sf <- st_as_sf(ras_st)
   fill_ras_sf <- st_drop_geometry(ras_sf)
   ggplot()+
     geom_sf(data = ras_sf, aes(fill=fill_ras_sf[,1]), 
             color=NA, 
             show.legend = T) + 
-    scale_fill_gradientn(colours = leg$colors,
-                         values = leg$values,
+    scale_fill_gradientn(colours = z_colors_spectral$colors,
+                         values = z_colors_spectral$values,
                          name = "Site\nsensitivity",
                          breaks = c(0.0, 0.2, 0.4, 0.6, 0.8,1)) +
     theme_bw() +
@@ -81,23 +27,26 @@ rank_plot <- function(rank_raster) {
           axis.text = element_blank(),
           panel.border = element_blank(),
           axis.ticks = element_blank())
+  
 }
 
-rank_diff <- function(rank_one, rank_two){
+## Priority rank difference map----
+rank_diff <- function(rankmap1, rankmap2){
   
-  species_only_diff <- rank_one - rank_two
+  species_only_diff <- rankmap1 - rankmap2
+  names(species_only_diff) <- "rankmap"
+  
   coolwarm_hcl <- colorspace::diverging_hcl(11,h = c(250, 10), c = 100, 
                                             l = c(37, 88), power = c(0.7, 1.7))
   species_only_diff_sf <- species_only_diff %>%
-    st_as_stars() %>%
+    stars::st_as_stars() %>%
     st_as_sf()
   
   ggplot()+
-    geom_sf(data = species_only_diff_sf, aes(fill=layer), 
+    geom_sf(data = species_only_diff_sf, aes(fill=rankmap), 
             color=NA, 
             show.legend = T) + 
     scale_fill_gradientn(colours = rev(coolwarm_hcl),
-                         #values = leg$values,
                          name = "Sensitivity\ndifference",
                          breaks = c(-0.5, 0.0, 0.5)) +
     theme_bw() +
@@ -108,97 +57,10 @@ rank_diff <- function(rank_one, rank_two){
           axis.text = element_blank(),
           panel.border = element_blank(),
           axis.ticks = element_blank())
-}
-
-#Priority plots - overlap of sensitive and susceptible sites 
-Priority_plot <- function(sdm, rank_raster, sdm_col, sdm_brd_col) {
-  
-  sdm_r <- sdm
-  sdm_r<- rasterToPolygons(sdm_r, dissolve = T)
-  sdm_cr <- crop(sdm, sdm_r)
-  rank_raster_cr <- crop(rank_raster, sdm_cr)
-  rank_raster_cr_st <- st_as_stars(rank_raster_cr)
-  rank_raster_cr_sf <- st_as_sf(rank_raster_cr_st)
-  sdm_sf <- st_as_sf(sdm_r)
-  sdm_sf_bb <- st_as_sfc(st_bbox(sdm_sf))
-  fill_rank_raster_cr_sf <- st_drop_geometry(rank_raster_cr_sf)
-  g <- ggplot()+
-    geom_sf(data = rank_raster_cr_sf, aes(fill=fill_rank_raster_cr_sf[,1]), 
-            color=NA, 
-            show.legend = T) + 
-    scale_fill_gradientn(colours = leg$colors,
-                         values = leg$values,
-                         name = "Site\nsensitivity",
-                         breaks = c(0.0001, 0.25, 0.5, 0.75, 0.9999),
-                         labels = as.character(c(0.0, 0.25, 0.5, 0.75, 1))) +
-    geom_sf(data = sdm_sf, show.legend = F,fill=alpha(sdm_col,0.3)) +
-    theme_bw() +
-    theme(axis.line = element_blank(),
-          panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(),
-          panel.background = element_blank(),
-          axis.text = element_blank(),
-          axis.ticks = element_blank(),
-          #legend.position = "none",
-          plot.margin=grid::unit(c(0,0,0,0), "mm"),
-          panel.border = element_rect(colour = sdm_brd_col, size = 1.2))
-  
-  return(g)
-}
-
-#Get cell values for Kolmogorov-smirnoff tests
-get_msk_vals <- function(rank_raster, mask_file) {
-  
-  temp_r <- mask(rank_raster, mask_file)
-  temp_r_values <- na.omit(values(temp_r))
   
 }
 
-#Create histograms
-mask_hist <- function(rank_raster, mask_layer) {
-  
-  vals <- get_msk_vals(rank_raster, mask_layer)
-  b <- seq(0.0, 1.0, by = 0.05)
-  h <- hist(vals, breaks = b, plot = F)
-  up_lim <- max(h$counts)
-  up_lim <- round(up_lim + 50, -2)
-  vals_df <- data.frame(data = vals)
-  
-  val_hist <- ggplot(vals_df, aes(x = vals)) + 
-    geom_histogram(colour = "white",
-                   binwidth = 0.05,
-                   boundary = 0) + 
-    scale_x_continuous(breaks = seq(0, 1, 0.25)) + 
-    scale_y_continuous(expand = c(0,0),
-                       limits = c(0,up_lim)) +
-    xlab("Site sensitivity") + 
-    theme_bw() +
-    theme(axis.line = element_line(colour = "black"),
-          panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(),
-          panel.background = element_blank(),
-          axis.text = element_text(size = 12), 
-          axis.title.x = element_text(size = 14),
-          axis.title.y = element_blank(),
-          strip.text.x = element_text(size = 12)) +
-    geom_vline(xintercept = median(vals, #could also use mean
-                                   na.rm = T), colour = "red")
-  
-  return(val_hist)
-  
-}
-
-#Proportion difference (KBA vs no KBA) in number of top sensitive sites
-#vals = output from get_msk_vals, sens = site sensitivity value
-prop_diff <- function(vals, sens) {
-  
-  vals_bin <- vals
-  vals_bin <- ifelse(vals_bin >= sens, 1,0)
-  sum(vals_bin)/length(vals_bin)*100
-  
-}
-
-#Calculate Jaccard similarities
+## Calculate Jaccard similarities----
 calculate_jaccards <- function(rank_stack, x.min, x.max, y.min, y.max, 
                                variant_names) {
   
@@ -229,51 +91,245 @@ calculate_jaccards <- function(rank_stack, x.min, x.max, y.min, y.max,
   return(jaccards)
 }
 
-#Taking a little off values of 1
-squeeze <- function(pvector){
-  for(i in 1:length(pvector)) {
-    if(!is.na(pvector[i]) == T & pvector[i] == 1){
-      pvector[i] <- pvector[i] - 0.000001
-    }
+
+
+## Raster correlation matrix----
+ras_cor <- function(ras_stack){
+  
+  rcors <- sapply(full_rank_stack, function(x) 
+            sapply(full_rank_stack, function(y) 
+              layerCor(c(x,y), "cor", asSample = F)))
+
+  rcors <- rcors[seq(1, length(rcors), 3)] #get every 3rd element (coefs)
+  mycors <- c()
+
+  for(i in 1:length(rcors)){
+  
+    v <- rcors[[i]][2,1]
+    mycors <- c(mycors,v)
+  
   }
-  return(pvector)
+
+  mymat <- round(matrix(data = mycors, 
+                        nrow = sqrt(length(mycors)), 
+                        ncol = sqrt(length(mycors)), 
+                        byrow = T),2)
+  
+  return(mymat)
+
 }
 
-#Create binary layers based on given site sensitivity
-spat_priority_dist <- function(df, n_col){
-  for(i in 1:n_col){
-    df[,i] <- ifelse(df[,i] >= 0.98, 1,0)}
-  return(df)
+## Structural similarity index----
+ssim <- function(ras_stack){
+  
+  ssim_mat <- matrix(nrow = nlyr(ras_stack), ncol = nlyr(ras_stack))
+  sim_mat <- matrix(nrow = nlyr(ras_stack), ncol = nlyr(ras_stack))
+  siv_mat <- matrix(nrow = nlyr(ras_stack), ncol = nlyr(ras_stack))
+  sip_mat <- matrix(nrow = nlyr(ras_stack), ncol = nlyr(ras_stack))
+  
+  my_combs <- combn(nlyr(ras_stack), 2)
+  
+  for(k in 1:ncol(my_combs)){
+    
+    my_ssim <- ssim_raster(ras_stack[[my_combs[1,k]]], ras_stack[[my_combs[2,k]]], global = F)
+    
+    varnames(my_ssim) <- paste0(names(ras_stack[[my_combs[1,k]]]),"-",
+                                      names(ras_stack[[my_combs[2,k]]]))
+    
+    my_path <- here(dirname(here()), "data", "ssim")
+    
+    if(file.exists(my_path)){
+      
+      writeRaster(my_ssim, filename = here(my_path, paste0(varnames(my_ssim), ".tif")))
+      
+    } else {
+      
+      dir.create(my_path)
+      writeRaster(my_ssim, filename = here(my_path, paste0(varnames(my_ssim), ".tif")))
+      
+    }
+    
+    ssim_mat[my_combs[2,k],my_combs[1,k]] <- as.numeric(global(my_ssim[[1]], "mean", na.rm = T))
+    sim_mat[my_combs[2,k],my_combs[1,k]] <- as.numeric(global(my_ssim[[2]], "mean", na.rm = T))
+    siv_mat[my_combs[2,k],my_combs[1,k]] <- as.numeric(global(my_ssim[[3]], "mean", na.rm = T))
+    sip_mat[my_combs[2,k],my_combs[1,k]] <- as.numeric(global(my_ssim[[4]], "mean", na.rm = T))
+        
+  }
+  
+ diag(ssim_mat) <- diag(sim_mat) <- diag(siv_mat) <- diag(sip_mat) <- 1
+ rownames(ssim_mat) <- rownames(sim_mat) <- rownames(siv_mat) <- rownames(sip_mat) <- names(ras_stack)
+ colnames(ssim_mat) <- colnames(sim_mat) <- colnames(siv_mat) <- colnames(sip_mat) <- names(ras_stack)
+  
+ my_list <- list(ssim_mat = ssim_mat, 
+                 sim_mat = sim_mat, 
+                 siv_mat = siv_mat, 
+                 sip_mat = sip_mat)
+ 
+ return(my_list)
+  
 }
 
-#Create predicted IAS distribution plots
-IAS_plot <- function(species){
-  species <- gsub(" ", ".", species)
-  r <- raster(file.path(regional_model_path, species, "proj_regional", 
-                        "individual_projections", 
-                        paste0(species,"_EMcaByTSS_mergedAlgo_mergedRun_mergedData.gri")))
-  r <- r/1000 #back to a 0-1 scale
-  r_st <- st_as_stars(r)
-  r_sf <- st_as_sf(r_st)
-  r_plot <- ggplot()+
-    geom_sf(data = r_sf, aes(fill=layer), 
-            color=NA, 
-            show.legend = T) + 
-    scale_fill_gradientn(colours = brewer.pal('YlGnBu', n=9),
-                         name = "Probability") +
+## Create SSIM heatmaps----
+ssim_heat <- function(data, pal, nm, lines){
+  
+  rownames(data) <- gsub("_", " ", rownames(data))
+  colnames(data) <- gsub("_", " ", colnames(data))
+  
+  mat <- as.matrix(data)
+  df <- as.data.frame(as.table(mat)) %>%
+    drop_na(Freq)
+  
+  g <- ggplot(df, aes(Var1, Var2, fill= Freq)) + 
+    geom_tile() +
+    scale_fill_distiller(palette = pal, name = nm) +
     theme_bw() +
-    theme(axis.line = element_blank(),
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+          axis.text = element_text(size = 10),
           panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(),
           panel.background = element_blank(),
-          axis.text = element_blank(),
           panel.border = element_blank(),
-          axis.ticks = element_blank())
-  return(r_plot)
+          axis.line.x = element_line(),
+          axis.line.y = element_line(),
+          axis.title = element_blank()) +
+    geom_text(data = df, aes(label = round(Freq,2)), size = 4)
+  
+  if(lines == T){
+    g +
+    geom_vline(xintercept = 1.5, colour = "black", linetype = 1) +
+    geom_vline(xintercept = 6.5, colour = "black", linetype = 1) +
+    geom_vline(xintercept = 7.5, colour = "black", linetype = 1) +
+    geom_vline(xintercept = 12.5, colour = "black", linetype = 1) +
+    geom_vline(xintercept = 13.5, colour = "black", linetype = 1) +
+    geom_vline(xintercept = 14.5, colour = "black", linetype = 1) +
+    geom_vline(xintercept = 19.5, colour = "black", linetype = 1) +
+    geom_vline(xintercept = 20.5, colour = "black", linetype = 1) +
+    geom_vline(xintercept = 21.5, colour = "black", linetype = 1) +
+    geom_vline(xintercept = 25.5, colour = "black", linetype = 1)
+    } else {g}
+} 
+
+## Calculate Jaccards----
+# Taken from zonator R package (https://github.com/cbig/zonator/tree/master)
+jaccard <- function(x, y, x.min=0.0, x.max=1.0, y.min=0.0, y.max=1.0,
+                    warn.uneven=FALSE, limit.tolerance=4,
+                    disable.checks=FALSE) {
+  
+  if (!disable.checks) {
+    # Check the input values
+    x.min.value <- round(raster::cellStats(x, stat="min"), limit.tolerance)
+    x.max.value <- round(raster::cellStats(x, stat="max"), limit.tolerance)
+    y.min.value <- round(raster::cellStats(y, stat="min"), limit.tolerance)
+    y.max.value <- round(raster::cellStats(y, stat="max"), limit.tolerance)
+    
+    if (x.min < x.min.value) {
+      stop(paste0("Minimum threshold value for x ("), x.min, ") smaller than
+            the computed minimum value in x (", x.min.value, ")")
+    }
+    if (x.max > x.max.value) {
+      stop(paste0("Maximum threshold value for x ("), x.max, ") smaller than
+            the computed maximum value in x (", x.max.value, ")")
+    }
+    if (x.min >= x.max) {
+      stop(paste0("Minimum threshold value for x ("), x.min, ") smaller than
+             maximum threshold value for x (", x.max, ")")
+    }
+    if (y.min < y.min.value) {
+      stop(paste0("Minimum threshold value for y ("), y.min, ") smaller than
+            the computed minimum value in y (", y.min.value, ")")
+    }
+    if (y.max > y.max.value) {
+      stop(paste0("Maximum threshold value for y ("), y.max, ") smaller than
+            the computed maximum value in y (", y.max.value, ")")
+    }
+    if (y.min >= y.max) {
+      stop(paste0("Minimum threshold value for y ("), y.min, ") smaller than
+             maximum threshold value for y (", y.max, ")")
+    }
+    
+    # Comparisons using just the defaults is probably not feasible
+    if (x.min == 0.0 & x.max == 1.0 & y.min == 0.0 & y.max == 1.0) {
+      warning("Using all the defaults for x and y ranges")
+    }
+  } else {
+    message("Input limit checks disabled")
+  }
+  
+  # [fixme] - using cellStats(X, "sum") should be safe as we're dealing with
+  # binary 0/1 rasters. count() would be preferable, but apparently raster
+  # (>= 2.2 at least) doesn't support it anymore.
+  
+  # Get the values according to the limits provided
+  x.bin <- (x >= x.min & x <=x.max)
+  y.bin <- (y >= y.min & y <=y.max)
+  
+  if (warn.uneven) {
+    x.size <- raster::cellStats(x.bin, "sum")
+    y.size <- raster::cellStats(y.bin, "sum")
+    # Sort from smaller to larger
+    sizes <- sort(c(x.size, y.size))
+    if (sizes[2] / sizes[1] > 20) {
+      warning("The extents of raster values above the threshhold differ more",
+              "than 20-fold: Jaccard coefficient may not be informative.")
+    }
+  }
+  
+  # Calculate the intersection of the two rasters, this is given by adding
+  # the binary rasters together -> 2 indicates intersection
+  combination <- x.bin + y.bin
+  intersection <- combination == 2
+  
+  # Union is all the area covered by the both rasters
+  union <- combination >= 1
+  
+  return(raster::cellStats(intersection, "sum") / raster::cellStats(union, "sum"))
+}
+## Susceptible site prep----
+susc_site_prep <- function(species_name, ras_stack){
+  
+  sp <- gsub(" ", ".", species_name)
+
+  bin <- rast(raster::raster(here(regional_model_path,  sp, 
+            paste0(sp,"_EMcaByTSS_mergedAlgo_mergedRun_mergedData_TSSbin.gri"))))
+  
+  bin2 <- bin
+  bin2[bin2 != 0] <- 1
+  
+  # Re-class zeros as NA
+  bin[bin == 0] <- NA
+  
+  bin_list <- list()
+  
+  for(i in 1:nlyr(ras_stack)){
+  
+    bin_list[[i]] <- resample(bin, ras_stack[[i]], method = "near") 
+    names(bin_list[[i]]) <- names(ras_stack[[i]])
+    
+  }
+  
+  return(list(bin_list, bin2))
+
 }
 
+## Get site sensitivity values----
+get_msk_vals <- function(rank_raster, mask_file) {
+  
+  temp_r <- mask(rank_raster, mask_file)
+  temp_r_values <- na.omit(values(temp_r))
+  
+}
 
-#Get proportion differences
+## Proportion difference (KBA vs no KBA) in number of top sensitive sites----
+#vals = output from get_msk_vals, sens = site sensitivity value
+prop_diff <- function(vals, sens) {
+  
+  vals_bin <- vals
+  vals_bin <- ifelse(vals_bin >= sens, 1,0)
+  sum(vals_bin)/length(vals_bin)*100
+  
+}
+
+## Get proportion differences----
 multi_props <- function(vals, props){
   
   diffs <- c()
@@ -290,95 +346,246 @@ multi_props <- function(vals, props){
   return(diffs)
 }
 
-#Multi-panel figure
-Figure <- function(species, rank_raster, binary) {
+## Apply additional weighting schemes----
+spp_wght_fun <- function(df, scheme = 1, wv = c(1,2,4,6,8,2)){
   
-  species <- gsub(" ", ".", species)
-  p <- IAS_plot(species)
-  hist <- mask_hist(rank_raster, binary)
-  priority <- Priority_plot(binary, rank_raster, sdm_col = "black", 
-                            sdm_brd_col = NA)
-  p2 <- ggarrange(p, priority, nrow = 2, ncol = 1)
-  p3 <- ggarrange(p2, hist, nrow = 1, ncol = 2)
-  return(p3)
+  nm <- paste0("scheme_",scheme)
+  
+  # using {{}} := allows you to reference a column name as a string
+  #https://stackoverflow.com/questions/73285003/how-do-i-pass-a-column-name-to-a-function-involving-mutate
+  
+  if(scheme == 1 | scheme == 3){
+    
+    df1 <- df %>% 
+      
+      mutate({{nm}} := case_when(redlistCategory == "Least Concern" ~ wv[1],
+                                 redlistCategory == "Near Threatened" ~ wv[2],
+                                 redlistCategory == "Vulnerable" ~ wv[3],
+                                 redlistCategory == "Endangered" ~ wv[4],
+                                 redlistCategory == "Critically Endangered" ~ wv[5],
+                                 redlistCategory == "Data Deficient" ~ wv[6]))
+    
+    
+  }
+  if(scheme == 2 | scheme == 4){
+    
+    df1 <- df %>% 
+      
+      mutate({{nm}} := case_when(redlistCategory == "Least Concern" ~ wv[1],
+                                 redlistCategory == "Near Threatened" ~ wv[2],
+                                 redlistCategory == "Vulnerable" ~ wv[3],
+                                 redlistCategory == "Endangered" ~ wv[4],
+                                 redlistCategory == "Critically Endangered" ~ wv[5],
+                                 redlistCategory == "Data Deficient" ~ wv[6])) %>%
+      
+      mutate({{nm}} := case_when(code == "8.1.1" | code == "8.1.2" ~ get(!!nm) + 1,
+                                 .default = get(!!nm)))
+    
+  }
+  
+  return(df1)
   
 }
 
-#Biodiversity feature performance plots
-performance_plot <- function(project_variant, feature_groups, brewer_pal) {
+spp_area_wght_fun <- function(df, scheme = 1, wv = c(1,2,4,6,8,2)){
   
-  if(length(feature_groups) <= 8){
+  nm <- paste0("scheme_",scheme)
+  
+  areas <- c("Ecosystem","Community","Ramsar","Upstream")
+  
+  if(scheme == 1 | scheme == 3){
     
-    groupnames(project_variant) <- feature_groups
-    lost.levels <- seq(0,1, by = 0.05)
-    results.caz <- results(project_variant)
-    perf <- performance(results.caz, lost.levels,melted = TRUE, groups = T)
-    perf <- na.omit(perf)
-    perf_wmean <- perf %>% dplyr::filter(str_detect(feature, "w.mean"))
-    perf_wmean$feature <- as.factor(perf_wmean$feature)
-    perf_min <- perf %>% dplyr::filter(str_detect(feature, "min."))
-    perf_min$feature <- as.factor(perf_min$feature)
-    feature.groups <- c("Amphibian", "Bird", "Fish", "Fungi", "Invertebrate", 
-                        "Mammal", "Plant", "Reptile")
-    feat.cols <- RColorBrewer::brewer.pal(length(feature_groups), brewer_pal)
-    names(feat.cols) <- levels(perf_wmean$feature)
-    colScale <- scale_colour_manual(name = "Feature",
-                                    values = feat.cols,
-                                    labels = feature.groups)
-    ggplot(data = perf, mapping = aes(x = pr.lost, y = perf.levels, 
-                                      colour = feature)) +
-      geom_line(data = perf_wmean, size = 1) +
-      colScale +
-      theme_bw() +
-      theme(axis.line = element_line(colour = "black"),
-            panel.grid.major = element_blank(),
-            panel.grid.minor = element_blank(),
-            panel.background = element_blank(),
-            axis.text = element_text(size = 12), 
-            axis.title.x = element_text(size = 14),
-            axis.title.y = element_text(size = 14),
-            strip.text.x = element_text(size = 12)) +
-      scale_y_continuous(expand = c(0,0)) +
-      scale_x_continuous(expand = c(0,0)) +
-      ylab("Distribution remaining") +
-      xlab("Proportion of landscape lost")
-  } else if(length(feature_groups) > 8) {
+    df1 <- df %>% 
+      
+      mutate({{nm}} := case_when(threatStatus == "Least Concern" &
+                                   !classGroup %in% areas ~ wv[1],
+                                 threatStatus == "Least Concern" &
+                                   classGroup %in% areas ~ wv[1] + 10 ,
+                                 threatStatus == "Near Threatened" &
+                                   !classGroup %in% areas ~ wv[2],
+                                 threatStatus == "Near Threatened" &
+                                   classGroup %in% areas ~ wv[2] + 10 ,
+                                 threatStatus == "Vulnerable" &
+                                   !classGroup %in% areas ~ wv[3],
+                                 threatStatus == "Vulnerable" &
+                                   classGroup %in% areas ~ wv[3] + 10 ,
+                                 threatStatus == "Endangered" &
+                                   !classGroup %in% areas ~ wv[4],
+                                 threatStatus == "Endangered" &
+                                   classGroup %in% areas ~ wv[4] + 10 ,
+                                 threatStatus == "Critically Endangered" &
+                                   !classGroup %in% areas ~ wv[5],
+                                 threatStatus == "Critically Endangered" &
+                                   classGroup %in% areas ~ wv[5] + 10 ,
+                                 threatStatus == "Data Deficient" &
+                                   !classGroup %in% areas ~ wv[6],
+                                 threatStatus == "Data Deficient" &
+                                   classGroup %in% areas ~ wv[6] + 10 ,
+                                 .default = weight)) #%>%
     
-    groupnames(project_variant) <- feature_groups
-    lost.levels <- seq(0,1, by = 0.05)
-    results_area.caz <- results(project_variant)
-    perf_area <- performance(results_area.caz, lost.levels,melted = TRUE, 
-                             groups = T)
-    perf_area <- na.omit(perf_area)
-    perf_area_wmean <- perf_area %>% dplyr::filter(str_detect(feature, "w.mean"))
-    perf_area_wmean$feature <- as.factor(perf_area_wmean$feature)
-    #perf_min <- perf %>% dplyr::filter(str_detect(feature, "min."))
-    #perf_min$feature <- as.factor(perf_min$feature)
-    feature_area.groups <- c("Amphibian", "Bird", "Community", "Ecosystem", 
-                             "Fish", "Fungi", "Invertebrate", 
-                             "Mammal", "Plant", "Ramsar", "Reptile", "Upstream")
-    feat_area.cols <- RColorBrewer::brewer.pal(length(feature_groups), brewer_pal)
-    names(feat_area.cols) <- levels(perf_area_wmean$feature)
-    colScale <- scale_colour_manual(name = "Feature",
-                                    values = feat_area.cols,
-                                    labels = feature_area.groups)
-    ggplot(data = perf_area, mapping = aes(x = pr.lost, y = perf.levels, 
-                                           colour = feature)) +
-      geom_line(data = perf_area_wmean, size = 1) +
-      colScale +
-      theme_bw() +
-      theme(axis.line = element_line(colour = "black"),
-            panel.grid.major = element_blank(),
-            panel.grid.minor = element_blank(),
-            panel.background = element_blank(),
-            axis.text = element_text(size = 12), 
-            axis.title.x = element_text(size = 14),
-            axis.title.y = element_text(size = 14),
-            strip.text.x = element_text(size = 12)) +
-      scale_y_continuous(expand = c(0,0)) +
-      scale_x_continuous(expand = c(0,0)) +
-      ylab("Distribution remaining") +
-      xlab("Proportion of landscape lost")
+    #mutate({{nm}} := case_when(classGroup %in% areas ~ get(!!weight)))
   }
+  if(scheme == 2 |scheme == 4){
+    
+    df1 <- df %>% 
+      
+      mutate({{nm}} := case_when(threatStatus == "Least Concern" &
+                                   !classGroup %in% areas ~ wv[1],
+                                 threatStatus == "Least Concern" &
+                                   classGroup %in% areas ~ wv[1] + 10 ,
+                                 threatStatus == "Near Threatened" &
+                                   !classGroup %in% areas ~ wv[2],
+                                 threatStatus == "Near Threatened" &
+                                   classGroup %in% areas ~ wv[2] + 10 ,
+                                 threatStatus == "Vulnerable" &
+                                   !classGroup %in% areas ~ wv[3],
+                                 threatStatus == "Vulnerable" &
+                                   classGroup %in% areas ~ wv[3] + 10 ,
+                                 threatStatus == "Endangered" &
+                                   !classGroup %in% areas ~ wv[4],
+                                 threatStatus == "Endangered" &
+                                   classGroup %in% areas ~ wv[4] + 10 ,
+                                 threatStatus == "Critically Endangered" &
+                                   !classGroup %in% areas ~ wv[5],
+                                 threatStatus == "Critically Endangered" &
+                                   classGroup %in% areas ~ wv[5] + 10 ,
+                                 threatStatus == "Data Deficient" &
+                                   !classGroup %in% areas ~ wv[6],
+                                 threatStatus == "Data Deficient" &
+                                   classGroup %in% areas ~ wv[6] + 10 ,
+                                 .default = weight)) %>%
+      
+      #mutate({{nm}} := case_when(classGroup %in% areas ~ weight)) %>%
+      
+      mutate({{nm}} := case_when(code == "8.1.1" | code == "8.1.2" ~ get(!!nm) + 1,
+                                 .default = get(!!nm)))
+    
+    
+  }
+  
+  return(df1)
+  
+}
+
+## Taking a little off values of 1----
+squeeze <- function(pvector){
+  
+  for(i in 1:length(pvector)) {
+    
+    if(!is.na(pvector[i]) == T & pvector[i] == 1){
+      
+      pvector[i] <- pvector[i] - 0.000001
+      
+    }
+  }
+  return(pvector)
+}
+
+## Create binary layers based on given site sensitivity----
+spat_priority_dist <- function(df, n_col){
+  
+  for(i in 1:n_col){
+    
+    df[,i] <- ifelse(df[,i] >= 0.98, 1,0)}
+  
+  return(df)
+}
+
+## Clarke-Evans test with cdf correction----
+clus_fun <- function(df, win_poly, lay_ind){
+  
+  df <- df %>% 
+    dplyr::select(all_of(c(lay_ind,27,28))) %>% 
+    filter(df[[lay_ind]] == 1)
+  
+  p <- ppp(df[,2], df[,3], 
+           window = as.owin(st_as_sf(win_poly)))
+  
+  ce <- clarkevans.test(p, alternative = "clustered", correction = "cdf")
+  
+  return(list(ce,p))
+  
+  
+}
+
+## Create predicted IAS distribution plots----
+IAS_plot <- function(species){
+  
+  species <- gsub(" ", ".", species)
+  
+  r <- rast(raster(here(regional_model_path, 
+                        species, 
+              paste0(species,"_EMcaByTSS_mergedAlgo_mergedRun_mergedData.gri"))))
+  
+  r <- r/1000 #back to a 0-1 scale
+  r_sf <- st_as_stars(r) %>%
+    st_as_sf()
+  
+  r_plot <- ggplot()+
+    
+    geom_sf(data = r_sf, aes(fill=layer), 
+            color=NA, 
+            show.legend = T) + 
+    
+    scale_fill_gradientn(colours = brewer.pal('YlGnBu', n=9),
+                         name = "Habitat suitability") +
+    
+    theme_bw() +
+    
+    theme(axis.line = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.background = element_blank(),
+          axis.text = element_blank(),
+          panel.border = element_blank(),
+          axis.ticks = element_blank()) 
+  
+  return(r_plot)
+}
+
+## Priority map----
+priority_map <- function(sens, susc){
+  
+  susc[susc == 0] <- NA
+  
+  r1 <- as.polygons(susc) %>% 
+    st_as_sf()
+  
+  r2 <- resample(sens, susc)
+  
+  r2 <- mask(r2, r1)
+  
+  r2 <- st_as_stars(r2) %>%
+    st_as_sf()
+  
+  r3 <- st_as_stars(sens) %>%
+    st_as_sf() 
+  
+  ggplot()+
+    
+    geom_sf(data = r3, aes(fill = r3[[1]]), 
+            color = NA, 
+            show.legend = F,
+            alpha = 0.2) + 
+    
+    geom_sf(data = r2, aes(fill = r2[[1]]),
+            color = NA, 
+            show.legend = T) +
+    
+    scale_fill_gradientn(colours = z_colors_spectral$colors,
+                         values = z_colors_spectral$values,
+                         name = "Site\nsensitivity",
+                         breaks = c(0.0, 0.2, 0.4, 0.6, 0.8,1)) +
+    
+    theme_bw() +
+    
+    theme(axis.line = element_blank(),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          panel.background = element_blank(),
+          axis.text = element_blank(),
+          panel.border = element_blank(),
+          axis.ticks = element_blank())
+  
   
 }
