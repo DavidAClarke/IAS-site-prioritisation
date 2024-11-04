@@ -217,7 +217,9 @@ gdif <- ggplot() +
         axis.text = element_blank(),
         panel.border = element_blank(),
         axis.ticks = element_blank())
-  
+
+g1 <- rank_plot(full_rank_stack[[15]])
+g2 <- rank_plot(full_rank_stack[[21]])
 
 ggpubr::ggarrange(g1, gdif, gsim, 
                   g2, gsiv, gsip, 
