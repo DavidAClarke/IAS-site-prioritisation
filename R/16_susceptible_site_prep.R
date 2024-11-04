@@ -1,5 +1,5 @@
 ##IAS SDMs##
-regional_model_path <- here(dirname(here()), "data", "IAS_regional")
+regional_model_path <- here(dirname(here()), "data", "IAS_distributions", "IAS_regional")
 
 spp_list <- c("Apis mellifera",  "Monomorium floricola",
               "Monomorium destructor","Linepithema humile", "Vespula vulgaris",
