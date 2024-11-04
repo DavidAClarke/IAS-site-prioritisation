@@ -289,7 +289,8 @@ susc_site_prep <- function(species_name, ras_stack){
   
   sp <- gsub(" ", ".", species_name)
 
-  bin <- rast(raster::raster(here(regional_model_path,  sp, 
+  bin <- rast(raster::raster(here(regional_model_path,  sp, "proj_regional",
+                                  "individual_projections",
             paste0(sp,"_EMcaByTSS_mergedAlgo_mergedRun_mergedData_TSSbin.gri"))))
   
   bin2 <- bin
