@@ -1,4 +1,4 @@
-# Priority site identification for invasive species management [in progress]
+# Priority site identification for invasive species management
 Using spatial conservation prioritisation techniques to identify areas most sensitive to the impacts of invasive alien species. Ultimately, priority sites are those sites that are determined to be both _sensitive_ and _susceptible_ to the occurrence and establishment of invasive alien species.
 
 ## Note:
