@@ -1,7 +1,7 @@
 # Priority site identification for invasive species management
 Using spatial conservation prioritisation techniques to identify areas most sensitive to the impacts of invasive alien species. Ultimately, priority sites are those sites that are determined to be both _sensitive_ and _susceptible_ to the occurrence and establishment of invasive alien species.
 
-Clarke, D.A., Clarke, R.H. and McGeoch, M.A. (2025), How to Identify Priority Sites for Invasive Alien Species Policy and Management. Divers Distrib, 31: e13970. https://doi.org/10.1111/ddi.13970
+Clarke, D.A., Clarke, R.H. and McGeoch, M.A. (2025), How to Identify Priority Sites for Invasive Alien Species Policy and Management. _Diversity and Distributions_, 31: e13970. https://doi.org/10.1111/ddi.13970
 
 ## Note:
 This code was originally written a couple of years agao. As such, I am in the process of updating all the code, where relevant. This is especially the case regarding spatial analyses and the move from `sp` and `raster` to `sf` and `terra`.
